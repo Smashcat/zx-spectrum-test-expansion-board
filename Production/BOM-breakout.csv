@@ -2,4 +2,4 @@ Qty,Designator,Footprint,Comment,LCSC Part #,Description,Device
 10,"C1, C2, C3, C4, C5, C6, C7, C8, C9, C10",C0402,100nF,C307331,"CAPACITOR, European symbol",C-EUC0402
 2,"C34, C35",C0402,1uF,C52923,"CAPACITOR, European symbol",C-EUC0402
 1,3V3_REG4,NCP718BSN330T1G,3V3,C587158,,NCP718BSN330T1G
-5,"U1, U2, U3, U4, U5",SOP65P640X120-20N,TXB0108PWR,C53406,8-Bit Bidirectional Voltage-Level Shifter with Auto Direction Sensing and +/-15-kV ESD Protect 20-TSSOP -40 to 85  Check availability,TXB0108PWR
+5,"U1, U2, U3, U4, U5",SOP65P640X120-20N,TXB0108PWR,C17206,8-Bit Bidirectional Voltage-Level Shifter with Auto Direction Sensing and +/-15-kV ESD Protect 20-TSSOP -40 to 85  Check availability,TXB0108PWR
