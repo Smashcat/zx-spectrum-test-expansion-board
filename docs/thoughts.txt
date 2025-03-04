@@ -3,7 +3,7 @@ Plan to use the ZX interface 2 port to host the ZXAccelerator cart.
 This interface has no /rd or /wr signals, only /mreq, SO, we can do the following:
 
 If the address has bit 14 and 15 low, then it's a read from the "ROM"
-If the address has bit 14 low and bit 15 set, then the bottom 8 bits of the address are location to write to (0-255) and top 8 bits is the value. These are written to a different array, which is read only be the ARM core on the RP2040. This allows the Z80 to send data back to the RP2040 in an efficient way.
+If the address has bit 14 low and bit 15 set, then the bottom 8 bits of the address are location to write to (0-255) and top 8 bits is the value. These are written to a different array, which is read only by the ARM core on the RP2040. This allows the Z80 to send data back to the RP2040 in an efficient way.
 
 Types of data the Z80 would send back to the "ROM":
 

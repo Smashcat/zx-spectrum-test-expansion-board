@@ -1,18 +1,12 @@
     DEVICE ZXSPECTRUM48
 
-    define pushPopAddr 		0xB000
-
-	define audioListAddr	0x8200
-	define audioList2Addr	0x8200+(956*3)+10
-	define audioListLen		956
-
-
-    define stackTopAddr 	0x8100
-    define spBackupAddr 	0x8002
+    define pushPopAddr 0x8200
+    define stackTopAddr 0x8100
+    define spBackupAddr 0x8002
     define tunePositionAddr 0x8004
 
-    define attrStartAddr 	0x5800
-    define screenStartAddr 	0x4000
+    define attrStartAddr 0x5800
+    define screenStartAddr 0x4000
 
 
     org 0x0000
@@ -39,16 +33,9 @@ cold_start:
     LD HL, 0x5800            ; Start of attribute area
     LD DE, 0x5801
     LD BC, 0x02FF
-    LD (HL), 0x17
+    LD (HL), 7
     ldir
 
-	ld hl,audioListAddr
-	ld bc,0x1919
-	call initAudioList
-
-	ld hl,audioList2Addr
-	ld bc,0x3737
-	call initAudioList
 
     ei
     jp main_loop
@@ -59,162 +46,66 @@ isr_handler:
     reti
 
 main_loop:
-
-//	call prepareAudioList
-//	halt
-
-	; Play the audio for frame
-    xor a
-    out (0xFE), a
-	call audioListAddr
-	ld a,4
-	out (0xFE), a
-
-	; chase the raster beam!
-	call pop_push_even
+    call pop_push_even
     halt
-
     call pop_push_odd
-    xor a
-    out (0xFE), a
-    call audioList2Addr
-	ld a,4
-	out (0xFE), a
+    call handle_audio
     halt
 
-    jp main_loop
+    call pop_push_even
+    halt
+    call pop_push_odd
+    call handle_audio
+    halt
 
-; create the instruction skeleton for the tone player on/off list
-initAudioList:
+    call pop_push_even
+    halt
+    call pop_push_odd
+    call handle_audio
+    halt
 
-	; ld bc, 0x0018
-	ld (hl),0x01
-	inc hl
-	ld (hl),0x18
-	inc hl
-	ld (hl),0x00
-	inc hl
+    call pop_push_even
+    halt
+    call pop_push_odd
+    call handle_audio
+    halt
 
-	ld de,audioListLen
-	ld a,0x78	;	enable beeper/earphone bits
-ial_audio_list_create_loop:
-	ld (hl),a		; 		7		ld a,b (78) or ld a,c (79)
-	inc hl			; 		6
-	ld (hl),0xd3	;		10		out (x),a
-	inc hl			; 		6
-	ld (hl),0xfe	;		10		out(0xfe),a
-	dec b
-	jp nz,ial_no_swap
-	ld b,c
-	xor 0x01
-ial_no_swap:
-	inc hl			; 		6
-	dec de			;		6
-	bit 7,d			;		8
-	jp z,ial_audio_list_create_loop ; 10
-	ld (hl),0xaf	;		xor a
-	inc hl
-	ld (hl),0xd3	;		10		out (x),a
-	inc hl			; 		6
-	ld (hl),0xfe	;		10		out(0xfe),a
-	inc hl
-	ld (hl),0xc9	;		10	ret
+;    call pop_push_even
+;    halt
+;    call pop_push_odd
 
-	ret
-
-; Create an array of b beeper on/off bytes, so we can play a tone with exact timing (no need for branches within tone player loop)
-; with 1000 entries, this takes up almost an entire frame!
-prepareAudioList:
-    ld a,4
-    out (0xFE), a
-	ld hl,(tunePositionAddr)
+    ld hl,(tunePositionAddr)
     inc hl
     ld a,(hl)
     or a
-    jp nz,pal_note_ok   ; 7 cycles if not zero, 12 if zero (takes jump)
+    jr nz,note_ok   ; 7 cycles if not zero, 12 if zero (takes jump)
     ld hl, tune
-    ld a,(hl)
-pal_note_ok:
+note_ok:
     ld (tunePositionAddr),hl
+    jp main_loop
 
-	; the audioListAddr holds the actual instructions to output the current tone
-	; technically, we could "mix" multiple streams here I guess by XORing them? hmm...
-	ld hl,audioListAddr+3
 
-	ld c,a
-	ld b,a
-	; c has the current "note"
-	ld de,audioListLen
-	ld a,0x78	;	enable beeper/earphone bits
-pal_audio_list_create_loop:
-	ld (hl),a		; 		7		ld a,b (78) or ld a,c (79)
-	inc hl			; 		6
-	inc hl			; 		6
-	inc hl			; 		6
-	dec b			; 		4
-	jp nz,pal_no_change ; 	10
-	ld b,c			; 		4
-	xor 0x01		; 		4
-pal_no_change:
-	dec de			;		6
-	bit 7,d			;		8
-	jp z,pal_audio_list_create_loop ; 10
-
-    ld a,2  ; red border, speaker off
-    out (0xFE), a
-	ret
 
 handle_audio:
-    xor a
-    out (0xFE), a
-	ld bc,0x0018
-
-	; repeat the following for 15 cycles per change
-	ld a,b	; on
-	out(0xfe),a
-
-	ld a,c	; off
-	out(0xfe),a
-
-
-    ld a,4  ; red border, speaker off
-    out (0xFE), a
-	ret
-
-handle_audio_long:
-    xor a
-    out (0xFE), a
-	ld hl,audioListAddr
-	ld de,audioListLen
-ha_loop_long:
-	ld a,(hl)		;	7
-	inc hl			;	6
-	out (0xfe),a	;	11
-	dec de			;	6
-	bit 7,d			;	8
-	jp z,ha_loop_long	;	10
-    ld a,4  ; red border, speaker off
-    out (0xFE), a
-	ret
-
-handle_audio_orig:
     xor a
     out (0xFE), a
     ld hl,(tunePositionAddr)
     ld c,(hl)
     ; play the note here
     ld de,550
-note_loop_orig:
-    ld b,c			; 4
-    xor 24			; 7
-    out (0xFE), a	; 11
-delay1_orig:
-    dec de			; 6
-    bit 7,d			; 8
-    jp nz,note_done_orig	; 10
-    djnz delay1_orig		; 13 if loop, or 10 if end
-    jp note_loop_orig	; 10
-note_done_orig:
+note_loop:
+    ld b,c
+    xor 24
+    out (0xFE), a
+delay1:
+    dec de
+    bit 7,d
+    jp nz,note_done
+    djnz delay1
+    jp note_loop
+
+
+note_done:
     ld a,4  ; red border, speaker off
     out (0xFE), a
     ret
@@ -222,27 +113,25 @@ note_done_orig:
 
 ; Even frames draw behind the raster beam, so have to wait until it's passed. Eventually we'll do something useful here!
 pop_push_even:
-;    xor a
-;    out (0xFE), a
-;    ld b,255    ;   3315 cycles total (13 per loop)
-;wait_beam:  ; Total of 17 cycles per loop until end, then 8 cycles to drop through
-;    nop ; 4 cycles * 11
-;    nop
-;    nop
-;    nop
-;    nop
-;    nop
-;    nop
-;    nop
-;    nop
-;    nop
-;    nop
-;    djnz wait_beam  ; 13 cycles per loop, until end, then 8 cycles to drop through
-
-    ld a,3
+    xor a
+    out (0xFE), a
+    ld b,255    ;   3315 cycles total (13 per loop)
+wait_beam:  ; Total of 17 cycles per loop until end, then 8 cycles to drop through
+    nop ; 4 cycles * 11
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    djnz wait_beam  ; 13 cycles per loop, until end, then 8 cycles to drop through
+    ld a,2
     out (0xFE), a
     ld (spBackupAddr),sp
-
 
 
 	; 0
@@ -5509,7 +5398,6 @@ pop_push_even:
 	push bc
 	push af
 
-	
 
 
     ld sp,(spBackupAddr)
@@ -5523,8 +5411,6 @@ pop_push_odd:
     ld a,2
     out (0xFE), a   ; Turn border red to track ULA
     ld (spBackupAddr),sp
-
-
 
 
 	; 0
@@ -9977,8 +9863,6 @@ pop_push_odd:
 
 
 
-
-
     ld sp,(spBackupAddr)
     ld a,7
     out (0xFE), a
@@ -10001,6 +9885,41 @@ tune:
     db  0x51,0x60,0x51,0x51,0x56,0x66,0x56,0x56
     db  0x80,0x72,0x66,0x60,0x56,0x66,0x56,0x40
     db  0x56,0x66,0x80,0x66,0x56,0x56,0x56,0x56,0
+
+pop_push_code_pre:
+    db  0xed,0x73,0x02,0x80  ; ld ($8002),sp
+
+pop_push_body:
+    db  0x31,0x8e,0x00       ; ld sp,$008e
+    db  0xf1                 ; pop af
+    db  0xc1                 ; pop bc
+    db  0xd1                 ; pop de
+    db  0xe1                 ; pop hl
+    db  0xd9                 ; exx
+    db  0xd9                 ; ex af,af'
+    db  0xf1                 ; pop af
+    db  0xc1                 ; pop bc
+    db  0xd1                 ; pop de
+    db  0xe1                 ; pop hl
+    db  0xdd,0xe1            ; pop ix
+    db  0xdd,0xe1            ; pop iy
+    db  0x31,0x14,0x40       ; ld sp,$4014
+    db  0xf5                 ; push af
+    db  0xc5                 ; push bc
+    db  0xd5                 ; push de
+    db  0xe5                 ; push hl
+    db  0xdd,0xe5            ; push ix
+    db  0xdd,0xe5            ; push iy
+    db  0xd9                 ; ex af,af'
+    db  0xd9                 ; exx
+    db  0xf5                 ; push af
+    db  0xc5                 ; push bc
+    db  0xd5                 ; push de
+    db  0xe5                 ; push hl
+
+pop_push_post:
+    db  0xed,0x7b,0x02,0x80  ; ld sp,($8002)
+    db  0xc9                 ; ret
 
 
     SAVEBIN "sp48.rom",0,$
