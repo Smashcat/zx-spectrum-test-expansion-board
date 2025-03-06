@@ -1,0 +1,77 @@
+; Get everything ready, load ALL usable registers and pre-set SP ready to PUSH
+=136T
+
+; get sync, so we chase the raster after it's output the first byte on the line - this gives us just under 448T before it catches us again!
+PUSH first 20 bytes = 126T
+set SP+6 POPs+EXX = 74T
+set SP+6 PUSHs+EXX = 80T
+
+=126+74+80 = 280T during raster beam
+
+=126+280 = 406T used per 4 scanlines from 896T (224*4) = 490T spare
+
+in 490T:
+
+ld sp,spriteDefX+0
+pop af
+pop bc
+pop de
+pop hl
+exx
+ex af,af'
+pop af
+pop bc
+pop de
+pop hl
+pop ix
+pop iy
+lp sp,spriteDestX0
+push af
+push bc
+lp sp,spriteDestX1
+push de
+push hl
+exx
+ex af,af'
+lp sp,spriteDestX2
+push af
+push bc
+lp sp,spriteDestX3
+push de
+push hl
+lp sp,spriteDestX4
+push ix
+push iy
+
+ld sp,spriteDefX+0
+pop af
+pop bc
+pop de
+pop hl
+exx
+pop bc
+pop de
+lp sp,spriteDestX5
+push af
+push bc
+lp sp,spriteDestX6
+push de
+push hl
+exx
+lp sp,spriteDestX7
+push bc
+push de
+
+; best case, 444T-states. However, this is contended, so maybe 490, need to tune!
+
+This could allow for up to 12 24*16 pixel sprites rendered during screen drawing. Would need to organise so they don't get partially rendered across raster beam.
+
+If clearing old sprites and drawing new sprites, with up to 32 sprite clear or draw operations in the top blank area, it gives a total of 44 clear or draws. So that's safely 22x(24x16) sprites updated per frame, whilst also doing bi-color updates for 32x48 color resolution!
+
+Could also do 16 sprite undraw operations in the bottom border, leaving just over 5000 t-states - enough for keyboard handling, but only crappy audio on 48k
+
+So max sprites (if all cleared and redrawn each frame) would be 30 updated at 50fps! 
+
+
+
+

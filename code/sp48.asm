@@ -2,9 +2,9 @@
 
     define pushPopAddr 		0xB000
 
-	define audioListAddr	0x8200
-	define audioList2Addr	0x8200+(956*3)+10
 	define audioListLen		956
+	define audioListAddr	0x8200
+	define audioList2Addr	0x8200+(audioListLen*3)+10
 
 
     define stackTopAddr 	0x8100
@@ -55,7 +55,7 @@ cold_start:
 
 ; Simple IM 1 interrupt handler
 isr_handler:
-    ei
+    ;ei
     reti
 
 main_loop:
@@ -72,14 +72,16 @@ main_loop:
 
 	; chase the raster beam!
 	call pop_push_even
-    halt
+	; approx 68 visible pixel rows plus bottom border free at this point, before second audio "channel" begins
+    ;halt
 
-    call pop_push_odd
-    xor a
-    out (0xFE), a
+    ;call pop_push_odd
+    ;xor a
+    ;out (0xFE), a
     call audioList2Addr
 	ld a,4
 	out (0xFE), a
+	ei
     halt
 
     jp main_loop
@@ -100,9 +102,11 @@ initAudioList:
 ial_audio_list_create_loop:
 	ld (hl),a		; 		7		ld a,b (78) or ld a,c (79)
 	inc hl			; 		6
-	ld (hl),0xd3	;		10		out (x),a
+
+	ld (hl),0xd3	;		10		out (0xfe),a
 	inc hl			; 		6
-	ld (hl),0xfe	;		10		out(0xfe),a
+	ld (hl),0xfe	;		10		
+
 	dec b
 	jp nz,ial_no_swap
 	ld b,c
@@ -5512,17 +5516,17 @@ pop_push_even:
 	
 
 
-    ld sp,(spBackupAddr)
-    ld a,7
-    out (0xFE), a
-    ret
+ ;   ld sp,(spBackupAddr)
+ ;   ld a,7
+ ;   out (0xFE), a
+ ;   ret
 
 
 ; Odd frames drawn in front of raster beam, so no need to wait.
 pop_push_odd:
-    ld a,2
-    out (0xFE), a   ; Turn border red to track ULA
-    ld (spBackupAddr),sp
+ ;   ld a,2
+ ;   out (0xFE), a   ; Turn border red to track ULA
+ ;   ld (spBackupAddr),sp
 
 
 
