@@ -120,24 +120,24 @@ main_loop:
     halt
 
 	; Play the audio data for frame (border is black during this)
-	;call audioListAddr
+	call audioListAddr
 
 	; chase the raster beam!
-    ld a,colorBlue
+    ld a,colorMagenta
     out (0xFE), a
 	call pop_push_even
 
 	; approx 68 visible pixel rows plus bottom border free at this point, before second audio "channel" begins
 
 	; Play second audio tone data for frame (border is black during this)
-    ;call audioList2Addr
+    call audioList2Addr
 
-	ld a,colorWhite
+	ld a,colorBlue
 	out (0xFE), a
 	call scanKeyboard
 
 	; all done, border green so we can see how many cycles we have left spare
-	ld a,colorRed
+	ld a,colorGreen
 	out (0xFE), a
 	ei
 
@@ -156,32 +156,39 @@ pop_push_even:
 
     ld (spBackupAddr),sp
 
-	; 0
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+16
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
+
+
+	; 0 - 242 clocks for 20 bytes moved - 348 repititions for all screen/attr RAM = 84216 T-cycles (plus some more for contention)
+	;     184 If we don't use IX/IY - 435 repititions for all screen/attr RAM = 80040 T-cycles (plus some more for contention)
+	ld sp,src_data
+	pop af						; 10
+	pop bc						; 10
+	pop de						; 10
+	pop hl						; 10
+	exx							; 4
+	ex af,af'					; 4
+	pop af						; 10
+	pop bc						; 10
+	pop de						; 10
+	pop hl						; 10
+	pop ix						; 14
+	pop iy						; 14
+	ld sp,screenStartAddr+20	; 10
+	push iy						; 15
+	push ix						; 15
+	push hl						; 11
+	push de						; 11
+	push bc						; 11
+	push af						; 11
+	ex af,af'					; 4
+	exx							; 4
+	push hl						; 11
+	push de						; 11
+	push bc						; 11
+	push af						; 11
 
 	; 1
-	ld sp,src_attr_data
+	ld sp,src_data
 	pop af
 	pop bc
 	pop de
@@ -192,7 +199,11 @@ pop_push_even:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+32
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+280
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -205,7 +216,7 @@ pop_push_even:
 	push af
 
 	; 2
-	ld sp,src_attr_data
+	ld sp,src_data
 	pop af
 	pop bc
 	pop de
@@ -216,7 +227,11 @@ pop_push_even:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+48
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+540
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -229,7 +244,7 @@ pop_push_even:
 	push af
 
 	; 3
-	ld sp,src_attr_data
+	ld sp,src_data
 	pop af
 	pop bc
 	pop de
@@ -240,7 +255,11 @@ pop_push_even:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+64
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1300
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -253,7 +272,7 @@ pop_push_even:
 	push af
 
 	; 4
-	ld sp,src_attr_data
+	ld sp,src_data
 	pop af
 	pop bc
 	pop de
@@ -264,7 +283,11 @@ pop_push_even:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+80
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1560
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -277,7 +300,7 @@ pop_push_even:
 	push af
 
 	; 5
-	ld sp,src_attr_data
+	ld sp,src_data
 	pop af
 	pop bc
 	pop de
@@ -288,7 +311,11 @@ pop_push_even:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+96
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1820
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -301,7 +328,7 @@ pop_push_even:
 	push af
 
 	; 6
-	ld sp,src_attr_data
+	ld sp,src_data
 	pop af
 	pop bc
 	pop de
@@ -312,7 +339,11 @@ pop_push_even:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+112
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+800
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -325,7 +356,7 @@ pop_push_even:
 	push af
 
 	; 7
-	ld sp,src_attr_data
+	ld sp,src_data
 	pop af
 	pop bc
 	pop de
@@ -336,7 +367,11 @@ pop_push_even:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+128
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+40
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -349,7 +384,7 @@ pop_push_even:
 	push af
 
 	; 8
-	ld sp,src_attr_data
+	ld sp,src_data
 	pop af
 	pop bc
 	pop de
@@ -360,7 +395,11 @@ pop_push_even:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+144
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+60
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -373,7 +412,7 @@ pop_push_even:
 	push af
 
 	; 9
-	ld sp,src_attr_data
+	ld sp,src_data
 	pop af
 	pop bc
 	pop de
@@ -384,7 +423,11 @@ pop_push_even:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+160
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+300
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -397,7 +440,7 @@ pop_push_even:
 	push af
 
 	; 10
-	ld sp,src_attr_data
+	ld sp,src_data
 	pop af
 	pop bc
 	pop de
@@ -408,7 +451,11 @@ pop_push_even:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+176
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+320
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -421,7 +468,7 @@ pop_push_even:
 	push af
 
 	; 11
-	ld sp,src_attr_data
+	ld sp,src_data
 	pop af
 	pop bc
 	pop de
@@ -432,7 +479,11 @@ pop_push_even:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+192
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+560
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -445,7 +496,7 @@ pop_push_even:
 	push af
 
 	; 12
-	ld sp,src_attr_data
+	ld sp,src_data
 	pop af
 	pop bc
 	pop de
@@ -456,7 +507,11 @@ pop_push_even:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+208
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+820
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -469,7 +524,7 @@ pop_push_even:
 	push af
 
 	; 13
-	ld sp,src_attr_data
+	ld sp,src_data
 	pop af
 	pop bc
 	pop de
@@ -480,7 +535,11 @@ pop_push_even:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+224
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1060
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -493,850 +552,6 @@ pop_push_even:
 	push af
 
 	; 14
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+240
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 15
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+256
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 16
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+272
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 17
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+288
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 18
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+304
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 19
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+320
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 20
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+336
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 21
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+352
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 22
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+368
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 23
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+384
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 24
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+400
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 25
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+416
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 26
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+432
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 27
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+448
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 28
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+464
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 29
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+480
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 30
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+496
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 31
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+512
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 32
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+528
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 33
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+544
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 34
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+560
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 35
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+576
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 36
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+592
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 37
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+608
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 38
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+624
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 39
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+640
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 40
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+656
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 41
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+672
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 42
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+688
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 43
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+704
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 44
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+720
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 45
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+736
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 46
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+752
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 47
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+768
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; delay to get start of second scanline
-	ld b,95
-ppe_scan_delay:
-	nop 
-	nop
-	nop
-	nop 
-	nop 
-	nop 
-	nop
-	nop
-	djnz ppe_scan_delay
-	nop
-	nop
-	nop
-	nop
-
-
-
-
-	; scanline is just entering the first pixel row here
-
-
-
-	; 0 - 242 clocks for 20 bytes moved - 348 repititions for all screen/attr RAM = 84216 T-cycles (plus some more for contention)
-	;     184 If we don't use IX/IY - 435 repetitions for all screen/attr RAM = 80040 T-cycles (plus some more for contention)
-	;	  This renders over 2 frames, completing screen bitmap+attribute memory blits approx 82 rows of pixels ahead of ULA on the second screen.
-	;	  There are 130 rows remaining if no attributes rendered. That gives 130*224 T-cycles in the pixel area
-	; 0
 	ld sp,src_data
 	pop af
 	pop bc
@@ -1348,494 +563,16 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+16
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 1
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+32
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 2
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+272
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; attr draw
-	ld sp,0x8020
-	ld bc,0b0010101000101010
-	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
-	push bc
-	pop af
-	ex af,af'
-	pop af
-	ld sp,attrStartAddr+16
-	ld de,0b0010101000101010
-	ld hl,0b0010101000101010
-	ld ix,0b0010101000101010
-	ld iy,0b0010101000101010
-	exx
-	ld bc,0b0010101000101010
-	ld de,0b0010101000101010
-	ld hl,0b0010101000101010
-	
-	; start chasing raster here
-	ld (attrStartAddr),hl
-	ld hl,0b0010101000101010
-	ld (attrStartAddr+2),hl
-	ld hl,0b0010101000101010
-	push hl
-	push de
-	push bc
-	push af
-	exx
-	ex af,af'
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1080
 	push iy
 	push ix
-	ld sp,attrStartAddr+24
-	push hl
-	push de
-	push bc
-	push af
-
-	ld bc,0b0010101000101010
-	ld de,0b0010101000101010
-	ld hl,0b0010101000101010
-	ld sp,attrStartAddr+30
-	push hl
-	push de
-	push bc
-	ld hl,0b0010101000101010
-	ld (attrStartAddr+30),hl
-	; end attr draw
-
-	; 3
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+288
 	push hl
 	push de
 	push bc
 	push af
 	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 4
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+528
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 5
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+544
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 6
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+784
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 7
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+800
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 8-1
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+1040
-	push hl
-	push de
-	push bc
-	push af
-
-	; attr draw
-	ld sp,0x8020
-	ld bc,0b0010101000101010
-	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
-	push bc
-	pop af
-	ex af,af'
-	pop af
-	ld sp,attrStartAddr+16+32
-	ld de,0b0010101000101010
-	ld hl,0b0010101000101010
-	ld ix,0b0010101000101010
-	ld iy,0b0010101000101010
-	exx
-	ld bc,0b0010101000101010
-	ld de,0b0010101000101010
-	ld hl,0b0010101000101010
-	
-	; start chasing raster here
-	ld (attrStartAddr+32),hl
-	ld hl,0b0010101000101010
-	ld (attrStartAddr+2+32),hl
-	ld hl,0b0010101000101010
-	push hl
-	push de
-	push bc
-	push af
-	exx
-	ex af,af'
-	push iy
-	push ix
-	ld sp,attrStartAddr+24+32
-	push hl
-	push de
-	push bc
-	push af
-
-	ld bc,0b0010101000101010
-	ld de,0b0010101000101010
-	ld hl,0b0010101000101010
-	ld sp,attrStartAddr+30+32
-	push hl
-	push de
-	push bc
-	ld hl,0b0010101000101010
-	ld (attrStartAddr+30+32),hl
-	; end attr draw
-
-	; 8-2
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+1032
-	push hl
-	push de
-	push bc
-	push af
-
-	; 9
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+1056
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 10
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+1296
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 11
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+1312
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 12
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+1552
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 13
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+1568
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 14-1
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	ld sp,screenStartAddr+1808
-	push de
-	push bc
-	push af
-
-	; attr draw
-	ld sp,0x8020
-	ld bc,0b0010101000101010
-	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
-	push bc
-	pop af
-	ex af,af'
-	pop af
-	ld sp,attrStartAddr+16+64
-	ld de,0b0010101000101010
-	ld hl,0b0010101000101010
-	ld ix,0b0010101000101010
-	ld iy,0b0010101000101010
-	exx
-	ld bc,0b0010101000101010
-	ld de,0b0010101000101010
-	ld hl,0b0010101000101010
-	
-	; start chasing raster here
-	ld (attrStartAddr+64),hl
-	ld hl,0b0010101000101010
-	ld (attrStartAddr+2+64),hl
-	ld hl,0b0010101000101010
-	push hl
-	push de
-	push bc
-	push af
-	exx
-	ex af,af'
-	push iy
-	push ix
-	ld sp,attrStartAddr+24+64
-	push hl
-	push de
-	push bc
-	push af
-
-	ld bc,0b0010101000101010
-	ld de,0b0010101000101010
-	ld hl,0b0010101000101010
-	ld sp,attrStartAddr+30+64
-	push hl
-	push de
-	push bc
-	ld hl,0b0010101000101010
-	ld (attrStartAddr+30+64),hl
-	; end attr draw
-
-	; 14-2
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	pop hl
-	ld sp,screenStartAddr+1802
-	push hl
 	exx
 	push hl
 	push de
@@ -1854,7 +591,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1824
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1320
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -1878,7 +619,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+48
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1340
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -1902,7 +647,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+64
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1580
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -1926,324 +675,319 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+304
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 19
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+320
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	nop
-	nop
-	
-	; attr draw
-	ld sp,0x8020
-	ld bc,0b0010101000101010
-	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
-	push bc
-	pop af
-	ex af,af'
-	pop af
-	ld sp,attrStartAddr+16+96
-	ld de,0b0010101000101010
-	ld hl,0b0010101000101010
-	ld ix,0b0010101000101010
-	ld iy,0b0010101000101010
-	exx
-	ld bc,0b0010101000101010
-	ld de,0b0010101000101010
-	ld hl,0b0010101000101010
-	
-	; start chasing raster here
-	ld (attrStartAddr+96),hl
-	ld hl,0b0010101000101010
-	ld (attrStartAddr+2+96),hl
-	ld hl,0b0010101000101010
-	push hl
-	push de
-	push bc
-	push af
-	exx
-	ex af,af'
-	push iy
-	push ix
-	ld sp,attrStartAddr+24+96
-	push hl
-	push de
-	push bc
-	push af
-
-	ld bc,0b0010101000101010
-	ld de,0b0010101000101010
-	ld hl,0b0010101000101010
-	ld sp,attrStartAddr+30+96
-	push hl
-	push de
-	push bc
-	ld hl,0b0010101000101010
-	ld (attrStartAddr+30+96),hl
-	; end attr draw
-
-
-
-	; 20
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+560
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 21
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+576
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 22
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+816
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 23
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+832
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 24
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+1072
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 25
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+1088
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 26
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+1328
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 27
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+1344
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 28
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+1584
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 29
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
+	pop ix
+	pop iy
 	ld sp,screenStartAddr+1600
+	push iy
+	push ix
+	push hl
+	push de
+	push bc
+	push af
+	ex af,af'
+	exx
+	push hl
+	push de
+	push bc
+	push af
+
+	; 19
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	exx
+	ex af,af'
+	pop af
+	pop bc
+	pop de
+	pop hl
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1840
+	push iy
+	push ix
+	push hl
+	push de
+	push bc
+	push af
+	ex af,af'
+	exx
+	push hl
+	push de
+	push bc
+	push af
+
+	; 20
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	exx
+	ex af,af'
+	pop af
+	pop bc
+	pop de
+	pop hl
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+80
+	push iy
+	push ix
+	push hl
+	push de
+	push bc
+	push af
+	ex af,af'
+	exx
+	push hl
+	push de
+	push bc
+	push af
+
+	; 21
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	exx
+	ex af,af'
+	pop af
+	pop bc
+	pop de
+	pop hl
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+340
+	push iy
+	push ix
+	push hl
+	push de
+	push bc
+	push af
+	ex af,af'
+	exx
+	push hl
+	push de
+	push bc
+	push af
+
+	; 22
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	exx
+	ex af,af'
+	pop af
+	pop bc
+	pop de
+	pop hl
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+580
+	push iy
+	push ix
+	push hl
+	push de
+	push bc
+	push af
+	ex af,af'
+	exx
+	push hl
+	push de
+	push bc
+	push af
+
+	; 23
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	exx
+	ex af,af'
+	pop af
+	pop bc
+	pop de
+	pop hl
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+600
+	push iy
+	push ix
+	push hl
+	push de
+	push bc
+	push af
+	ex af,af'
+	exx
+	push hl
+	push de
+	push bc
+	push af
+
+	; 24
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	exx
+	ex af,af'
+	pop af
+	pop bc
+	pop de
+	pop hl
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+840
+	push iy
+	push ix
+	push hl
+	push de
+	push bc
+	push af
+	ex af,af'
+	exx
+	push hl
+	push de
+	push bc
+	push af
+
+	; 25
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	exx
+	ex af,af'
+	pop af
+	pop bc
+	pop de
+	pop hl
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+860
+	push iy
+	push ix
+	push hl
+	push de
+	push bc
+	push af
+	ex af,af'
+	exx
+	push hl
+	push de
+	push bc
+	push af
+
+	; 26
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	exx
+	ex af,af'
+	pop af
+	pop bc
+	pop de
+	pop hl
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1100
+	push iy
+	push ix
+	push hl
+	push de
+	push bc
+	push af
+	ex af,af'
+	exx
+	push hl
+	push de
+	push bc
+	push af
+
+	; 27
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	exx
+	ex af,af'
+	pop af
+	pop bc
+	pop de
+	pop hl
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1120
+	push iy
+	push ix
+	push hl
+	push de
+	push bc
+	push af
+	ex af,af'
+	exx
+	push hl
+	push de
+	push bc
+	push af
+
+	; 28
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	exx
+	ex af,af'
+	pop af
+	pop bc
+	pop de
+	pop hl
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1360
+	push iy
+	push ix
+	push hl
+	push de
+	push bc
+	push af
+	ex af,af'
+	exx
+	push hl
+	push de
+	push bc
+	push af
+
+	; 29
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	exx
+	ex af,af'
+	pop af
+	pop bc
+	pop de
+	pop hl
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1620
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2267,7 +1011,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1840
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1860
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2291,7 +1039,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1856
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1880
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2315,7 +1067,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+80
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+100
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2339,7 +1095,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+96
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+120
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2363,7 +1123,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+336
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+360
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2387,7 +1151,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+352
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+380
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2411,7 +1179,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+592
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+620
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2435,7 +1207,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+608
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+640
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2459,7 +1235,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+848
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+880
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2483,7 +1263,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+864
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1140
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2507,7 +1291,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1104
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1380
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2531,7 +1319,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1120
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1400
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2555,7 +1347,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1360
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1640
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2579,7 +1375,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1376
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1660
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2603,7 +1403,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1616
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1900
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2627,7 +1431,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1632
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1920
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2651,7 +1459,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1872
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+140
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2675,7 +1487,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1888
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+160
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2699,7 +1515,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+112
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+400
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2723,7 +1543,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+128
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+660
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2747,7 +1571,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+368
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+900
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2771,7 +1599,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+384
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+920
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2795,7 +1627,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+624
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1160
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2819,7 +1655,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+640
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1180
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2843,7 +1683,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+880
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1420
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2867,7 +1711,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+896
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1440
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2891,7 +1739,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1136
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1680
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2915,7 +1767,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1152
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1940
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2939,7 +1795,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1392
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+180
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2963,7 +1823,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1408
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+420
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -2987,7 +1851,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1648
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+440
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3011,7 +1879,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1664
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+680
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3035,7 +1907,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1904
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+700
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3059,7 +1935,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1920
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+940
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3083,7 +1963,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+144
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+960
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3107,7 +1991,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+160
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1200
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3131,7 +2019,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+400
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1460
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3155,7 +2047,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+416
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1700
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3179,7 +2075,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+656
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1720
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3203,7 +2103,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+672
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1960
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3227,7 +2131,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+912
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1980
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3251,7 +2159,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+928
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+200
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3275,7 +2187,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1168
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+220
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3299,7 +2215,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1184
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+460
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3323,7 +2243,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1424
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+480
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3347,7 +2271,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1440
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+720
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3371,7 +2299,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1680
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+980
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3395,7 +2327,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1696
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1220
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3419,7 +2355,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1936
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1240
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3443,7 +2383,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1952
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1480
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3467,7 +2411,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+176
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1500
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3491,7 +2439,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+192
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1740
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3515,7 +2467,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+432
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1760
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3539,7 +2495,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+448
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2000
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3563,7 +2523,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+688
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+240
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3587,7 +2551,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+704
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+260
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3611,7 +2579,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+944
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+500
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3635,7 +2607,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+960
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+520
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3659,7 +2635,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1200
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+740
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3683,7 +2663,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1216
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+760
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3707,7 +2691,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1456
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+780
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3731,7 +2719,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1472
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1000
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3755,7 +2747,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1712
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1020
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3779,7 +2775,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1728
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1040
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3803,7 +2803,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1968
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1260
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3827,7 +2831,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1984
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1280
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3851,7 +2859,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+208
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1520
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3875,7 +2887,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+224
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1540
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3899,7 +2915,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+464
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1780
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3923,7 +2943,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+480
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+1800
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3947,7 +2971,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+720
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2020
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3971,7 +2999,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+736
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2040
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -3995,7 +3027,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+976
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2060
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4019,7 +3055,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+992
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2068
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4043,7 +3083,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1232
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2328
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4067,7 +3111,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1248
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2588
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4091,7 +3139,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1488
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2848
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4115,7 +3167,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1504
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3348
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4139,7 +3195,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1744
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3608
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4163,7 +3223,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1760
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3868
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4187,7 +3251,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2000
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2088
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4211,7 +3279,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2016
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2108
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4235,7 +3307,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+240
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2348
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4259,7 +3335,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+256
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2368
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4283,7 +3363,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+496
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2608
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4307,7 +3391,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+512
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2868
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4331,7 +3419,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+752
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3108
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4355,7 +3447,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+768
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3128
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4379,7 +3475,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1008
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3368
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4403,7 +3503,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1024
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3388
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4427,7 +3531,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1264
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3628
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4451,7 +3559,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1280
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3648
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4475,7 +3587,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1520
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3888
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4499,7 +3615,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1536
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2128
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4523,7 +3643,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1776
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2388
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4547,7 +3671,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+1792
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2628
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4571,7 +3699,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2032
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2648
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4595,7 +3727,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2048
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2888
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4619,7 +3755,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2064
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2908
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4643,7 +3783,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2080
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3148
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4667,7 +3811,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2320
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3168
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4691,7 +3839,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2336
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3408
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4715,7 +3867,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2576
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3668
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4726,9 +3882,6 @@ ppe_scan_delay:
 	push de
 	push bc
 	push af
-
-    ld sp,(spBackupAddr)
-    ret
 
 	; 133
 	ld sp,src_data
@@ -4742,7 +3895,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2592
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3908
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4766,7 +3923,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2832
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3928
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4790,7 +3951,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2848
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2148
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4814,7 +3979,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3088
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2168
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4838,7 +4007,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3104
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2408
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4862,7 +4035,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3344
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2428
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4886,7 +4063,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3360
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2668
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4910,7 +4091,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3600
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2688
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4934,7 +4119,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3616
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2928
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4958,7 +4147,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3856
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3188
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -4982,7 +4175,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3872
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3428
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5006,7 +4203,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2096
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3448
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5030,7 +4231,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2112
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3688
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5054,7 +4259,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2352
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3708
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5078,7 +4287,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2368
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3948
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5102,7 +4315,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2608
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3968
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5126,7 +4343,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2624
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2188
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5150,7 +4371,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2864
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2208
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5174,7 +4399,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2880
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2448
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5198,7 +4427,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3120
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2708
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5222,7 +4455,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3136
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2948
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5246,7 +4483,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3376
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2968
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5270,7 +4511,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3392
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3208
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5294,7 +4539,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3632
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3228
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5318,7 +4567,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3648
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3468
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5342,7 +4595,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3888
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3488
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5366,7 +4623,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3904
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3728
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5390,7 +4651,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2128
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3988
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5414,7 +4679,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2144
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2228
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5438,7 +4707,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2384
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2468
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5462,7 +4735,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2400
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2488
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5486,7 +4763,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2640
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2728
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5510,7 +4791,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2656
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2748
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5534,7 +4819,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2896
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2988
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5558,7 +4847,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2912
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3008
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5582,7 +4875,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3152
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3248
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5606,7 +4903,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3168
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3508
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5630,7 +4931,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3408
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3748
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5654,7 +4959,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3424
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3768
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5678,7 +4987,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3664
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4008
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5702,7 +5015,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3680
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4028
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5726,7 +5043,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3920
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2248
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5750,7 +5071,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3936
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2268
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5774,7 +5099,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2160
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2508
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5798,7 +5127,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2176
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2528
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5822,7 +5155,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2416
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2768
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5846,7 +5183,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2432
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3028
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5870,7 +5211,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2672
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3268
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5894,7 +5239,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2688
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3288
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5918,7 +5267,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2928
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3528
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5942,7 +5295,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2944
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3548
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5966,7 +5323,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3184
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3788
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -5990,7 +5351,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3200
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3808
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6014,7 +5379,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3440
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4048
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6038,7 +5407,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3456
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2288
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6050,296 +5423,21 @@ ppe_scan_delay:
 	push bc
 	push af
 
-	; 188
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+3696
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 189
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+3712
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 190
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+3952
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 191
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+3968
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 192
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+2192
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 193
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+2208
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 194
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+2448
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 195
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+2464
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 196
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+2704
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 197
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+2720
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 198
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+2960
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 199
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+2976
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
+	
 
 
-;======================================================================================================= second half + attributes ============================================================================================
+ ;   ld sp,(spBackupAddr)
+ ;   ld a,7
+ ;   out (0xFE), a
+ ;   ret
+
+
+; Odd frames drawn in front of raster beam, so no need to wait.
+pop_push_odd:
+ ;   ld a,2
+ ;   out (0xFE), a   ; Turn border red to track ULA
+ ;   ld (spBackupAddr),sp
+
 
 
 
@@ -6355,7 +5453,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+16
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+20
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6379,7 +5481,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+32
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+40
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6403,7 +5509,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+48
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+60
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6427,7 +5537,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+64
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+80
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6451,7 +5565,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+80
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+100
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6475,7 +5593,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+96
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+120
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6499,7 +5621,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+112
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+140
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6523,7 +5649,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+128
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+160
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6547,7 +5677,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+144
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+180
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6571,7 +5705,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+160
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+200
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6595,7 +5733,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+176
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+220
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6619,7 +5761,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+192
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+240
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6643,7 +5789,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+208
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+260
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6667,7 +5817,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+224
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+280
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6691,7 +5845,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+240
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+300
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6715,7 +5873,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+256
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+320
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6739,7 +5901,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+272
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+340
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6763,7 +5929,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+288
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+360
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6787,7 +5957,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+304
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+380
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6811,7 +5985,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+320
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+400
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6835,7 +6013,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+336
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+420
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6859,7 +6041,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+352
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+440
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6883,7 +6069,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+368
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+460
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6907,7 +6097,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+384
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+480
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6931,7 +6125,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+400
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+500
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6955,7 +6153,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+416
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+520
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -6979,7 +6181,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+432
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+540
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7003,7 +6209,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+448
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+560
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7027,7 +6237,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+464
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+580
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7051,7 +6265,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+480
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+600
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7075,7 +6293,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+496
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+620
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7099,7 +6321,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+512
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+640
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7123,7 +6349,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+528
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+660
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7147,7 +6377,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+544
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+680
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7171,7 +6405,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+560
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+700
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7195,7 +6433,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+576
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+720
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7219,7 +6461,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+592
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+740
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7243,7 +6489,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,attrStartAddr+608
+	pop ix
+	pop iy
+	ld sp,attrStartAddr+760
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7261,229 +6511,337 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+624
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 39
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+640
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 40
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+656
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 41
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+672
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 42
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+688
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 43
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+704
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 44
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+720
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 45
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+736
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 46
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,attrStartAddr+752
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 47
-	ld sp,src_attr_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
 	ld sp,attrStartAddr+768
+	push hl
+	push de
+	push bc
+	push af
+
+	; 188
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	exx
+	ex af,af'
+	pop af
+	pop bc
+	pop de
+	pop hl
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2308
+	push iy
+	push ix
+	push hl
+	push de
+	push bc
+	push af
+	ex af,af'
+	exx
+	push hl
+	push de
+	push bc
+	push af
+
+	; 189
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	exx
+	ex af,af'
+	pop af
+	pop bc
+	pop de
+	pop hl
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2548
+	push iy
+	push ix
+	push hl
+	push de
+	push bc
+	push af
+	ex af,af'
+	exx
+	push hl
+	push de
+	push bc
+	push af
+
+	; 190
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	exx
+	ex af,af'
+	pop af
+	pop bc
+	pop de
+	pop hl
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2568
+	push iy
+	push ix
+	push hl
+	push de
+	push bc
+	push af
+	ex af,af'
+	exx
+	push hl
+	push de
+	push bc
+	push af
+
+	; 191
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	exx
+	ex af,af'
+	pop af
+	pop bc
+	pop de
+	pop hl
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2788
+	push iy
+	push ix
+	push hl
+	push de
+	push bc
+	push af
+	ex af,af'
+	exx
+	push hl
+	push de
+	push bc
+	push af
+
+	; 192
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	exx
+	ex af,af'
+	pop af
+	pop bc
+	pop de
+	pop hl
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2808
+	push iy
+	push ix
+	push hl
+	push de
+	push bc
+	push af
+	ex af,af'
+	exx
+	push hl
+	push de
+	push bc
+	push af
+
+	; 193
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	exx
+	ex af,af'
+	pop af
+	pop bc
+	pop de
+	pop hl
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+2828
+	push iy
+	push ix
+	push hl
+	push de
+	push bc
+	push af
+	ex af,af'
+	exx
+	push hl
+	push de
+	push bc
+	push af
+
+	; 194
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	exx
+	ex af,af'
+	pop af
+	pop bc
+	pop de
+	pop hl
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3048
+	push iy
+	push ix
+	push hl
+	push de
+	push bc
+	push af
+	ex af,af'
+	exx
+	push hl
+	push de
+	push bc
+	push af
+
+	; 195
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	exx
+	ex af,af'
+	pop af
+	pop bc
+	pop de
+	pop hl
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3068
+	push iy
+	push ix
+	push hl
+	push de
+	push bc
+	push af
+	ex af,af'
+	exx
+	push hl
+	push de
+	push bc
+	push af
+
+	; 196
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	exx
+	ex af,af'
+	pop af
+	pop bc
+	pop de
+	pop hl
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3088
+	push iy
+	push ix
+	push hl
+	push de
+	push bc
+	push af
+	ex af,af'
+	exx
+	push hl
+	push de
+	push bc
+	push af
+
+	; 197
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	exx
+	ex af,af'
+	pop af
+	pop bc
+	pop de
+	pop hl
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3308
+	push iy
+	push ix
+	push hl
+	push de
+	push bc
+	push af
+	ex af,af'
+	exx
+	push hl
+	push de
+	push bc
+	push af
+
+	; 198
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	exx
+	ex af,af'
+	pop af
+	pop bc
+	pop de
+	pop hl
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3328
+	push iy
+	push ix
+	push hl
+	push de
+	push bc
+	push af
+	ex af,af'
+	exx
+	push hl
+	push de
+	push bc
+	push af
+
+	; 199
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	exx
+	ex af,af'
+	pop af
+	pop bc
+	pop de
+	pop hl
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3568
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7507,7 +6865,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3216
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3588
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7531,7 +6893,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3232
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3828
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7555,7 +6921,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3472
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+3848
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7579,7 +6949,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3488
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4068
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7603,7 +6977,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3728
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4088
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7627,7 +7005,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3744
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4108
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7651,7 +7033,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3984
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4116
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7675,7 +7061,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4000
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4376
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7699,7 +7089,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2224
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4636
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7723,7 +7117,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2240
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4896
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7747,7 +7145,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2480
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5396
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7771,7 +7173,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2496
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5656
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7795,7 +7201,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2736
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5916
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7819,7 +7229,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2752
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4136
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7843,7 +7257,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2992
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4156
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7867,7 +7285,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3008
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4396
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7891,7 +7313,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3248
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4416
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7915,7 +7341,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3264
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4656
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7939,7 +7369,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3504
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4916
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7963,7 +7397,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3520
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5156
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -7987,7 +7425,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3760
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5176
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8011,7 +7453,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3776
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5416
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8035,7 +7481,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4016
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5436
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8059,7 +7509,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4032
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5676
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8083,7 +7537,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2256
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5696
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8107,7 +7565,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2272
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5936
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8131,7 +7593,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2512
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4176
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8155,7 +7621,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2528
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4436
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8179,7 +7649,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2768
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4676
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8203,7 +7677,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2784
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4696
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8227,7 +7705,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3024
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4936
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8251,7 +7733,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3040
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4956
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8275,7 +7761,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3280
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5196
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8299,7 +7789,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3296
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5216
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8323,7 +7817,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3536
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5456
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8347,7 +7845,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3552
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5716
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8371,7 +7873,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3792
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5956
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8395,7 +7901,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3808
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5976
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8419,7 +7929,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4048
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4196
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8443,7 +7957,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4064
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4216
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8467,7 +7985,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2288
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4456
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8491,7 +8013,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2304
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4476
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8515,7 +8041,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2544
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4716
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8539,7 +8069,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2560
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4736
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8563,7 +8097,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2800
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4976
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8587,7 +8125,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+2816
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5236
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8611,7 +8153,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3056
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5476
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8635,7 +8181,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3072
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5496
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8659,7 +8209,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3312
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5736
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8683,7 +8237,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3328
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5756
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8707,7 +8265,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3568
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5996
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8731,7 +8293,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3584
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+6016
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8755,7 +8321,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3824
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4236
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8779,7 +8349,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+3840
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4256
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8803,7 +8377,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4080
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4496
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8827,7 +8405,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4096
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4756
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8851,7 +8433,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4112
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4996
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8875,7 +8461,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4128
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5016
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8899,7 +8489,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4368
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5256
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8923,7 +8517,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4384
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5276
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8947,7 +8545,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4624
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5516
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8971,7 +8573,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4640
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5536
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -8995,7 +8601,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4880
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5776
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9019,7 +8629,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4896
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+6036
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9043,7 +8657,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+5136
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4276
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9067,7 +8685,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+5152
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4516
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9091,7 +8713,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+5392
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4536
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9115,7 +8741,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+5408
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4776
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9139,7 +8769,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+5648
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4796
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9163,7 +8797,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+5664
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5036
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9187,7 +8825,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+5904
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5056
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9211,7 +8853,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+5920
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5296
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9235,7 +8881,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4144
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5556
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9259,7 +8909,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4160
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5796
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9283,7 +8937,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4400
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5816
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9307,7 +8965,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4416
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+6056
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9331,7 +8993,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4656
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+6076
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9355,7 +9021,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4672
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4296
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9379,7 +9049,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4912
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4316
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9403,7 +9077,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4928
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4556
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9427,7 +9105,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+5168
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4576
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9451,7 +9133,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+5184
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4816
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9475,7 +9161,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+5424
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5076
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9499,7 +9189,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+5440
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5316
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9523,7 +9217,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+5680
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5336
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9547,7 +9245,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+5696
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5576
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9571,7 +9273,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+5936
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5596
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9595,7 +9301,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+5952
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5836
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9619,7 +9329,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4176
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5856
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9643,7 +9357,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4192
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+6096
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9667,7 +9385,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4432
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4336
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9691,7 +9413,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4448
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4356
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9715,7 +9441,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4688
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4596
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9739,7 +9469,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4704
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4616
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9763,7 +9497,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4944
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4836
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9787,7 +9525,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4960
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4856
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9811,7 +9553,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+5200
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+4876
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9835,7 +9581,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+5216
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5096
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9859,7 +9609,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+5456
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5116
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9883,7 +9637,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+5472
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5136
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9907,7 +9665,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+5712
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5356
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9931,7 +9693,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+5728
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5376
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9955,7 +9721,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+5968
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5616
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -9979,7 +9749,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+5984
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5636
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -10003,7 +9777,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4208
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5876
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -10027,7 +9805,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4224
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+5896
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -10051,7 +9833,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4464
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+6116
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -10075,7 +9861,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	ld sp,screenStartAddr+4480
+	pop ix
+	pop iy
+	ld sp,screenStartAddr+6136
+	push iy
+	push ix
 	push hl
 	push de
 	push bc
@@ -10093,1826 +9883,11 @@ ppe_scan_delay:
 	pop bc
 	pop de
 	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4720
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 309
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4736
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 310
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4976
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 311
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4992
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 312
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5232
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 313
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5248
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 314
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5488
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 315
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5504
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 316
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5744
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 317
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5760
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 318
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+6000
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 319
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+6016
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 320
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4240
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 321
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4256
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 322
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4496
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 323
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4512
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 324
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4752
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 325
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4768
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 326
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5008
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 327
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5024
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 328
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5264
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 329
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5280
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 330
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5520
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 331
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5536
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 332
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5776
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 333
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5792
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 334
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+6032
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 335
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+6048
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 336
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4272
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 337
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4288
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 338
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4528
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 339
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4544
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 340
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4784
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 341
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4800
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 342
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5040
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 343
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5056
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 344
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5296
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 345
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5312
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 346
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5552
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 347
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5568
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 348
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5808
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 349
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5824
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 350
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+6064
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 351
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+6080
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 352
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4304
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 353
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4320
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 354
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4560
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 355
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4576
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 356
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4816
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 357
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4832
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 358
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5072
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 359
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5088
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 360
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5328
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 361
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5344
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 362
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5584
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 363
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5600
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 364
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5840
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 365
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5856
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 366
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+6096
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 367
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+6112
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 368
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4336
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 369
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4352
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 370
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4592
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 371
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4608
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 372
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4848
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 373
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+4864
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 374
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5104
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 375
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5120
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 376
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5360
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 377
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5376
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 378
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5616
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 379
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5632
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 380
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5872
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 381
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+5888
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 382
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+6128
-	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-	; 383
-	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
-	pop hl
 	ld sp,screenStartAddr+6144
 	push hl
 	push de
 	push bc
 	push af
-	ex af,af'
-	exx
-	push hl
-	push de
-	push bc
-	push af
-
-
-
 
 
 
@@ -11926,15 +9901,7 @@ src_data:
     db  0b11111111,0b00001111,0b00110011,0b01010101,0b11111111,0b00001111,0b00110011,0b01010101,0b11111111,0b00001111,0b00110011,0b01010101,0b11111111,0b00001111,0b00110011,0b01010101,0b11111111,0b00001111,0b00110011,0b01010101
 
 src_attr_data:
-    db  0b00110001,0b00110001,0b00110001,0b00110001,0b00110001,0b00110001,0b00110001,0b00110001
-	db	0b00110001,0b00110001,0b00110001,0b00110001,0b00110001,0b00110001,0b00110001,0b00110001
-	db	0b00110001,0b00110001,0b00110001,0b00110001
-
-src_attr_data2:
-    db  0b00000111,0b00000111,0b00000111,0b00000111,0b00000111,0b00000111,0b00000111,0b00000111,0b00000111,0b00000111
-    db  0b00111000,0b00111000,0b00111000,0b00111000,0b00111000,0b00111000,0b00111000,0b00111000
-    db  0b00111000,0b00111000,0b00111000,0b00111000,0b00111000,0b00111000,0b00111000,0b00111000
-    db  0b00100011,0b00100011,0b00100011,0b00100011,0b00100011,0b00100011,0b00100011,0b00100011
+    db  0b00110001,0b00110001,0b00110001,0b00110001,0b00110001,0b00110001,0b00110001,0b00110001,0b00110001,0b00110001,0b00110001,0b00110001,0b00110001,0b00110001,0b00110001,0b00110001,0b00110001,0b00110001,0b00110001,0b00110001
 
 tune:
     db  0x80/4,0x72/4,0x66/4,0x60/4,0x56/4,0x66/4,0x56/4,0x56/4
