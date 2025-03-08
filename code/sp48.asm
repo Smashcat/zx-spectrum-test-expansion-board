@@ -1408,7 +1408,7 @@ ppe_scan_delay:
 	push bc
 	push af
 
-	; attr draw
+	; attr draw 0
 	ld sp,0x8020
 	ld bc,0b0010101000101010
 	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
@@ -1454,7 +1454,7 @@ ppe_scan_delay:
 	push bc
 	ld hl,0b0010101000101010
 	ld (attrStartAddr+30),hl
-	; end attr draw
+	; end attr draw 0
 
 	; 3
 	ld sp,src_data
@@ -1588,7 +1588,7 @@ ppe_scan_delay:
 	push bc
 	push af
 
-	; attr draw
+	; attr draw 1
 	ld sp,0x8020
 	ld bc,0b0010101000101010
 	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
@@ -1634,7 +1634,7 @@ ppe_scan_delay:
 	push bc
 	ld hl,0b0010101000101010
 	ld (attrStartAddr+30+32),hl
-	; end attr draw
+	; end attr draw 1
 
 	; 8-2
 	ld sp,src_data
@@ -1778,7 +1778,7 @@ ppe_scan_delay:
 	push bc
 	push af
 
-	; attr draw
+	; attr draw 2
 	ld sp,0x8020
 	ld bc,0b0010101000101010
 	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
@@ -1824,7 +1824,7 @@ ppe_scan_delay:
 	push bc
 	ld hl,0b0010101000101010
 	ld (attrStartAddr+30+64),hl
-	; end attr draw
+	; end attr draw 2
 
 	; 14-2
 	ld sp,src_data
@@ -1965,7 +1965,7 @@ ppe_scan_delay:
 	nop
 	nop
 	
-	; attr draw
+	; attr draw 3
 	ld sp,0x8020
 	ld bc,0b0010101000101010
 	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
@@ -2011,7 +2011,7 @@ ppe_scan_delay:
 	push bc
 	ld hl,0b0010101000101010
 	ld (attrStartAddr+30+96),hl
-	; end attr draw
+	; end attr draw 3
 
 
 
@@ -2135,14 +2135,8 @@ ppe_scan_delay:
 	push bc
 	push af
 
-	; 25
+	; 25-1
 	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
 	pop af
 	pop bc
 	pop de
@@ -2152,8 +2146,63 @@ ppe_scan_delay:
 	push de
 	push bc
 	push af
+
+	; attr draw 4
+	ld sp,0x8020
+	ld bc,0b0010101000101010
+	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
+	push bc
+	pop af
 	ex af,af'
+	pop af
+	ld sp,attrStartAddr+16+128
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld ix,0b0010101000101010
+	ld iy,0b0010101000101010
 	exx
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	
+	; start chasing raster here
+	ld (attrStartAddr+128),hl
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+2+128),hl
+	ld hl,0b0010101000101010
+	push hl
+	push de
+	push bc
+	push af
+	exx
+	ex af,af'
+	push iy
+	push ix
+	ld sp,attrStartAddr+24+128
+	push hl
+	push de
+	push bc
+	push af
+
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld sp,attrStartAddr+30+128
+	push hl
+	push de
+	push bc
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+30+128),hl
+	; end attr draw 4
+
+
+	; 25-2 (8 bytes)
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	ld sp,screenStartAddr+1080
 	push hl
 	push de
 	push bc
@@ -2279,24 +2328,74 @@ ppe_scan_delay:
 	push bc
 	push af
 
-	; 31
+	; 31-1
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	ld sp,screenStartAddr+1856
+	push de
+	push bc
+	push af
+
+	; attr draw 5
+	ld sp,0x8020
+	ld bc,0b0010101000101010
+	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
+	push bc
+	pop af
+	ex af,af'
+	pop af
+	ld sp,attrStartAddr+16+160
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld ix,0b0010101000101010
+	ld iy,0b0010101000101010
+	exx
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	
+	; start chasing raster here
+	ld (attrStartAddr+160),hl
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+2+160),hl
+	ld hl,0b0010101000101010
+	push hl
+	push de
+	push bc
+	push af
+	exx
+	ex af,af'
+	push iy
+	push ix
+	ld sp,attrStartAddr+24+160
+	push hl
+	push de
+	push bc
+	push af
+
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld sp,attrStartAddr+30+160
+	push hl
+	push de
+	push bc
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+30+160),hl
+	; end attr draw 5
+
+	; 31-2
 	ld sp,src_data
 	pop af
 	pop bc
 	pop de
 	pop hl
 	exx
-	ex af,af'
-	pop af
 	pop bc
-	pop de
-	pop hl
-	ld sp,screenStartAddr+1856
-	push hl
-	push de
+	ld sp,screenStartAddr+1850
 	push bc
-	push af
-	ex af,af'
 	exx
 	push hl
 	push de
@@ -2423,6 +2522,58 @@ ppe_scan_delay:
 	push bc
 	push af
 
+	nop
+	nop
+
+	; attr draw 6
+	ld sp,0x8020
+	ld bc,0b0010101000101010
+	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
+	push bc
+	pop af
+	ex af,af'
+	pop af
+	ld sp,attrStartAddr+16+192
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld ix,0b0010101000101010
+	ld iy,0b0010101000101010
+	exx
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	
+	; start chasing raster here
+	ld (attrStartAddr+192),hl
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+2+192),hl
+	ld hl,0b0010101000101010
+	push hl
+	push de
+	push bc
+	push af
+	exx
+	ex af,af'
+	push iy
+	push ix
+	ld sp,attrStartAddr+24+192
+	push hl
+	push de
+	push bc
+	push af
+
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld sp,attrStartAddr+30+192
+	push hl
+	push de
+	push bc
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+30+192),hl
+	; end attr draw 6
+
+
 	; 37
 	ld sp,src_data
 	pop af
@@ -2543,14 +2694,8 @@ ppe_scan_delay:
 	push bc
 	push af
 
-	; 42
+	; 42-1
 	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
 	pop af
 	pop bc
 	pop de
@@ -2560,8 +2705,63 @@ ppe_scan_delay:
 	push de
 	push bc
 	push af
+
+
+	; attr draw 7
+	ld sp,0x8020
+	ld bc,0b0010101000101010
+	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
+	push bc
+	pop af
 	ex af,af'
+	pop af
+	ld sp,attrStartAddr+16+224
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld ix,0b0010101000101010
+	ld iy,0b0010101000101010
 	exx
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	
+	; start chasing raster here
+	ld (attrStartAddr+224),hl
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+2+224),hl
+	ld hl,0b0010101000101010
+	push hl
+	push de
+	push bc
+	push af
+	exx
+	ex af,af'
+	push iy
+	push ix
+	ld sp,attrStartAddr+24+224
+	push hl
+	push de
+	push bc
+	push af
+
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld sp,attrStartAddr+30+224
+	push hl
+	push de
+	push bc
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+30+224),hl
+	; end attr draw 7
+
+	; 42-1
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	ld sp,screenStartAddr+1352
 	push hl
 	push de
 	push bc
@@ -2687,24 +2887,76 @@ ppe_scan_delay:
 	push bc
 	push af
 
-	; 48
+	; 48-1
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	ld sp,screenStartAddr+112
+	push de
+	push bc
+	push af
+
+
+	; attr draw 8
+	ld sp,0x8020
+	ld bc,0b0010101000101010
+	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
+	push bc
+	pop af
+	ex af,af'
+	pop af
+	ld sp,attrStartAddr+16+256
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld ix,0b0010101000101010
+	ld iy,0b0010101000101010
+	exx
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	
+	; start chasing raster here
+	ld (attrStartAddr+256),hl
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+2+256),hl
+	ld hl,0b0010101000101010
+	push hl
+	push de
+	push bc
+	push af
+	exx
+	ex af,af'
+	push iy
+	push ix
+	ld sp,attrStartAddr+24+256
+	push hl
+	push de
+	push bc
+	push af
+
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld sp,attrStartAddr+30+256
+	push hl
+	push de
+	push bc
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+30+256),hl
+	; end attr draw 8
+
+
+	; 48-2
 	ld sp,src_data
 	pop af
 	pop bc
 	pop de
 	pop hl
 	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
 	pop hl
-	ld sp,screenStartAddr+112
+	ld sp,screenStartAddr+106
 	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
 	exx
 	push hl
 	push de
@@ -2831,6 +3083,58 @@ ppe_scan_delay:
 	push bc
 	push af
 
+	nop
+	nop
+
+
+	; attr draw 9
+	ld sp,0x8020
+	ld bc,0b0010101000101010
+	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
+	push bc
+	pop af
+	ex af,af'
+	pop af
+	ld sp,attrStartAddr+16+288
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld ix,0b0010101000101010
+	ld iy,0b0010101000101010
+	exx
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	
+	; start chasing raster here
+	ld (attrStartAddr+288),hl
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+2+288),hl
+	ld hl,0b0010101000101010
+	push hl
+	push de
+	push bc
+	push af
+	exx
+	ex af,af'
+	push iy
+	push ix
+	ld sp,attrStartAddr+24+288
+	push hl
+	push de
+	push bc
+	push af
+
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld sp,attrStartAddr+30+288
+	push hl
+	push de
+	push bc
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+30+288),hl
+	; end attr draw 9
+
 	; 54
 	ld sp,src_data
 	pop af
@@ -2951,14 +3255,8 @@ ppe_scan_delay:
 	push bc
 	push af
 
-	; 59
+	; 59-1
 	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
 	pop af
 	pop bc
 	pop de
@@ -2968,8 +3266,63 @@ ppe_scan_delay:
 	push de
 	push bc
 	push af
+
+
+	; attr draw 10
+	ld sp,0x8020
+	ld bc,0b0010101000101010
+	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
+	push bc
+	pop af
 	ex af,af'
+	pop af
+	ld sp,attrStartAddr+16+320
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld ix,0b0010101000101010
+	ld iy,0b0010101000101010
 	exx
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	
+	; start chasing raster here
+	ld (attrStartAddr+320),hl
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+2+320),hl
+	ld hl,0b0010101000101010
+	push hl
+	push de
+	push bc
+	push af
+	exx
+	ex af,af'
+	push iy
+	push ix
+	ld sp,attrStartAddr+24+320
+	push hl
+	push de
+	push bc
+	push af
+
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld sp,attrStartAddr+30+320
+	push hl
+	push de
+	push bc
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+30+320),hl
+	; end attr draw 10
+
+	; 59-2
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	ld sp,screenStartAddr+1400
 	push hl
 	push de
 	push bc
@@ -3095,24 +3448,74 @@ ppe_scan_delay:
 	push bc
 	push af
 
-	; 65
+	; 65-1
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	ld sp,screenStartAddr+160
+	push de
+	push bc
+	push af
+
+	; attr draw 11
+	ld sp,0x8020
+	ld bc,0b0010101000101010
+	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
+	push bc
+	pop af
+	ex af,af'
+	pop af
+	ld sp,attrStartAddr+16+352
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld ix,0b0010101000101010
+	ld iy,0b0010101000101010
+	exx
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	
+	; start chasing raster here
+	ld (attrStartAddr+352),hl
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+2+352),hl
+	ld hl,0b0010101000101010
+	push hl
+	push de
+	push bc
+	push af
+	exx
+	ex af,af'
+	push iy
+	push ix
+	ld sp,attrStartAddr+24+352
+	push hl
+	push de
+	push bc
+	push af
+
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld sp,attrStartAddr+30+352
+	push hl
+	push de
+	push bc
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+30+352),hl
+	; end attr draw 11
+
+	; 65-2
 	ld sp,src_data
 	pop af
 	pop bc
 	pop de
 	pop hl
 	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
 	pop hl
-	ld sp,screenStartAddr+160
+	ld sp,screenStartAddr+154
 	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
 	exx
 	push hl
 	push de
@@ -3239,6 +3642,59 @@ ppe_scan_delay:
 	push bc
 	push af
 
+	nop
+	nop
+
+
+	; attr draw 12
+	ld sp,0x8020
+	ld bc,0b0010101000101010
+	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
+	push bc
+	pop af
+	ex af,af'
+	pop af
+	ld sp,attrStartAddr+16+384
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld ix,0b0010101000101010
+	ld iy,0b0010101000101010
+	exx
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	
+	; start chasing raster here
+	ld (attrStartAddr+384),hl
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+2+384),hl
+	ld hl,0b0010101000101010
+	push hl
+	push de
+	push bc
+	push af
+	exx
+	ex af,af'
+	push iy
+	push ix
+	ld sp,attrStartAddr+24+384
+	push hl
+	push de
+	push bc
+	push af
+
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld sp,attrStartAddr+30+384
+	push hl
+	push de
+	push bc
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+30+384),hl
+	; end attr draw 12
+
+
 	; 71
 	ld sp,src_data
 	pop af
@@ -3359,14 +3815,8 @@ ppe_scan_delay:
 	push bc
 	push af
 
-	; 76
+	; 76-1
 	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
 	pop af
 	pop bc
 	pop de
@@ -3376,8 +3826,63 @@ ppe_scan_delay:
 	push de
 	push bc
 	push af
+
+
+	; attr draw 13
+	ld sp,0x8020
+	ld bc,0b0010101000101010
+	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
+	push bc
+	pop af
 	ex af,af'
+	pop af
+	ld sp,attrStartAddr+16+416
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld ix,0b0010101000101010
+	ld iy,0b0010101000101010
 	exx
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	
+	; start chasing raster here
+	ld (attrStartAddr+416),hl
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+2+416),hl
+	ld hl,0b0010101000101010
+	push hl
+	push de
+	push bc
+	push af
+	exx
+	ex af,af'
+	push iy
+	push ix
+	ld sp,attrStartAddr+24+416
+	push hl
+	push de
+	push bc
+	push af
+
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld sp,attrStartAddr+30+416
+	push hl
+	push de
+	push bc
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+30+416),hl
+	; end attr draw 13
+
+	; 76-2
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	ld sp,screenStartAddr+1672
 	push hl
 	push de
 	push bc
@@ -3503,24 +4008,74 @@ ppe_scan_delay:
 	push bc
 	push af
 
-	; 82
+	; 82-1
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	ld sp,screenStartAddr+432
+	push de
+	push bc
+	push af
+
+	; attr draw 14
+	ld sp,0x8020
+	ld bc,0b0010101000101010
+	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
+	push bc
+	pop af
+	ex af,af'
+	pop af
+	ld sp,attrStartAddr+16+448
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld ix,0b0010101000101010
+	ld iy,0b0010101000101010
+	exx
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	
+	; start chasing raster here
+	ld (attrStartAddr+448),hl
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+2+448),hl
+	ld hl,0b0010101000101010
+	push hl
+	push de
+	push bc
+	push af
+	exx
+	ex af,af'
+	push iy
+	push ix
+	ld sp,attrStartAddr+24+448
+	push hl
+	push de
+	push bc
+	push af
+
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld sp,attrStartAddr+30+448
+	push hl
+	push de
+	push bc
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+30+448),hl
+	; end attr draw 14
+
+	; 82-2
 	ld sp,src_data
 	pop af
 	pop bc
 	pop de
 	pop hl
 	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
 	pop hl
-	ld sp,screenStartAddr+432
+	ld sp,screenStartAddr+426
 	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
 	exx
 	push hl
 	push de
@@ -3647,6 +4202,58 @@ ppe_scan_delay:
 	push bc
 	push af
 
+	nop
+	nop
+
+	; attr draw 15
+	ld sp,0x8020
+	ld bc,0b0010101000101010
+	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
+	push bc
+	pop af
+	ex af,af'
+	pop af
+	ld sp,attrStartAddr+16+480
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld ix,0b0010101000101010
+	ld iy,0b0010101000101010
+	exx
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	
+	; start chasing raster here
+	ld (attrStartAddr+480),hl
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+2+480),hl
+	ld hl,0b0010101000101010
+	push hl
+	push de
+	push bc
+	push af
+	exx
+	ex af,af'
+	push iy
+	push ix
+	ld sp,attrStartAddr+24+480
+	push hl
+	push de
+	push bc
+	push af
+
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld sp,attrStartAddr+30+480
+	push hl
+	push de
+	push bc
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+30+480),hl
+	; end attr draw 15
+
+
 	; 88
 	ld sp,src_data
 	pop af
@@ -3767,14 +4374,8 @@ ppe_scan_delay:
 	push bc
 	push af
 
-	; 93
+	; 93-1
 	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
 	pop af
 	pop bc
 	pop de
@@ -3784,8 +4385,62 @@ ppe_scan_delay:
 	push de
 	push bc
 	push af
+
+	; attr draw 16
+	ld sp,0x8020
+	ld bc,0b0010101000101010
+	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
+	push bc
+	pop af
 	ex af,af'
+	pop af
+	ld sp,attrStartAddr+16+512
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld ix,0b0010101000101010
+	ld iy,0b0010101000101010
 	exx
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	
+	; start chasing raster here
+	ld (attrStartAddr+512),hl
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+2+512),hl
+	ld hl,0b0010101000101010
+	push hl
+	push de
+	push bc
+	push af
+	exx
+	ex af,af'
+	push iy
+	push ix
+	ld sp,attrStartAddr+24+512
+	push hl
+	push de
+	push bc
+	push af
+
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld sp,attrStartAddr+30+512
+	push hl
+	push de
+	push bc
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+30+512),hl
+	; end attr draw 16
+
+	; 93-2
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	ld sp,screenStartAddr+1720
 	push hl
 	push de
 	push bc
@@ -3911,24 +4566,75 @@ ppe_scan_delay:
 	push bc
 	push af
 
-	; 99
+	; 99-1
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	ld sp,screenStartAddr+480
+	push de
+	push bc
+	push af
+
+
+	; attr draw 17
+	ld sp,0x8020
+	ld bc,0b0010101000101010
+	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
+	push bc
+	pop af
+	ex af,af'
+	pop af
+	ld sp,attrStartAddr+16+544
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld ix,0b0010101000101010
+	ld iy,0b0010101000101010
+	exx
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	
+	; start chasing raster here
+	ld (attrStartAddr+544),hl
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+2+544),hl
+	ld hl,0b0010101000101010
+	push hl
+	push de
+	push bc
+	push af
+	exx
+	ex af,af'
+	push iy
+	push ix
+	ld sp,attrStartAddr+24+544
+	push hl
+	push de
+	push bc
+	push af
+
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld sp,attrStartAddr+30+544
+	push hl
+	push de
+	push bc
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+30+544),hl
+	; end attr draw 17
+
+	; 99-2
 	ld sp,src_data
 	pop af
 	pop bc
 	pop de
 	pop hl
 	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
 	pop hl
-	ld sp,screenStartAddr+480
+	ld sp,screenStartAddr+474
 	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
 	exx
 	push hl
 	push de
@@ -4055,6 +4761,58 @@ ppe_scan_delay:
 	push bc
 	push af
 
+	nop
+	nop
+
+	; attr draw 18
+	ld sp,0x8020
+	ld bc,0b0010101000101010
+	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
+	push bc
+	pop af
+	ex af,af'
+	pop af
+	ld sp,attrStartAddr+16+576
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld ix,0b0010101000101010
+	ld iy,0b0010101000101010
+	exx
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	
+	; start chasing raster here
+	ld (attrStartAddr+576),hl
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+2+576),hl
+	ld hl,0b0010101000101010
+	push hl
+	push de
+	push bc
+	push af
+	exx
+	ex af,af'
+	push iy
+	push ix
+	ld sp,attrStartAddr+24+576
+	push hl
+	push de
+	push bc
+	push af
+
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld sp,attrStartAddr+30+576
+	push hl
+	push de
+	push bc
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+30+576),hl
+	; end attr draw 18
+
+
 	; 105
 	ld sp,src_data
 	pop af
@@ -4175,14 +4933,8 @@ ppe_scan_delay:
 	push bc
 	push af
 
-	; 110
+	; 110-1
 	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
 	pop af
 	pop bc
 	pop de
@@ -4192,8 +4944,62 @@ ppe_scan_delay:
 	push de
 	push bc
 	push af
+
+	; attr draw 19
+	ld sp,0x8020
+	ld bc,0b0010101000101010
+	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
+	push bc
+	pop af
 	ex af,af'
+	pop af
+	ld sp,attrStartAddr+16+608
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld ix,0b0010101000101010
+	ld iy,0b0010101000101010
 	exx
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	
+	; start chasing raster here
+	ld (attrStartAddr+608),hl
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+2+608),hl
+	ld hl,0b0010101000101010
+	push hl
+	push de
+	push bc
+	push af
+	exx
+	ex af,af'
+	push iy
+	push ix
+	ld sp,attrStartAddr+24+608
+	push hl
+	push de
+	push bc
+	push af
+
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld sp,attrStartAddr+30+608
+	push hl
+	push de
+	push bc
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+30+608),hl
+	; end attr draw 19
+
+	; 110-2
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	ld sp,screenStartAddr+1992
 	push hl
 	push de
 	push bc
@@ -4319,24 +5125,74 @@ ppe_scan_delay:
 	push bc
 	push af
 
-	; 116
+	; 116-1
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	ld sp,screenStartAddr+752
+	push de
+	push bc
+	push af
+
+	; attr draw 20
+	ld sp,0x8020
+	ld bc,0b0010101000101010
+	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
+	push bc
+	pop af
+	ex af,af'
+	pop af
+	ld sp,attrStartAddr+16+640
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld ix,0b0010101000101010
+	ld iy,0b0010101000101010
+	exx
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	
+	; start chasing raster here
+	ld (attrStartAddr+640),hl
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+2+640),hl
+	ld hl,0b0010101000101010
+	push hl
+	push de
+	push bc
+	push af
+	exx
+	ex af,af'
+	push iy
+	push ix
+	ld sp,attrStartAddr+24+640
+	push hl
+	push de
+	push bc
+	push af
+
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld sp,attrStartAddr+30+640
+	push hl
+	push de
+	push bc
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+30+640),hl
+	; end attr draw 20
+
+	; 116-2
 	ld sp,src_data
 	pop af
 	pop bc
 	pop de
 	pop hl
 	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
 	pop hl
-	ld sp,screenStartAddr+752
+	ld sp,screenStartAddr+746
 	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
 	exx
 	push hl
 	push de
@@ -4463,6 +5319,57 @@ ppe_scan_delay:
 	push bc
 	push af
 
+	nop
+	nop
+
+	; attr draw 21
+	ld sp,0x8020
+	ld bc,0b0010101000101010
+	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
+	push bc
+	pop af
+	ex af,af'
+	pop af
+	ld sp,attrStartAddr+16+672
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld ix,0b0010101000101010
+	ld iy,0b0010101000101010
+	exx
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	
+	; start chasing raster here
+	ld (attrStartAddr+672),hl
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+2+672),hl
+	ld hl,0b0010101000101010
+	push hl
+	push de
+	push bc
+	push af
+	exx
+	ex af,af'
+	push iy
+	push ix
+	ld sp,attrStartAddr+24+672
+	push hl
+	push de
+	push bc
+	push af
+
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld sp,attrStartAddr+30+672
+	push hl
+	push de
+	push bc
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+30+672),hl
+	; end attr draw 21
+
 	; 122
 	ld sp,src_data
 	pop af
@@ -4583,14 +5490,8 @@ ppe_scan_delay:
 	push bc
 	push af
 
-	; 127
+	; 127-1
 	ld sp,src_data
-	pop af
-	pop bc
-	pop de
-	pop hl
-	exx
-	ex af,af'
 	pop af
 	pop bc
 	pop de
@@ -4600,8 +5501,62 @@ ppe_scan_delay:
 	push de
 	push bc
 	push af
+
+	; attr draw 22
+	ld sp,0x8020
+	ld bc,0b0000101000001010
+	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
+	push bc
+	pop af
 	ex af,af'
+	pop af
+	ld sp,attrStartAddr+16+704
+	ld de,0b0000101000001010
+	ld hl,0b0000101000001010
+	ld ix,0b0000101000001010
+	ld iy,0b0000101000001010
 	exx
+	ld bc,0b0000101000001010
+	ld de,0b0000101000001010
+	ld hl,0b0000101000001010
+	
+	; start chasing raster here
+	ld (attrStartAddr+704),hl
+	ld hl,0b0000101000001010
+	ld (attrStartAddr+2+704),hl
+	ld hl,0b0000101000001010
+	push hl
+	push de
+	push bc
+	push af
+	exx
+	ex af,af'
+	push iy
+	push ix
+	ld sp,attrStartAddr+24+704
+	push hl
+	push de
+	push bc
+	push af
+
+	ld bc,0b0000101000001010
+	ld de,0b0000101000001010
+	ld hl,0b0000101000001010
+	ld sp,attrStartAddr+30+704
+	push hl
+	push de
+	push bc
+	ld hl,0b0000101000001010
+	ld (attrStartAddr+30+704),hl
+	; end attr draw 22
+
+	; 127-2
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	pop hl
+	ld sp,screenStartAddr+2040
 	push hl
 	push de
 	push bc
@@ -4727,27 +5682,74 @@ ppe_scan_delay:
 	push bc
 	push af
 
-    ld sp,(spBackupAddr)
-    ret
+	; 133-1
+	ld sp,src_data
+	pop af
+	pop bc
+	pop de
+	ld sp,screenStartAddr+2592
+	push de
+	push bc
+	push af
 
-	; 133
+	; attr draw 23
+	ld sp,0x8020
+	ld bc,0b0010101000101010
+	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
+	push bc
+	pop af
+	ex af,af'
+	pop af
+	ld sp,attrStartAddr+16+736
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld ix,0b0010101000101010
+	ld iy,0b0010101000101010
+	exx
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	
+	; start chasing raster here
+	ld (attrStartAddr+736),hl
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+2+736),hl
+	ld hl,0b0010101000101010
+	push hl
+	push de
+	push bc
+	push af
+	exx
+	ex af,af'
+	push iy
+	push ix
+	ld sp,attrStartAddr+24+736
+	push hl
+	push de
+	push bc
+	push af
+
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld sp,attrStartAddr+30+736
+	push hl
+	push de
+	push bc
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+30+736),hl
+	; end attr draw 23
+
+	; 133-2
 	ld sp,src_data
 	pop af
 	pop bc
 	pop de
 	pop hl
 	exx
-	ex af,af'
-	pop af
-	pop bc
-	pop de
 	pop hl
-	ld sp,screenStartAddr+2592
+	ld sp,screenStartAddr+2586
 	push hl
-	push de
-	push bc
-	push af
-	ex af,af'
 	exx
 	push hl
 	push de
@@ -6049,6 +7051,9 @@ ppe_scan_delay:
 	push de
 	push bc
 	push af
+
+    ld sp,(spBackupAddr)
+    ret
 
 	; 188
 	ld sp,src_data
