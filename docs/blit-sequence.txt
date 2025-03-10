@@ -3,14 +3,11 @@ sets of 3 different render sets to keep attribute writes aligned with ULA, so I'
 Note: first 0 index starts after 3 normal blits, as we start to chase the beam, then this sequence repeats (beginning at index 1 below after this special case):
 
 
-0 = 5 normal bits, then 2 nops (sometimes can just use 1), then attributes 
+0 = 5 normal blits, then 2 nops (sometimes can just use 1), then attributes 
 
-1 = 5 normal bits, then only blit 8 bytes, then attributes, then blit the other 8 bytes
+1 = 5 normal blits, then only blit 8 bytes, then attributes, then blit the other 8 bytes
 
-2 = 5 normal bits, then only blit 6 bytes, then attributes, then blit the other 10 bytes (using exx, then popping/pushing hl)
+2 = 5 normal blits, then only blit 6 bytes, then attributes, then blit the other 10 bytes (using exx, then popping/pushing hl)
 
+13207
 
-
-
-
-now at 4814

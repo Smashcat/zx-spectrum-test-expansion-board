@@ -1,3 +1,119 @@
+	; (262 T-states to blit 20 bytes as IX and IY are slower, so not worth it)
+	; (204 T-states to blit 16 bytes using 26 instructions)
+	; (144 T-states to blit 12 bytes using 29 instructions by assigning direct values to bc,de,hl twice - saves 4032 T-cycles for 6192 bytes written, and 576 for 768 bytes written)
+	ld sp,src_attr_data		; 10
+	pop af					; 10
+	pop bc					; 10
+	pop de					; 10
+	pop hl					; 10
+	exx						; 4
+	ex af,af'				; 4
+	pop af					; 10
+	pop bc					; 10
+	pop de					; 10
+	pop hl					; 10
+	ld sp,attrStartAddr+768 ; 10
+	push hl					; 11
+	push de					; 11
+	push bc					; 11
+	push af					; 11
+	ex af,af'				; 4
+	exx						; 4
+	push hl					; 11
+	push de					; 11
+	push bc					; 11
+	push af					; 11
+
+	; delay to get start of second scanline (4291 T-states)
+	ld b,95
+ppe_scan_delay:
+	nop 
+	nop
+	nop
+	nop 
+	nop 
+	nop 
+	nop
+	nop					; 8*4
+	djnz ppe_scan_delay	; 13 if loop, otherwise 8
+	nop
+	nop
+	nop
+	nop
+
+Attribute change for bi-color (bugged, I'm pushing the same value into AF twice!)
+
+	; attr draw 0
+	ld sp,0x8020
+	ld bc,0b0010101000101010
+	push bc	; doesn't matter that we're writing to the stack here, as it'll be overwritten
+	push bc
+	pop af
+	ex af,af'
+	pop af
+	ld sp,attrStartAddr+16
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld ix,0b0010101000101010
+	ld iy,0b0010101000101010
+	exx
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	
+	; start chasing raster here
+	ld (attrStartAddr),hl
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+2),hl
+	ld hl,0b0010101000101010
+	push hl
+	push de
+	push bc
+	push af
+	exx
+	ex af,af'
+	push iy
+	push ix
+	ld sp,attrStartAddr+24
+	push hl
+	push de
+	push bc
+	push af
+
+	ld bc,0b0010101000101010
+	ld de,0b0010101000101010
+	ld hl,0b0010101000101010
+	ld sp,attrStartAddr+30
+	push hl
+	push de
+	push bc
+	ld hl,0b0010101000101010
+	ld (attrStartAddr+30),hl
+	; end attr draw 0
+
+
+Faster method to blit 12 bytes - this is the optimum I can come up with!
+
+	ld bc,0
+	ld de,0
+	ld hl,0
+	exx
+	ld bc,0
+	ld de,0
+	ld hl,0
+	ld sp,12
+	pop hl
+	pop de
+	pop bc
+	exx
+	pop hl
+	pop de
+	pop bc
+
+
+
+
+
 ; Get everything ready, load ALL usable registers and pre-set SP ready to PUSH
 =136T
 
