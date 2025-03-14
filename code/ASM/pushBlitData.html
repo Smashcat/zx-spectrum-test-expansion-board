@@ -1,0 +1,239 @@
+<html>
+<head>
+    <style>
+        body{
+            
+        }
+        pre{
+            border:1px solid red;
+            width:100%;
+            height:400px;
+            overflow-y: scroll;
+        }
+        canvas{
+            width:512px;
+            height:384px
+        }
+    </style>
+<script type="text/javascript">
+    const bytesPerBlit=16;
+    const screenRamAddr=0x4000;
+    const screenWidth=32;   //  (256 pixesls / 8)
+    const screenHeight=192;
+    const screenCharHeight=(screenHeight/8);
+    const screenSize=(screenWidth*screenHeight);
+    const attrSize=(screenWidth*screenCharHeight);
+    const totalBlits=Math.ceil(screenSize/bytesPerBlit);
+
+    const screenRam=new Uint8Array(screenSize);
+    const screenYStartIX=new Uint16Array(screenHeight);
+    const renderRowStartByteFullRow=new Uint16Array(400);
+    const renderRowStartBytePartRow=new Uint16Array(1600);
+    const renderRowOrder=new Uint16Array(400);
+
+    let renderRowStartByteFullRowNum=0;
+    let renderRowStartBytePartRowNum=0;
+    let renderRowOrderIX=0;
+    let outPutScreenIX=0;
+    let outPutScreenAttrIX=0;
+
+    let divEl=null;
+    let canvas=null;
+    let ctx=null;
+
+    const color=[
+        [0,0,0],
+        [0,0,255],
+        [255,0,0],
+        [255,0,255],
+        [0,255,0],
+        [0,255,255],
+        [255,255,0],
+        [255,255,255]
+    ];
+
+    // Returns the offset into screen RAM for each y position, based on the ULA's method of retrieving data
+    function getScreenRowAddressOffset(y) {
+        const baseAddress = 0x4000;        // Start of screen memory
+        const block = (y >> 6) & 0x03;      // 64-row blocks (top, middle, bottom)
+        const band = (y >> 3) & 0x07;       // 8-row bands within each block
+        const rowInBand = y & 0x07;         // Which row inside the 8-row band
+        return (block * 2048) + (rowInBand * 256) + (band * 32);
+    }
+
+    function screenOffsetToY(offset) {
+        if (offset<0) {
+            throw new Error("Offset out of screen RAM range (0-6143)");
+        }else if(offset >= 6144){
+            offset=6143;
+        }
+
+        const byteIndex = offset;  // Screen memory offset within 0x4000-0x57FF
+
+        const block = (byteIndex >> 11) & 0x03;      // Which 64-row block
+        const band = (byteIndex >> 5) & 0x07;         // Which 8-row band
+        const rowInBand = (byteIndex >> 8) & 0x07;    // Which row within that band
+
+        return (block << 6) + (band << 3) + rowInBand;
+    }
+
+    function renderToCanvas(){
+        let ramIndex=0;
+        for(let y=0;y<screenHeight;y++){
+            for(let x=0;x<screenWidth;x++){
+                let xPos=x*8;
+                let yRamStart=screenYStartIX[y];
+                let colorRGB=color[screenRam[ramIndex++]&0x07];
+                let yPos=yRamStart/32;
+                ctx.fillStyle = `rgb(${colorRGB[0]}, ${colorRGB[1]}, ${colorRGB[2]})`;
+                ctx.fillRect(xPos, yPos, 8, 1);
+            }
+        }
+    }
+
+    function addToRenderRowOrder(data,len){
+        let hasMore=true;
+        while(hasMore){
+            let lowest=200;
+            let lowestIX=-1;
+            hasMore=false;
+            for(let n=0;n<len;n++){
+                if(data[n]<9999){
+                    hasMore=true;
+                    let yPos=0;
+                    for(let i=0;i<bytesPerBlit;i++){
+                        let yTmp=screenOffsetToY(data[n]+i);   // +19 because we start the strip from (bytesPerBlit-1) bytes after the start of the strip!
+                        if(yTmp>yPos){
+                            yPos=yTmp;
+                        }
+                    }
+                    if(yPos<lowest){
+                        lowestIX=n;
+                        lowest=yPos;
+                    }
+                }
+            }
+            if(lowestIX>-1){
+                renderRowOrder[renderRowOrderIX++]=data[lowestIX];
+                data[lowestIX]=9999;
+            }
+        }
+    }
+
+    function getPushTxt20(ix,addr,srcName,dstName){
+        return "\t; "+ix+"\n" + 
+                "\tld sp,"+srcName+"\n" + 
+                "\tpop af\n" + 
+                "\tpop bc\n" + 
+                "\tpop de\n" + 
+                "\tpop hl\n" + 
+                "\texx\n" + 
+                "\tex af,af'\n" + 
+                "\tpop af\n" + 
+                "\tpop bc\n" + 
+                "\tpop de\n" + 
+                "\tpop hl\n" + 
+                "\tpop ix\n" + 
+                "\tpop iy\n" + 
+                "\tld sp,"+dstName+"+"+(addr+bytesPerBlit)+"\n" + 
+                "\tpush iy\n" + 
+                "\tpush ix\n" + 
+                "\tpush hl\n" + 
+                "\tpush de\n" + 
+                "\tpush bc\n" + 
+                "\tpush af\n" + 
+                "\tex af,af'\n" + 
+                "\texx\n" + 
+                "\tpush hl\n" + 
+                "\tpush de\n" + 
+                "\tpush bc\n" + 
+                "\tpush af\n\n";
+    }
+
+    function getPushTxt16(ix,addr,srcName,dstName){
+        return "\t; "+ix+"\n" + 
+                "\tld sp,"+srcName+"\n" + 
+                "\tpop af\n" + 
+                "\tpop bc\n" + 
+                "\tpop de\n" + 
+                "\tpop hl\n" + 
+                "\texx\n" + 
+                "\tex af,af'\n" + 
+                "\tpop af\n" + 
+                "\tpop bc\n" + 
+                "\tpop de\n" + 
+                "\tpop hl\n" + 
+                "\tld sp,"+dstName+"+"+(addr+bytesPerBlit)+"\n" + 
+                "\tpush hl\n" + 
+                "\tpush de\n" + 
+                "\tpush bc\n" + 
+                "\tpush af\n" + 
+                "\tex af,af'\n" + 
+                "\texx\n" + 
+                "\tpush hl\n" + 
+                "\tpush de\n" + 
+                "\tpush bc\n" + 
+                "\tpush af\n\n";
+    }
+
+    function getPushTxt8(ix,addr,srcName,dstName){
+        return "\t; "+ix+"\n" + 
+                "\tld sp,"+srcName+"\n" + 
+                "\tpop af\n" + 
+                "\tpop bc\n" + 
+                "\tpop de\n" + 
+                "\tpop hl\n" + 
+                "\tld sp,"+dstName+"+"+(addr+8)+"\n" + 
+                "\tpush hl\n" + 
+                "\tpush de\n" + 
+                "\tpush bc\n" + 
+                "\tpush af\n\n";
+    }
+
+    function renderToDiv(screenFirstIX,attrFirstIX,numScreenBlits,numAttrBlits){
+        let txt='';
+
+        let endIX=attrFirstIX+numAttrBlits;
+        for(let n=attrFirstIX;n<endIX;n++){
+            let addr=n*bytesPerBlit;
+            if(addr+bytesPerBlit>attrSize){
+                txt+=getPushTxt8(n,addr,"src_attr_data","attrStartAddr");
+            }else{
+                txt+=getPushTxt16(n,addr,"src_attr_data","attrStartAddr");
+            }
+        }
+
+        endIX=screenFirstIX+numScreenBlits;
+        for(let n=screenFirstIX;n<endIX;n++){
+            let yRow=Math.floor(n/2);
+            let addr=screenYStartIX[yRow]+((n%2)?16:0);
+console.log(addr);
+            if(addr+bytesPerBlit>screenSize){
+                txt+=getPushTxt8(n,addr,"src_data","screenStartAddr");    
+            }else{
+                txt+=getPushTxt16(n,addr,"src_data","screenStartAddr");
+            }
+        }
+
+        divEl.innerText=txt;
+    }
+
+    window.onload=function(){
+        canvas = document.getElementById('c');
+        ctx = canvas.getContext('2d');
+        divEl=document.getElementById("outputEl");
+
+        for(let n=0;n<screenHeight;n++){
+            screenYStartIX[n]=getScreenRowAddressOffset(n);
+        }
+        console.log(screenYStartIX);
+        //renderToDiv(0,0,200,0); // Even render
+        renderToDiv(200,0,184,48);  // Odd render (39 attr blits)
+    }
+</script>
+</head>
+<body>
+    <canvas width="256" height="192" id="c"></canvas>
+    <pre id="outputEl"></pre>
+</body>
+</html>
