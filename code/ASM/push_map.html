@@ -176,24 +176,34 @@
     function getPushTxt12(ix,addr,srcName,dstName,testWord){
         clockOff+=144;
         let r="\t; "+srcName+" blit "+ix+"\n" + 
-                "\tld bc,"+testWord+"\t; offset "+codeIX+"\n" + 
-                "\tld de,"+testWord+"\t; offset "+(codeIX+3)+"\n" + 
-                "\tld hl,"+testWord+"\t; offset "+(codeIX+6)+"\n" + 
-                "\texx    \t; offset "+(codeIX+9)+"\n" + 
-                "\tld bc,"+testWord+"\t; offset "+(codeIX+10)+"\n" + 
-                "\tld de,"+testWord+"\t; offset "+(codeIX+13)+"\n" + 
-                "\tld hl,"+testWord+"\t; offset "+(codeIX+16)+"\n" + 
-                "\tld sp,"+dstName+"+"+(addr+blitLen)+"\t; offset "+(codeIX+19)+"\n" + 
-                "\tpush hl\t; offset "+(codeIX+22)+"\n" + 
-                "\tpush de\t; offset "+(codeIX+23)+"\n" + 
-                "\tpush bc\t; offset "+(codeIX+24)+"\n" + 
-                "\texx    \t; offset "+(codeIX+25)+"\n" + 
-                "\tpush hl\t; offset "+(codeIX+26)+"\n" + 
-                "\tpush de\t; offset "+(codeIX+27)+"\n" + 
-                "\tpush bc\t; offset "+(codeIX+28)+"\n" +
-                ((srcName=="src_data") && (clockOff>-99999)?"\t; Clock offset: "+clockOff+"\n\n":"\n");
-                codeIX+=29;
+            "\tld sp,"+dstName+"+"+(addr+blitLen)+"\t; offset "+(codeIX+19)+"\n";
+        codeIX+=3;
+        for(let n=0;n<6;n++){
+            r+="\tld hl,"+testWord+"\t; offset "+codeIX+"\n" + 
+                "\tpush hl\t; offset "+(codeIX+3)+"\n";
+            codeIX+=4;
+        }
+
         return r;
+    }
+
+    function blockAttrBlit(testWord){
+        let attrPos=768;
+        divTxt+="\t; Block attribute blit start\n"+
+                "\tld sp,attrStartAddr+"+attrPos+"\t; Set sp to end of attr memory - code offset "+codeIX+"\n\n";
+        clockOff+=10;
+        attrPos-=2;
+        codeIX+=3;
+        let dWord=testWord+((testWord<<8)|0x40);
+        for(let n=0;n<768/2;n++){
+            divTxt+="\tld hl,"+dWord+"\t; src offset "+(attrPos-0)+", code offset "+(codeIX+6)+"\n" + 
+                    "\tpush hl\t; code offset "+(codeIX+9)+"\n";
+            clockOff+=21;
+            codeIX+=4;
+            attrPos-=2;
+        }
+
+        divTxt+="\n\t; Block attribute blit end\n\n";
     }
 
     function getPushTxt8(ix,addr,srcName,dstName){
@@ -321,65 +331,71 @@
         }
         const tW=screenTestByte+(screenTestByte<<8);
         const ix=biColorIX*32;
-        clockOff=-144*7;
-        codeIX+=455;
+        clockOff=-144*8;
+        //clockOff=-144*7;
+        codeIX+=458;
         divTxt+="\t; attr draw "+biColorIX+"\n"+
-                "\tld sp,0x8020\n"+
-                "\tld bc,"+tW+"\n"+
-                "\tpush bc\n"+
-                "\tld bc,"+tW+"\n"+
-                "\tpush bc\n"+
-                "\tpop af\n"+
+                "\t ld sp,attr8and16vals+4\n"+
+
+                "\tpop af\t; src 16\n"+
                 "\tex af,af'\n"+
-                "\tpop af\n"+
+                "\tpop af\t; src 8\n"+
                 "\tld sp,attrStartAddr+16+"+ix+"\n"+
-                "\tld de,"+tW+"\n"+
-                "\tld hl,"+tW+"\n"+
-                "\tld ix,"+tW+"\n"+
-                "\tld iy,"+tW+"\n"+
+                "\tld bc,"+tW+"\t; src 18\n"+
+                "\tld de,"+tW+"\t; src 20\n"+
+                "\tld hl,"+tW+"\t; src 22\n"+
+                "\tld ix,"+tW+"\t; src 4\n"+
+                "\tld iy,"+tW+"\t; src 6\n"+
                 "\texx\n"+
-                "\tld bc,"+tW+"\n"+
-                "\tld de,"+tW+"\n"+
-                "\tld hl,"+tW+"\n\n"+
-                "\t; start chasing raster here\n\n"+
-                "\tld (attrStartAddr+"+ix+"),hl\n"+
-                "\tld hl,"+tW+"\n"+
-                "\tld (attrStartAddr+2+"+ix+"),hl\n"+
-                "\tld hl,"+tW+"\n"+
-                "\tpush hl\n"+
-                "\tpush de\n"+
-                "\tpush bc\n"+
-                "\tpush af\n"+
+                "\tld bc,"+tW+"\t; src 10\n"+
+                "\tld de,"+tW+"\t; src 12\n"+
+                "\tld hl,"+tW+"\t; src 0\n\n"+
+
+                "\t; start chasing raster here to update ATTR memory\n\n"+
+
+                "\tld (attrStartAddr+"+ix+"),hl\t; dest 0\n"+
+                "\tld hl,"+tW+"\t; src 2\n"+
+                "\tld (attrStartAddr+2+"+ix+"),hl\t; dest 2\n"+
+                "\tld hl,"+tW+"\t; src 14\n"+
+                "\tpush hl\t; dest 14\n"+
+                "\tpush de\t; dest 12\n"+
+                "\tpush bc\t; dest 10\n"+
+                "\tpush af\t; dest 8\n"+
                 "\texx\n"+
                 "\tex af,af'\n"+
-                "\tpush iy\n"+
-                "\tpush ix\n"+
+                "\tpush iy\t; dest 6\n"+
+                "\tpush ix\t; dest 4\n"+
                 "\tld sp,attrStartAddr+24+"+ix+"\n"+
-                "\tpush hl\n"+
-                "\tpush de\n"+
-                "\tpush bc\n"+
-                "\tpush af\n"+
-                "\tld bc,"+tW+"\n"+
-                "\tld de,"+tW+"\n"+
-                "\tld hl,"+tW+"\n"+
+                "\tpush hl\t; dest 22\n"+
+                "\tpush de\t; dest 20\n"+
+                "\tpush bc\t; dest 18\n"+
+                "\tpush af\t; dest 16\n"+
+                "\tld bc,"+tW+"\t; src 24\n"+
+                "\tld de,"+tW+"\t; src 16\n"+
+                "\tld hl,"+tW+"\t; src 28\n"+
                 "\tld sp,attrStartAddr+30+"+ix+"\n"+
-                "\tpush hl\n"+
-                "\tpush de\n"+
-                "\tpush bc\n"+
-                "\tld hl,"+tW+"\n"+
-                "\tld (attrStartAddr+30+"+ix+"),hl\n";
+                "\tpush hl\t; dest 28\n"+
+                "\tpush de\t; dest 26\n"+
+                "\tpush bc\t; dest 24\n"+
+                "\tld hl,"+tW+"\t; src 30\n"+
+                "\tld (attrStartAddr+30+"+ix+"),hl;\t dest 30\n";
 
                 if(biColorIX==23){
                     if(frameIX==0){
-                        divTxt+="\tnop\n\tnop\n\tnop\n\tnop\n"+
-                                "\tnop\n\tnop\n\tnop\n\tnop\n"+
-                                "\tnop\n\tnop\n\tnop\n\tnop\n";
-                        codeIX+=12;
+                        const interFrameDelayNops=8;
+                        if(interFrameDelayNops>0){
+                            divTxt+="\t; Inter-frame delay\n";
+                        }
+                        for(let n=0;n<interFrameDelayNops;n++){
+                            divTxt+="\tnop\n";
+                        }
+                        codeIX+=interFrameDelayNops;
                     }else{
                         clockOff=-9999999;
                     }
                 }else{
-                    let numNops=lineDelay[biColorIX+(frameIX*24)];
+/*
+                    let numNops=0; //lineDelay[biColorIX+(frameIX*24)];
                     divTxt+=
                     "\t; src_data filler blit "+ix+"\n" + 
                     "\tld bc,"+fillByteWord+"\t; offset "+codeIX+"\n" + 
@@ -400,6 +416,7 @@
                     }
                     // ~100 clocks
                     fillBlitPos+=8;
+*/
                 };
 
                 divTxt+="\t; end attr draw "+biColorIX+"\n"+
@@ -408,7 +425,16 @@
     }
 
     function addBorderColorChange(col){
-        divTxt+="\t; Change border color\n\tld a,"+col+"\n\tout(0xfe),a\n\n";
+        divTxt+="\t; Change border color\n"+
+                "\tld a,"+col+"\n"+
+                "\tout(0xfe),a\n\n";
+        codeIX+=(2+2);
+    }
+
+    function addJmpToDiv(){
+        divTxt+="\t; Jump to second half of frame render (normally jumps back to pop_push_even, and MCU swaps buffer pointer so new command list exists in same memory space)\n"+
+                "\tjp fake_jmp\nfake_jmp:\n";
+        codeIX+=3;
     }
 
     window.onload=function(){
@@ -423,7 +449,8 @@
         let ix=0;
         let brmg=1;
         console.log("ScreenSize="+screenSize+", minus fillBytes="+(screenSize-(46*8)));
-        for(n=0;n<screenSize-(46*8);n+=blitLen){
+//        for(n=0;n<screenSize-(46*8);n+=blitLen){
+          for(n=0;n<screenSize;n+=blitLen){
             if(((n%32)<(33-blitLen)) && (screenOffsetToY(n)<8)){
                 renderRowStartByteFullRow[renderRowStartByteFullRowNum++]=n;
                 ix=0;
@@ -448,11 +475,23 @@
         let showEvenFrame=false;
         if(showEvenFrame){
                 // even frame
-                addBlitsToDiv(0,0,0,768/blitLen,0b00001110);  // Odd render (39 attr blits)
-                setChaseDelay(5030);
+                blockAttrBlit(0b00001110);
+                setChaseDelay(5650);
+                setChaseDelay(562);
+
                 biColorIX=0;
                 clockOff=-144*3;
-                addBlitsToDiv(0,0,241,0,0b10101111);  // Odd render (39 attr blits) 241
+                addBlitsToDiv(0,0,268,0,0b10101111);  // Odd render (39 attr blits) 241
+
+                // simulate jump back to start of ROM render address, so Pico can swap the buffer fill command list
+                addJmpToDiv();
+
+                blockAttrBlit(0b00001110);  // Odd render (39 attr blits)
+                clockOff=-144*65;
+                frameIX=1;
+                biColorIX=0;
+                addBlitsToDiv(268,0,85,0,0b11001100);  // Odd render (39 attr blits)
+
         }else{
                 //addBorderColorChange(3);
                 // odd frame
@@ -474,13 +513,15 @@
                 setChaseDelay(2000);
                 setChaseDelay(224*3);
 
-                addBlitsToDiv(0,0,0,768/blitLen,0b00001110);  // Odd render (39 attr blits)
-                //fillBlitPos+=(8*23);
+                blockAttrBlit(0b00001110);
+                fillBlitPos+=(8*23);
                 console.log("FillBlitPos begins at: "+fillBlitPos);
-                clockOff=-144*53;
+                clockOff=-144*65;
                 frameIX=1;
                 biColorIX=0;
-                addBlitsToDiv(241,0,259,0,0b11001100);  // Odd render (39 attr blits)
+                //addBlitsToDiv(241,0,259,0,0b10101111);  // Odd render (39 attr blits)
+                addBlitsToDiv(268,0,202,0,0b10101111);  // Odd render (39 attr blits)
+
         }
 
         // Output ASM to div
