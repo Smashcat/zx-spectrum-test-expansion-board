@@ -9,7 +9,7 @@
 	define colorYellow		6
 	define colorWhite		7
 
-	define audioListLen		508	; number of speaker transitions in the audio data
+	define audioListLen		499	; number of speaker transitions in the audio data
 	define attrLen			0x0300	; length of the attribute memory
 
     define spBackupAddr 	0xE002	; required as we abuse the stack constantly :)
@@ -123,8 +123,8 @@ ial_no_swap:
 
 main_loop:
 
-	; Tell ROM we are waiting for frame refresh - it can then get the first bank ready for rendering
-	ld a,(0x4ffe);
+	; Tell ROM we are waiting for frame refresh - it can then swap in the buffer holding the command list to render the first half of the screen
+	ld a,(0x3ffe);
 
 	; sync with display update
     halt
@@ -139,7 +139,7 @@ main_loop:
 	call pop_push_even
 
 	; Play the audio data for frame (border is black during this)
-	call audioListAddr2
+	;call audioListAddr2
 
 	; all done, border green so we can see how many cycles we have left spare
 	ld a,colorRed
