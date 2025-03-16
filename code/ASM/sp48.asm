@@ -9,7 +9,7 @@
 	define colorYellow		6
 	define colorWhite		7
 
-	define audioListLen		1200	; number of speaker transitions in the audio data
+	define audioListLen		508	; number of speaker transitions in the audio data
 	define attrLen			0x0300	; length of the attribute memory
 
     define spBackupAddr 	0xE002	; required as we abuse the stack constantly :)
@@ -17,6 +17,7 @@
 	define keyScanData		0xE006	; 8 bytes use to hold half-row keyboard scan data
     define stackTopAddr 	0xE0FE	; 242 bytes of stack space available before hitting contested memory
 	define audioListAddr	0xE100	; first audio list, this will be in cart address space eventually
+	define audioListAddr2	audioListAddr+(audioListLen*2)+20	; second audio list, this will be in cart address space eventually
 
     define attrStartAddr 	0x5800	; Attribute memory start
     define screenStartAddr 	0x4000	; screen bitmap memory start
@@ -50,7 +51,11 @@ cold_start:
     ldir
 
 	ld hl,audioListAddr		; audio command list address
-	ld c,0xe9				; frequency
+	ld c,0x00				; frequency
+	call initAudioList
+
+	ld hl,audioListAddr2		; audio command list address
+	ld c,0x00					; frequency
 	call initAudioList
 
     ei
@@ -73,7 +78,14 @@ initAudioList:
 	; ld de,0x0010
 	ld (hl),0x11
 	inc hl
+	ld a,c 
+	cp 0
+	jp z,ial_no_audio
 	ld (hl),0x10
+	jr ial_cont1
+ial_no_audio:
+	ld (hl),0x00
+ial_cont1:
 	inc hl
 	ld (hl),0x00
 	inc hl
@@ -111,26 +123,28 @@ ial_no_swap:
 
 main_loop:
 
+	; Tell ROM we are waiting for frame refresh - it can then get the first bank ready for rendering
+	ld a,(0x4ffe);
+
 	; sync with display update
     halt
 
 	; Play the audio data for frame (border is black during this)
-	;call audioListAddr
+	call audioListAddr
 
 	; chase the raster beam!
     ld a,colorGreen
     out (0xFE), a
+
 	call pop_push_even
 
-	; approx 68 visible pixel rows plus bottom border free at this point, before second audio "channel" begins
-
-	ld a,colorWhite
-	out (0xFE), a
-	call scanKeyboard
+	; Play the audio data for frame (border is black during this)
+	call audioListAddr2
 
 	; all done, border green so we can see how many cycles we have left spare
 	ld a,colorRed
 	out (0xFE), a
+
 	ei
 
     jp main_loop
@@ -141,24 +155,18 @@ scanKeyboard:
 
 	ret
 
-; We draw behind the raster beam form the highest 20 byte rows to the lowest (not trivial).
+; We draw behind the raster beam from the highest 20 byte rows to the lowest (not trivial).
 ; Audio is played until raster has drawn its first line of pixels so we don't change anything ahead.
 ; This allows perfectly stable 25fps, even with full screen scrolling, or any other full screen updates!
 
-src_data:
-    db  0b11111111,0b00001111,0b00110011,0b01010101,0b11111111,0b00001111,0b00110011,0b01010101,0b11111111,0b00001111,0b00110011,0b01010101,0b11111111,0b00001111,0b00110011,0b01010101,0b11111111,0b00001111,0b00110011,0b01010101
-
-src_attr_data:
-    db  0b00110001,0b00110001,0b00110001,0b00110001,0b00110001,0b00110001,0b00110001,0b00110001
-	db	0b00110001,0b00110001,0b00110001,0b00110001,0b00110001,0b00110001,0b00110001,0b00110001
-	db	0b00110001,0b00110001,0b00110001,0b00110001
-
-src_attr_data2:
-    db  0b00000111,0b00000111,0b00000111,0b00000111,0b00000111,0b00000111,0b00000111,0b00000111,0b00000111,0b00000111
-    db  0b00111000,0b00111000,0b00111000,0b00111000,0b00111000,0b00111000,0b00111000,0b00111000
-    db  0b00111000,0b00111000,0b00111000,0b00111000,0b00111000,0b00111000,0b00111000,0b00111000
-    db  0b00100011,0b00100011,0b00100011,0b00100011,0b00100011,0b00100011,0b00100011,0b00100011
-
+; List of index 8 and 16 dwords for each attr row, for faster loading into AF pair
+attr8and16vals:
+	dw  0b0010100000101000,0b0010100000101000,0b0010100000101000,0b0010100000101000,0b0010100000101000,0b0010100000101000,0b0010100000101000,0b0010100000101000
+	dw  0b0010100000101000,0b0010100000101000,0b0010100000101000,0b0010100000101000,0b0010100000101000,0b0010100000101000,0b0010100000101000,0b0010100000101000
+	dw  0b0010100000101000,0b0010100000101000,0b0010100000101000,0b0010100000101000,0b0010100000101000,0b0010100000101000,0b0010100000101000,0b0010100000101000
+	dw  0b0010100000101000,0b0010100000101000,0b0010100000101000,0b0010100000101000,0b0010100000101000,0b0010100000101000,0b0010100000101000,0b0010100000101000
+	dw  0b0010100000101000,0b0010100000101000,0b0010100000101000,0b0010100000101000,0b0010100000101000,0b0010100000101000,0b0010100000101000,0b0010100000101000
+	dw  0b0010100000101000,0b0010100000101000
 tune:
     db  0x80/4,0x72/4,0x66/4,0x60/4,0x56/4,0x66/4,0x56/4,0x56/4
     db  0x51/4,0x60/4,0x51/4,0x51/4,0x56/4,0x66/4,0x56/4,0x56/4

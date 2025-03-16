@@ -47,7 +47,7 @@
     let canvas=null;
     let ctx=null;
     let chaseDelayIX=0;
-    let codeIX=0;
+    let codeIX=0x156+0x04; // Address of start of render call, plus the initial stack pointer store
     let clockOff=0;
     let frameIX=0;
     let biColorIX=0;
@@ -173,14 +173,29 @@
                 "\tpush af\n\n";
     }
 
+    function h(val){
+        const hv=val.toString(16);
+        const l=hv.length;
+        if(l==1){
+            return "0x000"+hv;
+        }
+        if(l==2){
+            return "0x00"+hv;
+        }
+        if(l==3){
+            return "0x0"+hv;
+        }
+        return "0x"+hv;
+    }
+
     function getPushTxt12(ix,addr,srcName,dstName,testWord){
         clockOff+=144;
-        let r="\t; "+srcName+" blit "+ix+"\n" + 
-            "\tld sp,"+dstName+"+"+(addr+blitLen)+"\t; offset "+(codeIX+19)+"\n";
         codeIX+=3;
+        let r="\t; "+srcName+" blit "+ix+"\n" + 
+            "\tld sp,"+dstName+"+"+(addr+blitLen)+"\t; offset "+h(codeIX)+"\n";
         for(let n=0;n<6;n++){
-            r+="\tld hl,"+testWord+"\t; offset "+codeIX+"\n" + 
-                "\tpush hl\t; offset "+(codeIX+3)+"\n";
+            r+="\tld hl,"+testWord+"\t; offset "+h(codeIX+3)+"\n" + 
+                "\tpush hl\t; offset "+h(codeIX+3+1)+"\n";
             codeIX+=4;
         }
 
@@ -189,15 +204,15 @@
 
     function blockAttrBlit(testWord){
         let attrPos=768;
+        codeIX+=3;
         divTxt+="\t; Block attribute blit start\n"+
-                "\tld sp,attrStartAddr+"+attrPos+"\t; Set sp to end of attr memory - code offset "+codeIX+"\n\n";
+                "\tld sp,attrStartAddr+"+attrPos+"\t; Set sp to end of attr memory - code offset "+h(codeIX)+"\n\n";
         clockOff+=10;
         attrPos-=2;
-        codeIX+=3;
         let dWord=testWord+((testWord<<8)|0x40);
         for(let n=0;n<768/2;n++){
-            divTxt+="\tld hl,"+dWord+"\t; src offset "+(attrPos-0)+", code offset "+(codeIX+6)+"\n" + 
-                    "\tpush hl\t; code offset "+(codeIX+9)+"\n";
+            divTxt+="\tld hl,"+dWord+"\t; src offset "+(attrPos-0)+", code offset "+h(codeIX+3)+"\n" + 
+                    "\tpush hl\t\t; code offset "+h(codeIX+4)+"\n";
             clockOff+=21;
             codeIX+=4;
             attrPos-=2;
@@ -266,10 +281,16 @@
 
     }
 
+    function restoreStackPtr(){
+        divTxt+="\n\t; Restore the stack pointer\n"+
+                "\tld sp,(spBackupAddr)\t; offset "+h(codeIX+3)+"\n";
+        codeIX+=4;
+    }
+
     function renderToDiv(){
         let txt="pop_push_even:\n\tld (spBackupAddr),sp\n\n";
             txt+=divTxt;
-            txt+="\tld sp,(spBackupAddr)\n\tret\n\n\tSAVEBIN \"sp48.rom\",0,$\n\n";
+            txt+="\tret\n\n\tSAVEBIN \"sp48.rom\",0,$\n\n";
         divEl.innerText=txt;
     }
 
@@ -278,7 +299,7 @@
         if(clks==0){
             return;
         }
-        divTxt+="\t; delay to get start of scanline ("+chaseDelayClocks+" T-states)\n";
+        divTxt+="\t; delay to get start of scanline ("+chaseDelayClocks+" T-states) at offset "+h(codeIX)+"\n";
         if(clks>6){
             clks-=7; // For initial ld b,X
             let loops=Math.floor(clks/29);
@@ -291,38 +312,50 @@
                 --loops;
                 if(clks==6){    // will be 35-7=28
                     addDivTxt="\tld b,0\t; Re-align %4\n";
+                    codeIX+=2;
                     clks-=7;
                 }
                 clks+=29;
 
             }
             divTxt+="\tld b,"+loops+"\n";
+            codeIX+=2;
             if(loops>0){
-                divTxt+="ppe_scan_delay"+chaseDelayIX+":\n\tnop\n\tnop\n\tnop\n\tnop\n\tdjnz ppe_scan_delay"+chaseDelayIX+"\n";
+                divTxt+="ppe_scan_delay"+chaseDelayIX+":\n"+
+                        "\tnop\n"+
+                        "\tnop\n"+
+                        "\tnop\n"+
+                        "\tnop\n"+
+                        "\tdjnz ppe_scan_delay"+chaseDelayIX+"\n";
+                codeIX+=6;
                 ++chaseDelayIX;
             }
             divTxt+=addDivTxt;
-            divTxt+="\t\t; "+clks+" T-states remaining\n";
+            divTxt+="\t\t; offset "+h(codeIX)+", "+clks+" T-states remaining\n";
         }
         while(clks>0){
             if((clks&1)==1){
                 if((clks>=9) && ((clks-9)%4==0) ){
                     divTxt+="\tld a,i";
+                    codeIX+=2;
                     clks-=9;
                 }else if(clks>=7){
                     divTxt+="\tld b,0";
+                    codeIX+=2;
                     clks-=7;
                 }else{
                     divTxt+="\tnop   ";
+                    codeIX+=1;
                     clks-=4;    
                 }
             }else{
                 divTxt+="\tnop   ";
+                codeIX+=1;
                 clks-=4;
             }
-            divTxt+="\t; "+clks+" T-states remaining\n";
+            divTxt+="\t; offset "+h(codeIX)+", "+clks+" T-states remaining\n";
         }
-        divTxt+="\n\t;Beam chasing starts NOW!\n\n";
+        divTxt+="\n";
     }
 
     function addBicolorLine(screenTestByte){
@@ -332,54 +365,54 @@
         const tW=screenTestByte+(screenTestByte<<8);
         const ix=biColorIX*32;
         clockOff=-144*8;
-        //clockOff=-144*7;
-        codeIX+=458;
-        divTxt+="\t; attr draw "+biColorIX+"\n"+
-                "\t ld sp,attr8and16vals+4\n"+
 
-                "\tpop af\t; src 16\n"+
-                "\tex af,af'\n"+
-                "\tpop af\t; src 8\n"+
-                "\tld sp,attrStartAddr+16+"+ix+"\n"+
-                "\tld bc,"+tW+"\t; src 18\n"+
-                "\tld de,"+tW+"\t; src 20\n"+
-                "\tld hl,"+tW+"\t; src 22\n"+
-                "\tld ix,"+tW+"\t; src 4\n"+
-                "\tld iy,"+tW+"\t; src 6\n"+
-                "\texx\n"+
-                "\tld bc,"+tW+"\t; src 10\n"+
-                "\tld de,"+tW+"\t; src 12\n"+
-                "\tld hl,"+tW+"\t; src 0\n\n"+
+        divTxt+="\n\t; attr draw "+biColorIX+"\n"+
+                "\tld sp,attr8and16vals+4\n"+                   // 3
+
+                "\tpop af\t; src 16\n"+                         // 1
+                "\tex af,af'\n"+                                // 1
+                "\tpop af\t; src 8\n"+                          // 1
+                "\tld bc,"+tW+"\t; src 18\n"+                   // 3
+                "\tld de,"+tW+"\t; src 20\n"+                   // 3
+                "\tld hl,"+tW+"\t; src 22\n"+                   // 3
+                "\tld ix,"+tW+"\t; src 4\n"+                    // 4
+                "\tld iy,"+tW+"\t; src 6\n"+                    // 4
+                "\texx\n"+                                      // 1
+                "\tld bc,"+tW+"\t; src 10\n"+                   // 3
+                "\tld de,"+tW+"\t; src 12\n"+                   // 3
+                "\tld hl,"+tW+"\t; src 0\n\n"+                  // 3
+
+                "\tld sp,attrStartAddr+16+"+ix+"\n"+            // 3
 
                 "\t; start chasing raster here to update ATTR memory\n\n"+
 
-                "\tld (attrStartAddr+"+ix+"),hl\t; dest 0\n"+
-                "\tld hl,"+tW+"\t; src 2\n"+
-                "\tld (attrStartAddr+2+"+ix+"),hl\t; dest 2\n"+
-                "\tld hl,"+tW+"\t; src 14\n"+
-                "\tpush hl\t; dest 14\n"+
-                "\tpush de\t; dest 12\n"+
-                "\tpush bc\t; dest 10\n"+
-                "\tpush af\t; dest 8\n"+
-                "\texx\n"+
-                "\tex af,af'\n"+
-                "\tpush iy\t; dest 6\n"+
-                "\tpush ix\t; dest 4\n"+
-                "\tld sp,attrStartAddr+24+"+ix+"\n"+
-                "\tpush hl\t; dest 22\n"+
-                "\tpush de\t; dest 20\n"+
-                "\tpush bc\t; dest 18\n"+
-                "\tpush af\t; dest 16\n"+
-                "\tld bc,"+tW+"\t; src 24\n"+
-                "\tld de,"+tW+"\t; src 16\n"+
-                "\tld hl,"+tW+"\t; src 28\n"+
-                "\tld sp,attrStartAddr+30+"+ix+"\n"+
-                "\tpush hl\t; dest 28\n"+
-                "\tpush de\t; dest 26\n"+
-                "\tpush bc\t; dest 24\n"+
-                "\tld hl,"+tW+"\t; src 30\n"+
-                "\tld (attrStartAddr+30+"+ix+"),hl;\t dest 30\n";
-
+                "\tld (attrStartAddr+"+ix+"),hl\t; dest 0\n"+   // 3
+                "\tld hl,"+tW+"\t; src 2\n"+                    // 3
+                "\tld (attrStartAddr+2+"+ix+"),hl\t; dest 2\n"+ // 3
+                "\tld hl,"+tW+"\t; src 14\n"+                   // 3
+                "\tpush hl\t; dest 14\n"+                       // 1
+                "\tpush de\t; dest 12\n"+                       // 1
+                "\tpush bc\t; dest 10\n"+                       // 1
+                "\tpush af\t; dest 8\n"+                        // 1
+                "\texx\n"+                                      // 1
+                "\tex af,af'\n"+                                // 1
+                "\tpush iy\t; dest 6\n"+                        // 2
+                "\tpush ix\t; dest 4\n"+                        // 2
+                "\tld sp,attrStartAddr+24+"+ix+"\n"+            // 3
+                "\tpush hl\t; dest 22\n"+                       // 1
+                "\tpush de\t; dest 20\n"+                       // 1
+                "\tpush bc\t; dest 18\n"+                       // 1
+                "\tpush af\t; dest 16\n"+                       // 1
+                "\tld bc,"+tW+"\t; src 24\n"+                   // 3
+                "\tld de,"+tW+"\t; src 16\n"+                   // 3
+                "\tld hl,"+tW+"\t; src 28\n"+                   // 3
+                "\tld sp,attrStartAddr+30+"+ix+"\n"+            // 3
+                "\tpush hl\t; dest 28\n"+                       // 1
+                "\tpush de\t; dest 26\n"+                       // 1
+                "\tpush bc\t; dest 24\n"+                       // 1
+                "\tld hl,"+tW+"\t; src 30\n"+                   // 3
+                "\tld (attrStartAddr+30+"+ix+"),hl;\t dest 30\n"; // 3
+                codeIX+=86;
                 if(biColorIX==23){
                     if(frameIX==0){
                         const interFrameDelayNops=8;
@@ -419,7 +452,7 @@
 */
                 };
 
-                divTxt+="\t; end attr draw "+biColorIX+"\n"+
+                divTxt+="\t; end attr draw "+biColorIX+", offset "+h(codeIX)+"\n"+
                 ((clockOff>-9999)?"\t; Clock offset: "+clockOff+"\n\n":"");
         ++biColorIX;
     }
@@ -435,6 +468,56 @@
         divTxt+="\t; Jump to second half of frame render (normally jumps back to pop_push_even, and MCU swaps buffer pointer so new command list exists in same memory space)\n"+
                 "\tjp fake_jmp\nfake_jmp:\n";
         codeIX+=3;
+    }
+
+    function playAudioList(){
+        divTxt+="\n\t; Play some audio before we start rendering behind the beam\n"+
+                "\tcall audioListAddr\n\n";
+        codeIX+=3;
+    }
+
+    function addKeyboardScanToDiv(){
+        // Reading from address 0x3fff tells the ROM the Z80 is about to store keyboard scan data
+        // The next 8 addresses "read" from 0x3fxx use the bottom 8 bits to specify the 5 bit scan data for each row
+        // Since the next 8 reads cannot be 0xff, this ensures it does not get reset in error
+        // This takes 188 T-cycles
+        divTxt+="\n\t; Scan keyboard, and send codes to accelerator ROM\n"+
+
+                "\tld hl,0x3fff\n"+ // 10 clocks - 3 bytes
+                "\tld d,(hl)\n"+    // 7 clocks - 1 byte
+
+                "\tld bc,0xfefe\n"+ // 10 clocks - 3 bytes
+                "\tin l,(c)\n"+     // 7 clocks - 2 bytes
+                "\tld d,(hl)\n"+    // 7 clocks - 1 byte - SHIFT to V
+
+                "\tld b,0xfd\n"+    // 7 clocks - 2 bytes
+                "\tin l,(c)\n"+     // 7 clocks - 2 bytes
+                "\tld d,(hl)\n"+    // 7 clocks - 1 byte - A to G
+
+                "\tld b,0xfb\n"+    // 7 clocks - 2 bytes
+                "\tin l,(c)\n"+     // 7 clocks - 2 bytes
+                "\tld d,(hl)\n"+    // 7 clocks - 1 byte - Q to T
+
+                "\tld b,0xf7\n"+    // 7 clocks - 2 bytes
+                "\tin l,(c)\n"+     // 7 clocks - 2 bytes
+                "\tld d,(hl)\n"+    // 7 clocks - 1 byte - 1 to 5
+
+                "\tld b,0xef\n"+    // 7 clocks - 2 bytes
+                "\tin l,(c)\n"+     // 7 clocks - 2 bytes
+                "\tld d,(hl)\n"+    // 7 clocks - 1 byte - 0 to 6
+
+                "\tld b,0xdf\n"+    // 7 clocks - 2 bytes
+                "\tin l,(c)\n"+     // 7 clocks - 2 bytes
+                "\tld d,(hl)\n"+    // 7 clocks - 1 byte - P to Y
+
+                "\tld b,0xbf\n"+    // 7 clocks - 2 bytes
+                "\tin l,(c)\n"+     // 7 clocks - 2 bytes
+                "\tld d,(hl)\n"+    // 7 clocks - 1 byte - ENTER to H
+
+                "\tld b,0x7f\n"+    // 7 clocks - 2 bytes
+                "\tin l,(c)\n"+     // 7 clocks - 2 bytes
+                "\tld d,(hl)\n\n";  // 7 clocks - 1 byte - SPACE to B
+        codeIX+=45;
     }
 
     window.onload=function(){
@@ -472,12 +555,14 @@
         console.log(renderRowOrder);
         renderToCanvas();
 
-        let showEvenFrame=false;
+        let showEvenFrame=true;
         if(showEvenFrame){
+
                 // even frame
                 blockAttrBlit(0b00001110);
-                setChaseDelay(5650);
-                setChaseDelay(562);
+
+                // Delay before starting to chase the beam
+                setChaseDelay(30);
 
                 biColorIX=0;
                 clockOff=-144*3;
@@ -485,12 +570,13 @@
 
                 // simulate jump back to start of ROM render address, so Pico can swap the buffer fill command list
                 addJmpToDiv();
-
+/*
                 blockAttrBlit(0b00001110);  // Odd render (39 attr blits)
                 clockOff=-144*65;
                 frameIX=1;
                 biColorIX=0;
-                addBlitsToDiv(268,0,85,0,0b11001100);  // Odd render (39 attr blits)
+                addBlitsToDiv(268,0,90,0,0b11001100);  // Odd render (39 attr blits)
+*/
 
         }else{
                 //addBorderColorChange(3);
@@ -510,21 +596,30 @@
                 setChaseDelay(5000);
                 setChaseDelay(5000);
                 setChaseDelay(5000);
-                setChaseDelay(2000);
+                setChaseDelay(1940);
                 setChaseDelay(224*3);
 
                 blockAttrBlit(0b00001110);
-                fillBlitPos+=(8*23);
-                console.log("FillBlitPos begins at: "+fillBlitPos);
+                //fillBlitPos+=(8*23);
+                //console.log("FillBlitPos begins at: "+fillBlitPos);
                 clockOff=-144*65;
                 frameIX=1;
                 biColorIX=0;
-                //addBlitsToDiv(241,0,259,0,0b10101111);  // Odd render (39 attr blits)
-                addBlitsToDiv(268,0,202,0,0b10101111);  // Odd render (39 attr blits)
+                addBlitsToDiv(268,0,262,0,0b10101111);  // Odd render (39 attr blits)
+
+                // Read keyboard (188 cycles)
+                addKeyboardScanToDiv();
+
+                // Nothing else to do here, so waste around 570 t-states
+                setChaseDelay(570);
+
+                // Render the final bi-colour line
+                addBicolorLine(0b00101000);
 
         }
 
         // Output ASM to div
+        restoreStackPtr();
         renderToDiv();
 
     }

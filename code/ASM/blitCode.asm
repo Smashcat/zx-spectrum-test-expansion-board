@@ -1,7125 +1,5856 @@
 pop_push_even:
 	ld (spBackupAddr),sp
 
-	; delay to get start of scanline (5000 T-states)
-	ld b,172
+	; Block attribute blit start
+	ld sp,attrStartAddr+768	; Set sp to end of attr memory - code offset 0x15c
+
+	ld hl,3662	; src offset 766, code offset 0x15f
+	push hl		; code offset 0x160
+	ld hl,3662	; src offset 764, code offset 0x163
+	push hl		; code offset 0x164
+	ld hl,3662	; src offset 762, code offset 0x167
+	push hl		; code offset 0x168
+	ld hl,3662	; src offset 760, code offset 0x16b
+	push hl		; code offset 0x16c
+	ld hl,3662	; src offset 758, code offset 0x16f
+	push hl		; code offset 0x170
+	ld hl,3662	; src offset 756, code offset 0x173
+	push hl		; code offset 0x174
+	ld hl,3662	; src offset 754, code offset 0x177
+	push hl		; code offset 0x178
+	ld hl,3662	; src offset 752, code offset 0x17b
+	push hl		; code offset 0x17c
+	ld hl,3662	; src offset 750, code offset 0x17f
+	push hl		; code offset 0x180
+	ld hl,3662	; src offset 748, code offset 0x183
+	push hl		; code offset 0x184
+	ld hl,3662	; src offset 746, code offset 0x187
+	push hl		; code offset 0x188
+	ld hl,3662	; src offset 744, code offset 0x18b
+	push hl		; code offset 0x18c
+	ld hl,3662	; src offset 742, code offset 0x18f
+	push hl		; code offset 0x190
+	ld hl,3662	; src offset 740, code offset 0x193
+	push hl		; code offset 0x194
+	ld hl,3662	; src offset 738, code offset 0x197
+	push hl		; code offset 0x198
+	ld hl,3662	; src offset 736, code offset 0x19b
+	push hl		; code offset 0x19c
+	ld hl,3662	; src offset 734, code offset 0x19f
+	push hl		; code offset 0x1a0
+	ld hl,3662	; src offset 732, code offset 0x1a3
+	push hl		; code offset 0x1a4
+	ld hl,3662	; src offset 730, code offset 0x1a7
+	push hl		; code offset 0x1a8
+	ld hl,3662	; src offset 728, code offset 0x1ab
+	push hl		; code offset 0x1ac
+	ld hl,3662	; src offset 726, code offset 0x1af
+	push hl		; code offset 0x1b0
+	ld hl,3662	; src offset 724, code offset 0x1b3
+	push hl		; code offset 0x1b4
+	ld hl,3662	; src offset 722, code offset 0x1b7
+	push hl		; code offset 0x1b8
+	ld hl,3662	; src offset 720, code offset 0x1bb
+	push hl		; code offset 0x1bc
+	ld hl,3662	; src offset 718, code offset 0x1bf
+	push hl		; code offset 0x1c0
+	ld hl,3662	; src offset 716, code offset 0x1c3
+	push hl		; code offset 0x1c4
+	ld hl,3662	; src offset 714, code offset 0x1c7
+	push hl		; code offset 0x1c8
+	ld hl,3662	; src offset 712, code offset 0x1cb
+	push hl		; code offset 0x1cc
+	ld hl,3662	; src offset 710, code offset 0x1cf
+	push hl		; code offset 0x1d0
+	ld hl,3662	; src offset 708, code offset 0x1d3
+	push hl		; code offset 0x1d4
+	ld hl,3662	; src offset 706, code offset 0x1d7
+	push hl		; code offset 0x1d8
+	ld hl,3662	; src offset 704, code offset 0x1db
+	push hl		; code offset 0x1dc
+	ld hl,3662	; src offset 702, code offset 0x1df
+	push hl		; code offset 0x1e0
+	ld hl,3662	; src offset 700, code offset 0x1e3
+	push hl		; code offset 0x1e4
+	ld hl,3662	; src offset 698, code offset 0x1e7
+	push hl		; code offset 0x1e8
+	ld hl,3662	; src offset 696, code offset 0x1eb
+	push hl		; code offset 0x1ec
+	ld hl,3662	; src offset 694, code offset 0x1ef
+	push hl		; code offset 0x1f0
+	ld hl,3662	; src offset 692, code offset 0x1f3
+	push hl		; code offset 0x1f4
+	ld hl,3662	; src offset 690, code offset 0x1f7
+	push hl		; code offset 0x1f8
+	ld hl,3662	; src offset 688, code offset 0x1fb
+	push hl		; code offset 0x1fc
+	ld hl,3662	; src offset 686, code offset 0x1ff
+	push hl		; code offset 0x200
+	ld hl,3662	; src offset 684, code offset 0x203
+	push hl		; code offset 0x204
+	ld hl,3662	; src offset 682, code offset 0x207
+	push hl		; code offset 0x208
+	ld hl,3662	; src offset 680, code offset 0x20b
+	push hl		; code offset 0x20c
+	ld hl,3662	; src offset 678, code offset 0x20f
+	push hl		; code offset 0x210
+	ld hl,3662	; src offset 676, code offset 0x213
+	push hl		; code offset 0x214
+	ld hl,3662	; src offset 674, code offset 0x217
+	push hl		; code offset 0x218
+	ld hl,3662	; src offset 672, code offset 0x21b
+	push hl		; code offset 0x21c
+	ld hl,3662	; src offset 670, code offset 0x21f
+	push hl		; code offset 0x220
+	ld hl,3662	; src offset 668, code offset 0x223
+	push hl		; code offset 0x224
+	ld hl,3662	; src offset 666, code offset 0x227
+	push hl		; code offset 0x228
+	ld hl,3662	; src offset 664, code offset 0x22b
+	push hl		; code offset 0x22c
+	ld hl,3662	; src offset 662, code offset 0x22f
+	push hl		; code offset 0x230
+	ld hl,3662	; src offset 660, code offset 0x233
+	push hl		; code offset 0x234
+	ld hl,3662	; src offset 658, code offset 0x237
+	push hl		; code offset 0x238
+	ld hl,3662	; src offset 656, code offset 0x23b
+	push hl		; code offset 0x23c
+	ld hl,3662	; src offset 654, code offset 0x23f
+	push hl		; code offset 0x240
+	ld hl,3662	; src offset 652, code offset 0x243
+	push hl		; code offset 0x244
+	ld hl,3662	; src offset 650, code offset 0x247
+	push hl		; code offset 0x248
+	ld hl,3662	; src offset 648, code offset 0x24b
+	push hl		; code offset 0x24c
+	ld hl,3662	; src offset 646, code offset 0x24f
+	push hl		; code offset 0x250
+	ld hl,3662	; src offset 644, code offset 0x253
+	push hl		; code offset 0x254
+	ld hl,3662	; src offset 642, code offset 0x257
+	push hl		; code offset 0x258
+	ld hl,3662	; src offset 640, code offset 0x25b
+	push hl		; code offset 0x25c
+	ld hl,3662	; src offset 638, code offset 0x25f
+	push hl		; code offset 0x260
+	ld hl,3662	; src offset 636, code offset 0x263
+	push hl		; code offset 0x264
+	ld hl,3662	; src offset 634, code offset 0x267
+	push hl		; code offset 0x268
+	ld hl,3662	; src offset 632, code offset 0x26b
+	push hl		; code offset 0x26c
+	ld hl,3662	; src offset 630, code offset 0x26f
+	push hl		; code offset 0x270
+	ld hl,3662	; src offset 628, code offset 0x273
+	push hl		; code offset 0x274
+	ld hl,3662	; src offset 626, code offset 0x277
+	push hl		; code offset 0x278
+	ld hl,3662	; src offset 624, code offset 0x27b
+	push hl		; code offset 0x27c
+	ld hl,3662	; src offset 622, code offset 0x27f
+	push hl		; code offset 0x280
+	ld hl,3662	; src offset 620, code offset 0x283
+	push hl		; code offset 0x284
+	ld hl,3662	; src offset 618, code offset 0x287
+	push hl		; code offset 0x288
+	ld hl,3662	; src offset 616, code offset 0x28b
+	push hl		; code offset 0x28c
+	ld hl,3662	; src offset 614, code offset 0x28f
+	push hl		; code offset 0x290
+	ld hl,3662	; src offset 612, code offset 0x293
+	push hl		; code offset 0x294
+	ld hl,3662	; src offset 610, code offset 0x297
+	push hl		; code offset 0x298
+	ld hl,3662	; src offset 608, code offset 0x29b
+	push hl		; code offset 0x29c
+	ld hl,3662	; src offset 606, code offset 0x29f
+	push hl		; code offset 0x2a0
+	ld hl,3662	; src offset 604, code offset 0x2a3
+	push hl		; code offset 0x2a4
+	ld hl,3662	; src offset 602, code offset 0x2a7
+	push hl		; code offset 0x2a8
+	ld hl,3662	; src offset 600, code offset 0x2ab
+	push hl		; code offset 0x2ac
+	ld hl,3662	; src offset 598, code offset 0x2af
+	push hl		; code offset 0x2b0
+	ld hl,3662	; src offset 596, code offset 0x2b3
+	push hl		; code offset 0x2b4
+	ld hl,3662	; src offset 594, code offset 0x2b7
+	push hl		; code offset 0x2b8
+	ld hl,3662	; src offset 592, code offset 0x2bb
+	push hl		; code offset 0x2bc
+	ld hl,3662	; src offset 590, code offset 0x2bf
+	push hl		; code offset 0x2c0
+	ld hl,3662	; src offset 588, code offset 0x2c3
+	push hl		; code offset 0x2c4
+	ld hl,3662	; src offset 586, code offset 0x2c7
+	push hl		; code offset 0x2c8
+	ld hl,3662	; src offset 584, code offset 0x2cb
+	push hl		; code offset 0x2cc
+	ld hl,3662	; src offset 582, code offset 0x2cf
+	push hl		; code offset 0x2d0
+	ld hl,3662	; src offset 580, code offset 0x2d3
+	push hl		; code offset 0x2d4
+	ld hl,3662	; src offset 578, code offset 0x2d7
+	push hl		; code offset 0x2d8
+	ld hl,3662	; src offset 576, code offset 0x2db
+	push hl		; code offset 0x2dc
+	ld hl,3662	; src offset 574, code offset 0x2df
+	push hl		; code offset 0x2e0
+	ld hl,3662	; src offset 572, code offset 0x2e3
+	push hl		; code offset 0x2e4
+	ld hl,3662	; src offset 570, code offset 0x2e7
+	push hl		; code offset 0x2e8
+	ld hl,3662	; src offset 568, code offset 0x2eb
+	push hl		; code offset 0x2ec
+	ld hl,3662	; src offset 566, code offset 0x2ef
+	push hl		; code offset 0x2f0
+	ld hl,3662	; src offset 564, code offset 0x2f3
+	push hl		; code offset 0x2f4
+	ld hl,3662	; src offset 562, code offset 0x2f7
+	push hl		; code offset 0x2f8
+	ld hl,3662	; src offset 560, code offset 0x2fb
+	push hl		; code offset 0x2fc
+	ld hl,3662	; src offset 558, code offset 0x2ff
+	push hl		; code offset 0x300
+	ld hl,3662	; src offset 556, code offset 0x303
+	push hl		; code offset 0x304
+	ld hl,3662	; src offset 554, code offset 0x307
+	push hl		; code offset 0x308
+	ld hl,3662	; src offset 552, code offset 0x30b
+	push hl		; code offset 0x30c
+	ld hl,3662	; src offset 550, code offset 0x30f
+	push hl		; code offset 0x310
+	ld hl,3662	; src offset 548, code offset 0x313
+	push hl		; code offset 0x314
+	ld hl,3662	; src offset 546, code offset 0x317
+	push hl		; code offset 0x318
+	ld hl,3662	; src offset 544, code offset 0x31b
+	push hl		; code offset 0x31c
+	ld hl,3662	; src offset 542, code offset 0x31f
+	push hl		; code offset 0x320
+	ld hl,3662	; src offset 540, code offset 0x323
+	push hl		; code offset 0x324
+	ld hl,3662	; src offset 538, code offset 0x327
+	push hl		; code offset 0x328
+	ld hl,3662	; src offset 536, code offset 0x32b
+	push hl		; code offset 0x32c
+	ld hl,3662	; src offset 534, code offset 0x32f
+	push hl		; code offset 0x330
+	ld hl,3662	; src offset 532, code offset 0x333
+	push hl		; code offset 0x334
+	ld hl,3662	; src offset 530, code offset 0x337
+	push hl		; code offset 0x338
+	ld hl,3662	; src offset 528, code offset 0x33b
+	push hl		; code offset 0x33c
+	ld hl,3662	; src offset 526, code offset 0x33f
+	push hl		; code offset 0x340
+	ld hl,3662	; src offset 524, code offset 0x343
+	push hl		; code offset 0x344
+	ld hl,3662	; src offset 522, code offset 0x347
+	push hl		; code offset 0x348
+	ld hl,3662	; src offset 520, code offset 0x34b
+	push hl		; code offset 0x34c
+	ld hl,3662	; src offset 518, code offset 0x34f
+	push hl		; code offset 0x350
+	ld hl,3662	; src offset 516, code offset 0x353
+	push hl		; code offset 0x354
+	ld hl,3662	; src offset 514, code offset 0x357
+	push hl		; code offset 0x358
+	ld hl,3662	; src offset 512, code offset 0x35b
+	push hl		; code offset 0x35c
+	ld hl,3662	; src offset 510, code offset 0x35f
+	push hl		; code offset 0x360
+	ld hl,3662	; src offset 508, code offset 0x363
+	push hl		; code offset 0x364
+	ld hl,3662	; src offset 506, code offset 0x367
+	push hl		; code offset 0x368
+	ld hl,3662	; src offset 504, code offset 0x36b
+	push hl		; code offset 0x36c
+	ld hl,3662	; src offset 502, code offset 0x36f
+	push hl		; code offset 0x370
+	ld hl,3662	; src offset 500, code offset 0x373
+	push hl		; code offset 0x374
+	ld hl,3662	; src offset 498, code offset 0x377
+	push hl		; code offset 0x378
+	ld hl,3662	; src offset 496, code offset 0x37b
+	push hl		; code offset 0x37c
+	ld hl,3662	; src offset 494, code offset 0x37f
+	push hl		; code offset 0x380
+	ld hl,3662	; src offset 492, code offset 0x383
+	push hl		; code offset 0x384
+	ld hl,3662	; src offset 490, code offset 0x387
+	push hl		; code offset 0x388
+	ld hl,3662	; src offset 488, code offset 0x38b
+	push hl		; code offset 0x38c
+	ld hl,3662	; src offset 486, code offset 0x38f
+	push hl		; code offset 0x390
+	ld hl,3662	; src offset 484, code offset 0x393
+	push hl		; code offset 0x394
+	ld hl,3662	; src offset 482, code offset 0x397
+	push hl		; code offset 0x398
+	ld hl,3662	; src offset 480, code offset 0x39b
+	push hl		; code offset 0x39c
+	ld hl,3662	; src offset 478, code offset 0x39f
+	push hl		; code offset 0x3a0
+	ld hl,3662	; src offset 476, code offset 0x3a3
+	push hl		; code offset 0x3a4
+	ld hl,3662	; src offset 474, code offset 0x3a7
+	push hl		; code offset 0x3a8
+	ld hl,3662	; src offset 472, code offset 0x3ab
+	push hl		; code offset 0x3ac
+	ld hl,3662	; src offset 470, code offset 0x3af
+	push hl		; code offset 0x3b0
+	ld hl,3662	; src offset 468, code offset 0x3b3
+	push hl		; code offset 0x3b4
+	ld hl,3662	; src offset 466, code offset 0x3b7
+	push hl		; code offset 0x3b8
+	ld hl,3662	; src offset 464, code offset 0x3bb
+	push hl		; code offset 0x3bc
+	ld hl,3662	; src offset 462, code offset 0x3bf
+	push hl		; code offset 0x3c0
+	ld hl,3662	; src offset 460, code offset 0x3c3
+	push hl		; code offset 0x3c4
+	ld hl,3662	; src offset 458, code offset 0x3c7
+	push hl		; code offset 0x3c8
+	ld hl,3662	; src offset 456, code offset 0x3cb
+	push hl		; code offset 0x3cc
+	ld hl,3662	; src offset 454, code offset 0x3cf
+	push hl		; code offset 0x3d0
+	ld hl,3662	; src offset 452, code offset 0x3d3
+	push hl		; code offset 0x3d4
+	ld hl,3662	; src offset 450, code offset 0x3d7
+	push hl		; code offset 0x3d8
+	ld hl,3662	; src offset 448, code offset 0x3db
+	push hl		; code offset 0x3dc
+	ld hl,3662	; src offset 446, code offset 0x3df
+	push hl		; code offset 0x3e0
+	ld hl,3662	; src offset 444, code offset 0x3e3
+	push hl		; code offset 0x3e4
+	ld hl,3662	; src offset 442, code offset 0x3e7
+	push hl		; code offset 0x3e8
+	ld hl,3662	; src offset 440, code offset 0x3eb
+	push hl		; code offset 0x3ec
+	ld hl,3662	; src offset 438, code offset 0x3ef
+	push hl		; code offset 0x3f0
+	ld hl,3662	; src offset 436, code offset 0x3f3
+	push hl		; code offset 0x3f4
+	ld hl,3662	; src offset 434, code offset 0x3f7
+	push hl		; code offset 0x3f8
+	ld hl,3662	; src offset 432, code offset 0x3fb
+	push hl		; code offset 0x3fc
+	ld hl,3662	; src offset 430, code offset 0x3ff
+	push hl		; code offset 0x400
+	ld hl,3662	; src offset 428, code offset 0x403
+	push hl		; code offset 0x404
+	ld hl,3662	; src offset 426, code offset 0x407
+	push hl		; code offset 0x408
+	ld hl,3662	; src offset 424, code offset 0x40b
+	push hl		; code offset 0x40c
+	ld hl,3662	; src offset 422, code offset 0x40f
+	push hl		; code offset 0x410
+	ld hl,3662	; src offset 420, code offset 0x413
+	push hl		; code offset 0x414
+	ld hl,3662	; src offset 418, code offset 0x417
+	push hl		; code offset 0x418
+	ld hl,3662	; src offset 416, code offset 0x41b
+	push hl		; code offset 0x41c
+	ld hl,3662	; src offset 414, code offset 0x41f
+	push hl		; code offset 0x420
+	ld hl,3662	; src offset 412, code offset 0x423
+	push hl		; code offset 0x424
+	ld hl,3662	; src offset 410, code offset 0x427
+	push hl		; code offset 0x428
+	ld hl,3662	; src offset 408, code offset 0x42b
+	push hl		; code offset 0x42c
+	ld hl,3662	; src offset 406, code offset 0x42f
+	push hl		; code offset 0x430
+	ld hl,3662	; src offset 404, code offset 0x433
+	push hl		; code offset 0x434
+	ld hl,3662	; src offset 402, code offset 0x437
+	push hl		; code offset 0x438
+	ld hl,3662	; src offset 400, code offset 0x43b
+	push hl		; code offset 0x43c
+	ld hl,3662	; src offset 398, code offset 0x43f
+	push hl		; code offset 0x440
+	ld hl,3662	; src offset 396, code offset 0x443
+	push hl		; code offset 0x444
+	ld hl,3662	; src offset 394, code offset 0x447
+	push hl		; code offset 0x448
+	ld hl,3662	; src offset 392, code offset 0x44b
+	push hl		; code offset 0x44c
+	ld hl,3662	; src offset 390, code offset 0x44f
+	push hl		; code offset 0x450
+	ld hl,3662	; src offset 388, code offset 0x453
+	push hl		; code offset 0x454
+	ld hl,3662	; src offset 386, code offset 0x457
+	push hl		; code offset 0x458
+	ld hl,3662	; src offset 384, code offset 0x45b
+	push hl		; code offset 0x45c
+	ld hl,3662	; src offset 382, code offset 0x45f
+	push hl		; code offset 0x460
+	ld hl,3662	; src offset 380, code offset 0x463
+	push hl		; code offset 0x464
+	ld hl,3662	; src offset 378, code offset 0x467
+	push hl		; code offset 0x468
+	ld hl,3662	; src offset 376, code offset 0x46b
+	push hl		; code offset 0x46c
+	ld hl,3662	; src offset 374, code offset 0x46f
+	push hl		; code offset 0x470
+	ld hl,3662	; src offset 372, code offset 0x473
+	push hl		; code offset 0x474
+	ld hl,3662	; src offset 370, code offset 0x477
+	push hl		; code offset 0x478
+	ld hl,3662	; src offset 368, code offset 0x47b
+	push hl		; code offset 0x47c
+	ld hl,3662	; src offset 366, code offset 0x47f
+	push hl		; code offset 0x480
+	ld hl,3662	; src offset 364, code offset 0x483
+	push hl		; code offset 0x484
+	ld hl,3662	; src offset 362, code offset 0x487
+	push hl		; code offset 0x488
+	ld hl,3662	; src offset 360, code offset 0x48b
+	push hl		; code offset 0x48c
+	ld hl,3662	; src offset 358, code offset 0x48f
+	push hl		; code offset 0x490
+	ld hl,3662	; src offset 356, code offset 0x493
+	push hl		; code offset 0x494
+	ld hl,3662	; src offset 354, code offset 0x497
+	push hl		; code offset 0x498
+	ld hl,3662	; src offset 352, code offset 0x49b
+	push hl		; code offset 0x49c
+	ld hl,3662	; src offset 350, code offset 0x49f
+	push hl		; code offset 0x4a0
+	ld hl,3662	; src offset 348, code offset 0x4a3
+	push hl		; code offset 0x4a4
+	ld hl,3662	; src offset 346, code offset 0x4a7
+	push hl		; code offset 0x4a8
+	ld hl,3662	; src offset 344, code offset 0x4ab
+	push hl		; code offset 0x4ac
+	ld hl,3662	; src offset 342, code offset 0x4af
+	push hl		; code offset 0x4b0
+	ld hl,3662	; src offset 340, code offset 0x4b3
+	push hl		; code offset 0x4b4
+	ld hl,3662	; src offset 338, code offset 0x4b7
+	push hl		; code offset 0x4b8
+	ld hl,3662	; src offset 336, code offset 0x4bb
+	push hl		; code offset 0x4bc
+	ld hl,3662	; src offset 334, code offset 0x4bf
+	push hl		; code offset 0x4c0
+	ld hl,3662	; src offset 332, code offset 0x4c3
+	push hl		; code offset 0x4c4
+	ld hl,3662	; src offset 330, code offset 0x4c7
+	push hl		; code offset 0x4c8
+	ld hl,3662	; src offset 328, code offset 0x4cb
+	push hl		; code offset 0x4cc
+	ld hl,3662	; src offset 326, code offset 0x4cf
+	push hl		; code offset 0x4d0
+	ld hl,3662	; src offset 324, code offset 0x4d3
+	push hl		; code offset 0x4d4
+	ld hl,3662	; src offset 322, code offset 0x4d7
+	push hl		; code offset 0x4d8
+	ld hl,3662	; src offset 320, code offset 0x4db
+	push hl		; code offset 0x4dc
+	ld hl,3662	; src offset 318, code offset 0x4df
+	push hl		; code offset 0x4e0
+	ld hl,3662	; src offset 316, code offset 0x4e3
+	push hl		; code offset 0x4e4
+	ld hl,3662	; src offset 314, code offset 0x4e7
+	push hl		; code offset 0x4e8
+	ld hl,3662	; src offset 312, code offset 0x4eb
+	push hl		; code offset 0x4ec
+	ld hl,3662	; src offset 310, code offset 0x4ef
+	push hl		; code offset 0x4f0
+	ld hl,3662	; src offset 308, code offset 0x4f3
+	push hl		; code offset 0x4f4
+	ld hl,3662	; src offset 306, code offset 0x4f7
+	push hl		; code offset 0x4f8
+	ld hl,3662	; src offset 304, code offset 0x4fb
+	push hl		; code offset 0x4fc
+	ld hl,3662	; src offset 302, code offset 0x4ff
+	push hl		; code offset 0x500
+	ld hl,3662	; src offset 300, code offset 0x503
+	push hl		; code offset 0x504
+	ld hl,3662	; src offset 298, code offset 0x507
+	push hl		; code offset 0x508
+	ld hl,3662	; src offset 296, code offset 0x50b
+	push hl		; code offset 0x50c
+	ld hl,3662	; src offset 294, code offset 0x50f
+	push hl		; code offset 0x510
+	ld hl,3662	; src offset 292, code offset 0x513
+	push hl		; code offset 0x514
+	ld hl,3662	; src offset 290, code offset 0x517
+	push hl		; code offset 0x518
+	ld hl,3662	; src offset 288, code offset 0x51b
+	push hl		; code offset 0x51c
+	ld hl,3662	; src offset 286, code offset 0x51f
+	push hl		; code offset 0x520
+	ld hl,3662	; src offset 284, code offset 0x523
+	push hl		; code offset 0x524
+	ld hl,3662	; src offset 282, code offset 0x527
+	push hl		; code offset 0x528
+	ld hl,3662	; src offset 280, code offset 0x52b
+	push hl		; code offset 0x52c
+	ld hl,3662	; src offset 278, code offset 0x52f
+	push hl		; code offset 0x530
+	ld hl,3662	; src offset 276, code offset 0x533
+	push hl		; code offset 0x534
+	ld hl,3662	; src offset 274, code offset 0x537
+	push hl		; code offset 0x538
+	ld hl,3662	; src offset 272, code offset 0x53b
+	push hl		; code offset 0x53c
+	ld hl,3662	; src offset 270, code offset 0x53f
+	push hl		; code offset 0x540
+	ld hl,3662	; src offset 268, code offset 0x543
+	push hl		; code offset 0x544
+	ld hl,3662	; src offset 266, code offset 0x547
+	push hl		; code offset 0x548
+	ld hl,3662	; src offset 264, code offset 0x54b
+	push hl		; code offset 0x54c
+	ld hl,3662	; src offset 262, code offset 0x54f
+	push hl		; code offset 0x550
+	ld hl,3662	; src offset 260, code offset 0x553
+	push hl		; code offset 0x554
+	ld hl,3662	; src offset 258, code offset 0x557
+	push hl		; code offset 0x558
+	ld hl,3662	; src offset 256, code offset 0x55b
+	push hl		; code offset 0x55c
+	ld hl,3662	; src offset 254, code offset 0x55f
+	push hl		; code offset 0x560
+	ld hl,3662	; src offset 252, code offset 0x563
+	push hl		; code offset 0x564
+	ld hl,3662	; src offset 250, code offset 0x567
+	push hl		; code offset 0x568
+	ld hl,3662	; src offset 248, code offset 0x56b
+	push hl		; code offset 0x56c
+	ld hl,3662	; src offset 246, code offset 0x56f
+	push hl		; code offset 0x570
+	ld hl,3662	; src offset 244, code offset 0x573
+	push hl		; code offset 0x574
+	ld hl,3662	; src offset 242, code offset 0x577
+	push hl		; code offset 0x578
+	ld hl,3662	; src offset 240, code offset 0x57b
+	push hl		; code offset 0x57c
+	ld hl,3662	; src offset 238, code offset 0x57f
+	push hl		; code offset 0x580
+	ld hl,3662	; src offset 236, code offset 0x583
+	push hl		; code offset 0x584
+	ld hl,3662	; src offset 234, code offset 0x587
+	push hl		; code offset 0x588
+	ld hl,3662	; src offset 232, code offset 0x58b
+	push hl		; code offset 0x58c
+	ld hl,3662	; src offset 230, code offset 0x58f
+	push hl		; code offset 0x590
+	ld hl,3662	; src offset 228, code offset 0x593
+	push hl		; code offset 0x594
+	ld hl,3662	; src offset 226, code offset 0x597
+	push hl		; code offset 0x598
+	ld hl,3662	; src offset 224, code offset 0x59b
+	push hl		; code offset 0x59c
+	ld hl,3662	; src offset 222, code offset 0x59f
+	push hl		; code offset 0x5a0
+	ld hl,3662	; src offset 220, code offset 0x5a3
+	push hl		; code offset 0x5a4
+	ld hl,3662	; src offset 218, code offset 0x5a7
+	push hl		; code offset 0x5a8
+	ld hl,3662	; src offset 216, code offset 0x5ab
+	push hl		; code offset 0x5ac
+	ld hl,3662	; src offset 214, code offset 0x5af
+	push hl		; code offset 0x5b0
+	ld hl,3662	; src offset 212, code offset 0x5b3
+	push hl		; code offset 0x5b4
+	ld hl,3662	; src offset 210, code offset 0x5b7
+	push hl		; code offset 0x5b8
+	ld hl,3662	; src offset 208, code offset 0x5bb
+	push hl		; code offset 0x5bc
+	ld hl,3662	; src offset 206, code offset 0x5bf
+	push hl		; code offset 0x5c0
+	ld hl,3662	; src offset 204, code offset 0x5c3
+	push hl		; code offset 0x5c4
+	ld hl,3662	; src offset 202, code offset 0x5c7
+	push hl		; code offset 0x5c8
+	ld hl,3662	; src offset 200, code offset 0x5cb
+	push hl		; code offset 0x5cc
+	ld hl,3662	; src offset 198, code offset 0x5cf
+	push hl		; code offset 0x5d0
+	ld hl,3662	; src offset 196, code offset 0x5d3
+	push hl		; code offset 0x5d4
+	ld hl,3662	; src offset 194, code offset 0x5d7
+	push hl		; code offset 0x5d8
+	ld hl,3662	; src offset 192, code offset 0x5db
+	push hl		; code offset 0x5dc
+	ld hl,3662	; src offset 190, code offset 0x5df
+	push hl		; code offset 0x5e0
+	ld hl,3662	; src offset 188, code offset 0x5e3
+	push hl		; code offset 0x5e4
+	ld hl,3662	; src offset 186, code offset 0x5e7
+	push hl		; code offset 0x5e8
+	ld hl,3662	; src offset 184, code offset 0x5eb
+	push hl		; code offset 0x5ec
+	ld hl,3662	; src offset 182, code offset 0x5ef
+	push hl		; code offset 0x5f0
+	ld hl,3662	; src offset 180, code offset 0x5f3
+	push hl		; code offset 0x5f4
+	ld hl,3662	; src offset 178, code offset 0x5f7
+	push hl		; code offset 0x5f8
+	ld hl,3662	; src offset 176, code offset 0x5fb
+	push hl		; code offset 0x5fc
+	ld hl,3662	; src offset 174, code offset 0x5ff
+	push hl		; code offset 0x600
+	ld hl,3662	; src offset 172, code offset 0x603
+	push hl		; code offset 0x604
+	ld hl,3662	; src offset 170, code offset 0x607
+	push hl		; code offset 0x608
+	ld hl,3662	; src offset 168, code offset 0x60b
+	push hl		; code offset 0x60c
+	ld hl,3662	; src offset 166, code offset 0x60f
+	push hl		; code offset 0x610
+	ld hl,3662	; src offset 164, code offset 0x613
+	push hl		; code offset 0x614
+	ld hl,3662	; src offset 162, code offset 0x617
+	push hl		; code offset 0x618
+	ld hl,3662	; src offset 160, code offset 0x61b
+	push hl		; code offset 0x61c
+	ld hl,3662	; src offset 158, code offset 0x61f
+	push hl		; code offset 0x620
+	ld hl,3662	; src offset 156, code offset 0x623
+	push hl		; code offset 0x624
+	ld hl,3662	; src offset 154, code offset 0x627
+	push hl		; code offset 0x628
+	ld hl,3662	; src offset 152, code offset 0x62b
+	push hl		; code offset 0x62c
+	ld hl,3662	; src offset 150, code offset 0x62f
+	push hl		; code offset 0x630
+	ld hl,3662	; src offset 148, code offset 0x633
+	push hl		; code offset 0x634
+	ld hl,3662	; src offset 146, code offset 0x637
+	push hl		; code offset 0x638
+	ld hl,3662	; src offset 144, code offset 0x63b
+	push hl		; code offset 0x63c
+	ld hl,3662	; src offset 142, code offset 0x63f
+	push hl		; code offset 0x640
+	ld hl,3662	; src offset 140, code offset 0x643
+	push hl		; code offset 0x644
+	ld hl,3662	; src offset 138, code offset 0x647
+	push hl		; code offset 0x648
+	ld hl,3662	; src offset 136, code offset 0x64b
+	push hl		; code offset 0x64c
+	ld hl,3662	; src offset 134, code offset 0x64f
+	push hl		; code offset 0x650
+	ld hl,3662	; src offset 132, code offset 0x653
+	push hl		; code offset 0x654
+	ld hl,3662	; src offset 130, code offset 0x657
+	push hl		; code offset 0x658
+	ld hl,3662	; src offset 128, code offset 0x65b
+	push hl		; code offset 0x65c
+	ld hl,3662	; src offset 126, code offset 0x65f
+	push hl		; code offset 0x660
+	ld hl,3662	; src offset 124, code offset 0x663
+	push hl		; code offset 0x664
+	ld hl,3662	; src offset 122, code offset 0x667
+	push hl		; code offset 0x668
+	ld hl,3662	; src offset 120, code offset 0x66b
+	push hl		; code offset 0x66c
+	ld hl,3662	; src offset 118, code offset 0x66f
+	push hl		; code offset 0x670
+	ld hl,3662	; src offset 116, code offset 0x673
+	push hl		; code offset 0x674
+	ld hl,3662	; src offset 114, code offset 0x677
+	push hl		; code offset 0x678
+	ld hl,3662	; src offset 112, code offset 0x67b
+	push hl		; code offset 0x67c
+	ld hl,3662	; src offset 110, code offset 0x67f
+	push hl		; code offset 0x680
+	ld hl,3662	; src offset 108, code offset 0x683
+	push hl		; code offset 0x684
+	ld hl,3662	; src offset 106, code offset 0x687
+	push hl		; code offset 0x688
+	ld hl,3662	; src offset 104, code offset 0x68b
+	push hl		; code offset 0x68c
+	ld hl,3662	; src offset 102, code offset 0x68f
+	push hl		; code offset 0x690
+	ld hl,3662	; src offset 100, code offset 0x693
+	push hl		; code offset 0x694
+	ld hl,3662	; src offset 98, code offset 0x697
+	push hl		; code offset 0x698
+	ld hl,3662	; src offset 96, code offset 0x69b
+	push hl		; code offset 0x69c
+	ld hl,3662	; src offset 94, code offset 0x69f
+	push hl		; code offset 0x6a0
+	ld hl,3662	; src offset 92, code offset 0x6a3
+	push hl		; code offset 0x6a4
+	ld hl,3662	; src offset 90, code offset 0x6a7
+	push hl		; code offset 0x6a8
+	ld hl,3662	; src offset 88, code offset 0x6ab
+	push hl		; code offset 0x6ac
+	ld hl,3662	; src offset 86, code offset 0x6af
+	push hl		; code offset 0x6b0
+	ld hl,3662	; src offset 84, code offset 0x6b3
+	push hl		; code offset 0x6b4
+	ld hl,3662	; src offset 82, code offset 0x6b7
+	push hl		; code offset 0x6b8
+	ld hl,3662	; src offset 80, code offset 0x6bb
+	push hl		; code offset 0x6bc
+	ld hl,3662	; src offset 78, code offset 0x6bf
+	push hl		; code offset 0x6c0
+	ld hl,3662	; src offset 76, code offset 0x6c3
+	push hl		; code offset 0x6c4
+	ld hl,3662	; src offset 74, code offset 0x6c7
+	push hl		; code offset 0x6c8
+	ld hl,3662	; src offset 72, code offset 0x6cb
+	push hl		; code offset 0x6cc
+	ld hl,3662	; src offset 70, code offset 0x6cf
+	push hl		; code offset 0x6d0
+	ld hl,3662	; src offset 68, code offset 0x6d3
+	push hl		; code offset 0x6d4
+	ld hl,3662	; src offset 66, code offset 0x6d7
+	push hl		; code offset 0x6d8
+	ld hl,3662	; src offset 64, code offset 0x6db
+	push hl		; code offset 0x6dc
+	ld hl,3662	; src offset 62, code offset 0x6df
+	push hl		; code offset 0x6e0
+	ld hl,3662	; src offset 60, code offset 0x6e3
+	push hl		; code offset 0x6e4
+	ld hl,3662	; src offset 58, code offset 0x6e7
+	push hl		; code offset 0x6e8
+	ld hl,3662	; src offset 56, code offset 0x6eb
+	push hl		; code offset 0x6ec
+	ld hl,3662	; src offset 54, code offset 0x6ef
+	push hl		; code offset 0x6f0
+	ld hl,3662	; src offset 52, code offset 0x6f3
+	push hl		; code offset 0x6f4
+	ld hl,3662	; src offset 50, code offset 0x6f7
+	push hl		; code offset 0x6f8
+	ld hl,3662	; src offset 48, code offset 0x6fb
+	push hl		; code offset 0x6fc
+	ld hl,3662	; src offset 46, code offset 0x6ff
+	push hl		; code offset 0x700
+	ld hl,3662	; src offset 44, code offset 0x703
+	push hl		; code offset 0x704
+	ld hl,3662	; src offset 42, code offset 0x707
+	push hl		; code offset 0x708
+	ld hl,3662	; src offset 40, code offset 0x70b
+	push hl		; code offset 0x70c
+	ld hl,3662	; src offset 38, code offset 0x70f
+	push hl		; code offset 0x710
+	ld hl,3662	; src offset 36, code offset 0x713
+	push hl		; code offset 0x714
+	ld hl,3662	; src offset 34, code offset 0x717
+	push hl		; code offset 0x718
+	ld hl,3662	; src offset 32, code offset 0x71b
+	push hl		; code offset 0x71c
+	ld hl,3662	; src offset 30, code offset 0x71f
+	push hl		; code offset 0x720
+	ld hl,3662	; src offset 28, code offset 0x723
+	push hl		; code offset 0x724
+	ld hl,3662	; src offset 26, code offset 0x727
+	push hl		; code offset 0x728
+	ld hl,3662	; src offset 24, code offset 0x72b
+	push hl		; code offset 0x72c
+	ld hl,3662	; src offset 22, code offset 0x72f
+	push hl		; code offset 0x730
+	ld hl,3662	; src offset 20, code offset 0x733
+	push hl		; code offset 0x734
+	ld hl,3662	; src offset 18, code offset 0x737
+	push hl		; code offset 0x738
+	ld hl,3662	; src offset 16, code offset 0x73b
+	push hl		; code offset 0x73c
+	ld hl,3662	; src offset 14, code offset 0x73f
+	push hl		; code offset 0x740
+	ld hl,3662	; src offset 12, code offset 0x743
+	push hl		; code offset 0x744
+	ld hl,3662	; src offset 10, code offset 0x747
+	push hl		; code offset 0x748
+	ld hl,3662	; src offset 8, code offset 0x74b
+	push hl		; code offset 0x74c
+	ld hl,3662	; src offset 6, code offset 0x74f
+	push hl		; code offset 0x750
+	ld hl,3662	; src offset 4, code offset 0x753
+	push hl		; code offset 0x754
+	ld hl,3662	; src offset 2, code offset 0x757
+	push hl		; code offset 0x758
+	ld hl,3662	; src offset 0, code offset 0x75b
+	push hl		; code offset 0x75c
+
+	; Block attribute blit end
+
+	; delay to get start of scanline (30 T-states) at offset 0x75c
+	ld b,1
 ppe_scan_delay0:
 	nop
 	nop
 	nop
 	nop
 	djnz ppe_scan_delay0
-		; 10 T-states remaining
-	nop   	; 6 T-states remaining
-	nop   	; 2 T-states remaining
-	nop   	; -2 T-states remaining
-
-	;Beam chasing starts NOW!
-
-	; delay to get start of scanline (5000 T-states)
-	ld b,172
-ppe_scan_delay1:
-	nop
-	nop
-	nop
-	nop
-	djnz ppe_scan_delay1
-		; 10 T-states remaining
-	nop   	; 6 T-states remaining
-	nop   	; 2 T-states remaining
-	nop   	; -2 T-states remaining
-
-	;Beam chasing starts NOW!
-
-	; delay to get start of scanline (5000 T-states)
-	ld b,172
-ppe_scan_delay2:
-	nop
-	nop
-	nop
-	nop
-	djnz ppe_scan_delay2
-		; 10 T-states remaining
-	nop   	; 6 T-states remaining
-	nop   	; 2 T-states remaining
-	nop   	; -2 T-states remaining
-
-	;Beam chasing starts NOW!
-
-	; delay to get start of scanline (5000 T-states)
-	ld b,172
-ppe_scan_delay3:
-	nop
-	nop
-	nop
-	nop
-	djnz ppe_scan_delay3
-		; 10 T-states remaining
-	nop   	; 6 T-states remaining
-	nop   	; 2 T-states remaining
-	nop   	; -2 T-states remaining
-
-	;Beam chasing starts NOW!
-
-	; delay to get start of scanline (5000 T-states)
-	ld b,172
-ppe_scan_delay4:
-	nop
-	nop
-	nop
-	nop
-	djnz ppe_scan_delay4
-		; 10 T-states remaining
-	nop   	; 6 T-states remaining
-	nop   	; 2 T-states remaining
-	nop   	; -2 T-states remaining
-
-	;Beam chasing starts NOW!
-
-	; delay to get start of scanline (5000 T-states)
-	ld b,172
-ppe_scan_delay5:
-	nop
-	nop
-	nop
-	nop
-	djnz ppe_scan_delay5
-		; 10 T-states remaining
-	nop   	; 6 T-states remaining
-	nop   	; 2 T-states remaining
-	nop   	; -2 T-states remaining
-
-	;Beam chasing starts NOW!
-
-	; delay to get start of scanline (5000 T-states)
-	ld b,172
-ppe_scan_delay6:
-	nop
-	nop
-	nop
-	nop
-	djnz ppe_scan_delay6
-		; 10 T-states remaining
-	nop   	; 6 T-states remaining
-	nop   	; 2 T-states remaining
-	nop   	; -2 T-states remaining
-
-	;Beam chasing starts NOW!
-
-	; delay to get start of scanline (5000 T-states)
-	ld b,172
-ppe_scan_delay7:
-	nop
-	nop
-	nop
-	nop
-	djnz ppe_scan_delay7
-		; 10 T-states remaining
-	nop   	; 6 T-states remaining
-	nop   	; 2 T-states remaining
-	nop   	; -2 T-states remaining
-
-	;Beam chasing starts NOW!
-
-	; delay to get start of scanline (5000 T-states)
-	ld b,172
-ppe_scan_delay8:
-	nop
-	nop
-	nop
-	nop
-	djnz ppe_scan_delay8
-		; 10 T-states remaining
-	nop   	; 6 T-states remaining
-	nop   	; 2 T-states remaining
-	nop   	; -2 T-states remaining
-
-	;Beam chasing starts NOW!
-
-	; delay to get start of scanline (5000 T-states)
-	ld b,172
-ppe_scan_delay9:
-	nop
-	nop
-	nop
-	nop
-	djnz ppe_scan_delay9
-		; 10 T-states remaining
-	nop   	; 6 T-states remaining
-	nop   	; 2 T-states remaining
-	nop   	; -2 T-states remaining
-
-	;Beam chasing starts NOW!
-
-	; delay to get start of scanline (5000 T-states)
-	ld b,172
-ppe_scan_delay10:
-	nop
-	nop
-	nop
-	nop
-	djnz ppe_scan_delay10
-		; 10 T-states remaining
-	nop   	; 6 T-states remaining
-	nop   	; 2 T-states remaining
-	nop   	; -2 T-states remaining
-
-	;Beam chasing starts NOW!
-
-	; delay to get start of scanline (5000 T-states)
-	ld b,172
-ppe_scan_delay11:
-	nop
-	nop
-	nop
-	nop
-	djnz ppe_scan_delay11
-		; 10 T-states remaining
-	nop   	; 6 T-states remaining
-	nop   	; 2 T-states remaining
-	nop   	; -2 T-states remaining
-
-	;Beam chasing starts NOW!
-
-	; delay to get start of scanline (5000 T-states)
-	ld b,172
-ppe_scan_delay12:
-	nop
-	nop
-	nop
-	nop
-	djnz ppe_scan_delay12
-		; 10 T-states remaining
-	nop   	; 6 T-states remaining
-	nop   	; 2 T-states remaining
-	nop   	; -2 T-states remaining
-
-	;Beam chasing starts NOW!
-
-	; delay to get start of scanline (2000 T-states)
-	ld b,69
-ppe_scan_delay13:
-	nop
-	nop
-	nop
-	nop
-	djnz ppe_scan_delay13
-		; 2 T-states remaining
-	nop   	; -2 T-states remaining
-
-	;Beam chasing starts NOW!
-
-	; delay to get start of scanline (672 T-states)
-	ld b,23
-ppe_scan_delay14:
-	nop
-	nop
-	nop
-	nop
-	djnz ppe_scan_delay14
-		; 8 T-states remaining
-	nop   	; 4 T-states remaining
-	nop   	; 0 T-states remaining
-
-	;Beam chasing starts NOW!
-
-	; src_attr_data blit 0
-	ld bc,3598	; offset 0
-	ld de,3598	; offset 3
-	ld hl,3598	; offset 6
-	exx    	; offset 9
-	ld bc,3598	; offset 10
-	ld de,3598	; offset 13
-	ld hl,3598	; offset 16
-	ld sp,attrStartAddr+12	; offset 19
-	push hl	; offset 22
-	push de	; offset 23
-	push bc	; offset 24
-	exx    	; offset 25
-	push hl	; offset 26
-	push de	; offset 27
-	push bc	; offset 28
-
-	; src_attr_data blit 1
-	ld bc,3598	; offset 29
-	ld de,3598	; offset 32
-	ld hl,3598	; offset 35
-	exx    	; offset 38
-	ld bc,3598	; offset 39
-	ld de,3598	; offset 42
-	ld hl,3598	; offset 45
-	ld sp,attrStartAddr+24	; offset 48
-	push hl	; offset 51
-	push de	; offset 52
-	push bc	; offset 53
-	exx    	; offset 54
-	push hl	; offset 55
-	push de	; offset 56
-	push bc	; offset 57
-
-	; src_attr_data blit 2
-	ld bc,3598	; offset 58
-	ld de,3598	; offset 61
-	ld hl,3598	; offset 64
-	exx    	; offset 67
-	ld bc,3598	; offset 68
-	ld de,3598	; offset 71
-	ld hl,3598	; offset 74
-	ld sp,attrStartAddr+36	; offset 77
-	push hl	; offset 80
-	push de	; offset 81
-	push bc	; offset 82
-	exx    	; offset 83
-	push hl	; offset 84
-	push de	; offset 85
-	push bc	; offset 86
-
-	; src_attr_data blit 3
-	ld bc,3598	; offset 87
-	ld de,3598	; offset 90
-	ld hl,3598	; offset 93
-	exx    	; offset 96
-	ld bc,3598	; offset 97
-	ld de,3598	; offset 100
-	ld hl,3598	; offset 103
-	ld sp,attrStartAddr+48	; offset 106
-	push hl	; offset 109
-	push de	; offset 110
-	push bc	; offset 111
-	exx    	; offset 112
-	push hl	; offset 113
-	push de	; offset 114
-	push bc	; offset 115
-
-	; src_attr_data blit 4
-	ld bc,3598	; offset 116
-	ld de,3598	; offset 119
-	ld hl,3598	; offset 122
-	exx    	; offset 125
-	ld bc,3598	; offset 126
-	ld de,3598	; offset 129
-	ld hl,3598	; offset 132
-	ld sp,attrStartAddr+60	; offset 135
-	push hl	; offset 138
-	push de	; offset 139
-	push bc	; offset 140
-	exx    	; offset 141
-	push hl	; offset 142
-	push de	; offset 143
-	push bc	; offset 144
-
-	; src_attr_data blit 5
-	ld bc,3598	; offset 145
-	ld de,3598	; offset 148
-	ld hl,3598	; offset 151
-	exx    	; offset 154
-	ld bc,3598	; offset 155
-	ld de,3598	; offset 158
-	ld hl,3598	; offset 161
-	ld sp,attrStartAddr+72	; offset 164
-	push hl	; offset 167
-	push de	; offset 168
-	push bc	; offset 169
-	exx    	; offset 170
-	push hl	; offset 171
-	push de	; offset 172
-	push bc	; offset 173
-
-	; src_attr_data blit 6
-	ld bc,3598	; offset 174
-	ld de,3598	; offset 177
-	ld hl,3598	; offset 180
-	exx    	; offset 183
-	ld bc,3598	; offset 184
-	ld de,3598	; offset 187
-	ld hl,3598	; offset 190
-	ld sp,attrStartAddr+84	; offset 193
-	push hl	; offset 196
-	push de	; offset 197
-	push bc	; offset 198
-	exx    	; offset 199
-	push hl	; offset 200
-	push de	; offset 201
-	push bc	; offset 202
-
-	; src_attr_data blit 7
-	ld bc,3598	; offset 203
-	ld de,3598	; offset 206
-	ld hl,3598	; offset 209
-	exx    	; offset 212
-	ld bc,3598	; offset 213
-	ld de,3598	; offset 216
-	ld hl,3598	; offset 219
-	ld sp,attrStartAddr+96	; offset 222
-	push hl	; offset 225
-	push de	; offset 226
-	push bc	; offset 227
-	exx    	; offset 228
-	push hl	; offset 229
-	push de	; offset 230
-	push bc	; offset 231
-
-	; src_attr_data blit 8
-	ld bc,3598	; offset 232
-	ld de,3598	; offset 235
-	ld hl,3598	; offset 238
-	exx    	; offset 241
-	ld bc,3598	; offset 242
-	ld de,3598	; offset 245
-	ld hl,3598	; offset 248
-	ld sp,attrStartAddr+108	; offset 251
-	push hl	; offset 254
-	push de	; offset 255
-	push bc	; offset 256
-	exx    	; offset 257
-	push hl	; offset 258
-	push de	; offset 259
-	push bc	; offset 260
-
-	; src_attr_data blit 9
-	ld bc,3598	; offset 261
-	ld de,3598	; offset 264
-	ld hl,3598	; offset 267
-	exx    	; offset 270
-	ld bc,3598	; offset 271
-	ld de,3598	; offset 274
-	ld hl,3598	; offset 277
-	ld sp,attrStartAddr+120	; offset 280
-	push hl	; offset 283
-	push de	; offset 284
-	push bc	; offset 285
-	exx    	; offset 286
-	push hl	; offset 287
-	push de	; offset 288
-	push bc	; offset 289
-
-	; src_attr_data blit 10
-	ld bc,3598	; offset 290
-	ld de,3598	; offset 293
-	ld hl,3598	; offset 296
-	exx    	; offset 299
-	ld bc,3598	; offset 300
-	ld de,3598	; offset 303
-	ld hl,3598	; offset 306
-	ld sp,attrStartAddr+132	; offset 309
-	push hl	; offset 312
-	push de	; offset 313
-	push bc	; offset 314
-	exx    	; offset 315
-	push hl	; offset 316
-	push de	; offset 317
-	push bc	; offset 318
-
-	; src_attr_data blit 11
-	ld bc,3598	; offset 319
-	ld de,3598	; offset 322
-	ld hl,3598	; offset 325
-	exx    	; offset 328
-	ld bc,3598	; offset 329
-	ld de,3598	; offset 332
-	ld hl,3598	; offset 335
-	ld sp,attrStartAddr+144	; offset 338
-	push hl	; offset 341
-	push de	; offset 342
-	push bc	; offset 343
-	exx    	; offset 344
-	push hl	; offset 345
-	push de	; offset 346
-	push bc	; offset 347
-
-	; src_attr_data blit 12
-	ld bc,3598	; offset 348
-	ld de,3598	; offset 351
-	ld hl,3598	; offset 354
-	exx    	; offset 357
-	ld bc,3598	; offset 358
-	ld de,3598	; offset 361
-	ld hl,3598	; offset 364
-	ld sp,attrStartAddr+156	; offset 367
-	push hl	; offset 370
-	push de	; offset 371
-	push bc	; offset 372
-	exx    	; offset 373
-	push hl	; offset 374
-	push de	; offset 375
-	push bc	; offset 376
-
-	; src_attr_data blit 13
-	ld bc,3598	; offset 377
-	ld de,3598	; offset 380
-	ld hl,3598	; offset 383
-	exx    	; offset 386
-	ld bc,3598	; offset 387
-	ld de,3598	; offset 390
-	ld hl,3598	; offset 393
-	ld sp,attrStartAddr+168	; offset 396
-	push hl	; offset 399
-	push de	; offset 400
-	push bc	; offset 401
-	exx    	; offset 402
-	push hl	; offset 403
-	push de	; offset 404
-	push bc	; offset 405
-
-	; src_attr_data blit 14
-	ld bc,3598	; offset 406
-	ld de,3598	; offset 409
-	ld hl,3598	; offset 412
-	exx    	; offset 415
-	ld bc,3598	; offset 416
-	ld de,3598	; offset 419
-	ld hl,3598	; offset 422
-	ld sp,attrStartAddr+180	; offset 425
-	push hl	; offset 428
-	push de	; offset 429
-	push bc	; offset 430
-	exx    	; offset 431
-	push hl	; offset 432
-	push de	; offset 433
-	push bc	; offset 434
-
-	; src_attr_data blit 15
-	ld bc,3598	; offset 435
-	ld de,3598	; offset 438
-	ld hl,3598	; offset 441
-	exx    	; offset 444
-	ld bc,3598	; offset 445
-	ld de,3598	; offset 448
-	ld hl,3598	; offset 451
-	ld sp,attrStartAddr+192	; offset 454
-	push hl	; offset 457
-	push de	; offset 458
-	push bc	; offset 459
-	exx    	; offset 460
-	push hl	; offset 461
-	push de	; offset 462
-	push bc	; offset 463
-
-	; src_attr_data blit 16
-	ld bc,3598	; offset 464
-	ld de,3598	; offset 467
-	ld hl,3598	; offset 470
-	exx    	; offset 473
-	ld bc,3598	; offset 474
-	ld de,3598	; offset 477
-	ld hl,3598	; offset 480
-	ld sp,attrStartAddr+204	; offset 483
-	push hl	; offset 486
-	push de	; offset 487
-	push bc	; offset 488
-	exx    	; offset 489
-	push hl	; offset 490
-	push de	; offset 491
-	push bc	; offset 492
-
-	; src_attr_data blit 17
-	ld bc,3598	; offset 493
-	ld de,3598	; offset 496
-	ld hl,3598	; offset 499
-	exx    	; offset 502
-	ld bc,3598	; offset 503
-	ld de,3598	; offset 506
-	ld hl,3598	; offset 509
-	ld sp,attrStartAddr+216	; offset 512
-	push hl	; offset 515
-	push de	; offset 516
-	push bc	; offset 517
-	exx    	; offset 518
-	push hl	; offset 519
-	push de	; offset 520
-	push bc	; offset 521
-
-	; src_attr_data blit 18
-	ld bc,3598	; offset 522
-	ld de,3598	; offset 525
-	ld hl,3598	; offset 528
-	exx    	; offset 531
-	ld bc,3598	; offset 532
-	ld de,3598	; offset 535
-	ld hl,3598	; offset 538
-	ld sp,attrStartAddr+228	; offset 541
-	push hl	; offset 544
-	push de	; offset 545
-	push bc	; offset 546
-	exx    	; offset 547
-	push hl	; offset 548
-	push de	; offset 549
-	push bc	; offset 550
-
-	; src_attr_data blit 19
-	ld bc,3598	; offset 551
-	ld de,3598	; offset 554
-	ld hl,3598	; offset 557
-	exx    	; offset 560
-	ld bc,3598	; offset 561
-	ld de,3598	; offset 564
-	ld hl,3598	; offset 567
-	ld sp,attrStartAddr+240	; offset 570
-	push hl	; offset 573
-	push de	; offset 574
-	push bc	; offset 575
-	exx    	; offset 576
-	push hl	; offset 577
-	push de	; offset 578
-	push bc	; offset 579
-
-	; src_attr_data blit 20
-	ld bc,3598	; offset 580
-	ld de,3598	; offset 583
-	ld hl,3598	; offset 586
-	exx    	; offset 589
-	ld bc,3598	; offset 590
-	ld de,3598	; offset 593
-	ld hl,3598	; offset 596
-	ld sp,attrStartAddr+252	; offset 599
-	push hl	; offset 602
-	push de	; offset 603
-	push bc	; offset 604
-	exx    	; offset 605
-	push hl	; offset 606
-	push de	; offset 607
-	push bc	; offset 608
-
-	; src_attr_data blit 21
-	ld bc,3598	; offset 609
-	ld de,3598	; offset 612
-	ld hl,3598	; offset 615
-	exx    	; offset 618
-	ld bc,3598	; offset 619
-	ld de,3598	; offset 622
-	ld hl,3598	; offset 625
-	ld sp,attrStartAddr+264	; offset 628
-	push hl	; offset 631
-	push de	; offset 632
-	push bc	; offset 633
-	exx    	; offset 634
-	push hl	; offset 635
-	push de	; offset 636
-	push bc	; offset 637
-
-	; src_attr_data blit 22
-	ld bc,3598	; offset 638
-	ld de,3598	; offset 641
-	ld hl,3598	; offset 644
-	exx    	; offset 647
-	ld bc,3598	; offset 648
-	ld de,3598	; offset 651
-	ld hl,3598	; offset 654
-	ld sp,attrStartAddr+276	; offset 657
-	push hl	; offset 660
-	push de	; offset 661
-	push bc	; offset 662
-	exx    	; offset 663
-	push hl	; offset 664
-	push de	; offset 665
-	push bc	; offset 666
-
-	; src_attr_data blit 23
-	ld bc,3598	; offset 667
-	ld de,3598	; offset 670
-	ld hl,3598	; offset 673
-	exx    	; offset 676
-	ld bc,3598	; offset 677
-	ld de,3598	; offset 680
-	ld hl,3598	; offset 683
-	ld sp,attrStartAddr+288	; offset 686
-	push hl	; offset 689
-	push de	; offset 690
-	push bc	; offset 691
-	exx    	; offset 692
-	push hl	; offset 693
-	push de	; offset 694
-	push bc	; offset 695
-
-	; src_attr_data blit 24
-	ld bc,3598	; offset 696
-	ld de,3598	; offset 699
-	ld hl,3598	; offset 702
-	exx    	; offset 705
-	ld bc,3598	; offset 706
-	ld de,3598	; offset 709
-	ld hl,3598	; offset 712
-	ld sp,attrStartAddr+300	; offset 715
-	push hl	; offset 718
-	push de	; offset 719
-	push bc	; offset 720
-	exx    	; offset 721
-	push hl	; offset 722
-	push de	; offset 723
-	push bc	; offset 724
-
-	; src_attr_data blit 25
-	ld bc,3598	; offset 725
-	ld de,3598	; offset 728
-	ld hl,3598	; offset 731
-	exx    	; offset 734
-	ld bc,3598	; offset 735
-	ld de,3598	; offset 738
-	ld hl,3598	; offset 741
-	ld sp,attrStartAddr+312	; offset 744
-	push hl	; offset 747
-	push de	; offset 748
-	push bc	; offset 749
-	exx    	; offset 750
-	push hl	; offset 751
-	push de	; offset 752
-	push bc	; offset 753
-
-	; src_attr_data blit 26
-	ld bc,3598	; offset 754
-	ld de,3598	; offset 757
-	ld hl,3598	; offset 760
-	exx    	; offset 763
-	ld bc,3598	; offset 764
-	ld de,3598	; offset 767
-	ld hl,3598	; offset 770
-	ld sp,attrStartAddr+324	; offset 773
-	push hl	; offset 776
-	push de	; offset 777
-	push bc	; offset 778
-	exx    	; offset 779
-	push hl	; offset 780
-	push de	; offset 781
-	push bc	; offset 782
-
-	; src_attr_data blit 27
-	ld bc,3598	; offset 783
-	ld de,3598	; offset 786
-	ld hl,3598	; offset 789
-	exx    	; offset 792
-	ld bc,3598	; offset 793
-	ld de,3598	; offset 796
-	ld hl,3598	; offset 799
-	ld sp,attrStartAddr+336	; offset 802
-	push hl	; offset 805
-	push de	; offset 806
-	push bc	; offset 807
-	exx    	; offset 808
-	push hl	; offset 809
-	push de	; offset 810
-	push bc	; offset 811
-
-	; src_attr_data blit 28
-	ld bc,3598	; offset 812
-	ld de,3598	; offset 815
-	ld hl,3598	; offset 818
-	exx    	; offset 821
-	ld bc,3598	; offset 822
-	ld de,3598	; offset 825
-	ld hl,3598	; offset 828
-	ld sp,attrStartAddr+348	; offset 831
-	push hl	; offset 834
-	push de	; offset 835
-	push bc	; offset 836
-	exx    	; offset 837
-	push hl	; offset 838
-	push de	; offset 839
-	push bc	; offset 840
-
-	; src_attr_data blit 29
-	ld bc,3598	; offset 841
-	ld de,3598	; offset 844
-	ld hl,3598	; offset 847
-	exx    	; offset 850
-	ld bc,3598	; offset 851
-	ld de,3598	; offset 854
-	ld hl,3598	; offset 857
-	ld sp,attrStartAddr+360	; offset 860
-	push hl	; offset 863
-	push de	; offset 864
-	push bc	; offset 865
-	exx    	; offset 866
-	push hl	; offset 867
-	push de	; offset 868
-	push bc	; offset 869
-
-	; src_attr_data blit 30
-	ld bc,3598	; offset 870
-	ld de,3598	; offset 873
-	ld hl,3598	; offset 876
-	exx    	; offset 879
-	ld bc,3598	; offset 880
-	ld de,3598	; offset 883
-	ld hl,3598	; offset 886
-	ld sp,attrStartAddr+372	; offset 889
-	push hl	; offset 892
-	push de	; offset 893
-	push bc	; offset 894
-	exx    	; offset 895
-	push hl	; offset 896
-	push de	; offset 897
-	push bc	; offset 898
-
-	; src_attr_data blit 31
-	ld bc,3598	; offset 899
-	ld de,3598	; offset 902
-	ld hl,3598	; offset 905
-	exx    	; offset 908
-	ld bc,3598	; offset 909
-	ld de,3598	; offset 912
-	ld hl,3598	; offset 915
-	ld sp,attrStartAddr+384	; offset 918
-	push hl	; offset 921
-	push de	; offset 922
-	push bc	; offset 923
-	exx    	; offset 924
-	push hl	; offset 925
-	push de	; offset 926
-	push bc	; offset 927
-
-	; src_attr_data blit 32
-	ld bc,3598	; offset 928
-	ld de,3598	; offset 931
-	ld hl,3598	; offset 934
-	exx    	; offset 937
-	ld bc,3598	; offset 938
-	ld de,3598	; offset 941
-	ld hl,3598	; offset 944
-	ld sp,attrStartAddr+396	; offset 947
-	push hl	; offset 950
-	push de	; offset 951
-	push bc	; offset 952
-	exx    	; offset 953
-	push hl	; offset 954
-	push de	; offset 955
-	push bc	; offset 956
-
-	; src_attr_data blit 33
-	ld bc,3598	; offset 957
-	ld de,3598	; offset 960
-	ld hl,3598	; offset 963
-	exx    	; offset 966
-	ld bc,3598	; offset 967
-	ld de,3598	; offset 970
-	ld hl,3598	; offset 973
-	ld sp,attrStartAddr+408	; offset 976
-	push hl	; offset 979
-	push de	; offset 980
-	push bc	; offset 981
-	exx    	; offset 982
-	push hl	; offset 983
-	push de	; offset 984
-	push bc	; offset 985
-
-	; src_attr_data blit 34
-	ld bc,3598	; offset 986
-	ld de,3598	; offset 989
-	ld hl,3598	; offset 992
-	exx    	; offset 995
-	ld bc,3598	; offset 996
-	ld de,3598	; offset 999
-	ld hl,3598	; offset 1002
-	ld sp,attrStartAddr+420	; offset 1005
-	push hl	; offset 1008
-	push de	; offset 1009
-	push bc	; offset 1010
-	exx    	; offset 1011
-	push hl	; offset 1012
-	push de	; offset 1013
-	push bc	; offset 1014
-
-	; src_attr_data blit 35
-	ld bc,3598	; offset 1015
-	ld de,3598	; offset 1018
-	ld hl,3598	; offset 1021
-	exx    	; offset 1024
-	ld bc,3598	; offset 1025
-	ld de,3598	; offset 1028
-	ld hl,3598	; offset 1031
-	ld sp,attrStartAddr+432	; offset 1034
-	push hl	; offset 1037
-	push de	; offset 1038
-	push bc	; offset 1039
-	exx    	; offset 1040
-	push hl	; offset 1041
-	push de	; offset 1042
-	push bc	; offset 1043
-
-	; src_attr_data blit 36
-	ld bc,3598	; offset 1044
-	ld de,3598	; offset 1047
-	ld hl,3598	; offset 1050
-	exx    	; offset 1053
-	ld bc,3598	; offset 1054
-	ld de,3598	; offset 1057
-	ld hl,3598	; offset 1060
-	ld sp,attrStartAddr+444	; offset 1063
-	push hl	; offset 1066
-	push de	; offset 1067
-	push bc	; offset 1068
-	exx    	; offset 1069
-	push hl	; offset 1070
-	push de	; offset 1071
-	push bc	; offset 1072
-
-	; src_attr_data blit 37
-	ld bc,3598	; offset 1073
-	ld de,3598	; offset 1076
-	ld hl,3598	; offset 1079
-	exx    	; offset 1082
-	ld bc,3598	; offset 1083
-	ld de,3598	; offset 1086
-	ld hl,3598	; offset 1089
-	ld sp,attrStartAddr+456	; offset 1092
-	push hl	; offset 1095
-	push de	; offset 1096
-	push bc	; offset 1097
-	exx    	; offset 1098
-	push hl	; offset 1099
-	push de	; offset 1100
-	push bc	; offset 1101
-
-	; src_attr_data blit 38
-	ld bc,3598	; offset 1102
-	ld de,3598	; offset 1105
-	ld hl,3598	; offset 1108
-	exx    	; offset 1111
-	ld bc,3598	; offset 1112
-	ld de,3598	; offset 1115
-	ld hl,3598	; offset 1118
-	ld sp,attrStartAddr+468	; offset 1121
-	push hl	; offset 1124
-	push de	; offset 1125
-	push bc	; offset 1126
-	exx    	; offset 1127
-	push hl	; offset 1128
-	push de	; offset 1129
-	push bc	; offset 1130
-
-	; src_attr_data blit 39
-	ld bc,3598	; offset 1131
-	ld de,3598	; offset 1134
-	ld hl,3598	; offset 1137
-	exx    	; offset 1140
-	ld bc,3598	; offset 1141
-	ld de,3598	; offset 1144
-	ld hl,3598	; offset 1147
-	ld sp,attrStartAddr+480	; offset 1150
-	push hl	; offset 1153
-	push de	; offset 1154
-	push bc	; offset 1155
-	exx    	; offset 1156
-	push hl	; offset 1157
-	push de	; offset 1158
-	push bc	; offset 1159
-
-	; src_attr_data blit 40
-	ld bc,3598	; offset 1160
-	ld de,3598	; offset 1163
-	ld hl,3598	; offset 1166
-	exx    	; offset 1169
-	ld bc,3598	; offset 1170
-	ld de,3598	; offset 1173
-	ld hl,3598	; offset 1176
-	ld sp,attrStartAddr+492	; offset 1179
-	push hl	; offset 1182
-	push de	; offset 1183
-	push bc	; offset 1184
-	exx    	; offset 1185
-	push hl	; offset 1186
-	push de	; offset 1187
-	push bc	; offset 1188
-
-	; src_attr_data blit 41
-	ld bc,3598	; offset 1189
-	ld de,3598	; offset 1192
-	ld hl,3598	; offset 1195
-	exx    	; offset 1198
-	ld bc,3598	; offset 1199
-	ld de,3598	; offset 1202
-	ld hl,3598	; offset 1205
-	ld sp,attrStartAddr+504	; offset 1208
-	push hl	; offset 1211
-	push de	; offset 1212
-	push bc	; offset 1213
-	exx    	; offset 1214
-	push hl	; offset 1215
-	push de	; offset 1216
-	push bc	; offset 1217
-
-	; src_attr_data blit 42
-	ld bc,3598	; offset 1218
-	ld de,3598	; offset 1221
-	ld hl,3598	; offset 1224
-	exx    	; offset 1227
-	ld bc,3598	; offset 1228
-	ld de,3598	; offset 1231
-	ld hl,3598	; offset 1234
-	ld sp,attrStartAddr+516	; offset 1237
-	push hl	; offset 1240
-	push de	; offset 1241
-	push bc	; offset 1242
-	exx    	; offset 1243
-	push hl	; offset 1244
-	push de	; offset 1245
-	push bc	; offset 1246
-
-	; src_attr_data blit 43
-	ld bc,3598	; offset 1247
-	ld de,3598	; offset 1250
-	ld hl,3598	; offset 1253
-	exx    	; offset 1256
-	ld bc,3598	; offset 1257
-	ld de,3598	; offset 1260
-	ld hl,3598	; offset 1263
-	ld sp,attrStartAddr+528	; offset 1266
-	push hl	; offset 1269
-	push de	; offset 1270
-	push bc	; offset 1271
-	exx    	; offset 1272
-	push hl	; offset 1273
-	push de	; offset 1274
-	push bc	; offset 1275
-
-	; src_attr_data blit 44
-	ld bc,3598	; offset 1276
-	ld de,3598	; offset 1279
-	ld hl,3598	; offset 1282
-	exx    	; offset 1285
-	ld bc,3598	; offset 1286
-	ld de,3598	; offset 1289
-	ld hl,3598	; offset 1292
-	ld sp,attrStartAddr+540	; offset 1295
-	push hl	; offset 1298
-	push de	; offset 1299
-	push bc	; offset 1300
-	exx    	; offset 1301
-	push hl	; offset 1302
-	push de	; offset 1303
-	push bc	; offset 1304
-
-	; src_attr_data blit 45
-	ld bc,3598	; offset 1305
-	ld de,3598	; offset 1308
-	ld hl,3598	; offset 1311
-	exx    	; offset 1314
-	ld bc,3598	; offset 1315
-	ld de,3598	; offset 1318
-	ld hl,3598	; offset 1321
-	ld sp,attrStartAddr+552	; offset 1324
-	push hl	; offset 1327
-	push de	; offset 1328
-	push bc	; offset 1329
-	exx    	; offset 1330
-	push hl	; offset 1331
-	push de	; offset 1332
-	push bc	; offset 1333
-
-	; src_attr_data blit 46
-	ld bc,3598	; offset 1334
-	ld de,3598	; offset 1337
-	ld hl,3598	; offset 1340
-	exx    	; offset 1343
-	ld bc,3598	; offset 1344
-	ld de,3598	; offset 1347
-	ld hl,3598	; offset 1350
-	ld sp,attrStartAddr+564	; offset 1353
-	push hl	; offset 1356
-	push de	; offset 1357
-	push bc	; offset 1358
-	exx    	; offset 1359
-	push hl	; offset 1360
-	push de	; offset 1361
-	push bc	; offset 1362
-
-	; src_attr_data blit 47
-	ld bc,3598	; offset 1363
-	ld de,3598	; offset 1366
-	ld hl,3598	; offset 1369
-	exx    	; offset 1372
-	ld bc,3598	; offset 1373
-	ld de,3598	; offset 1376
-	ld hl,3598	; offset 1379
-	ld sp,attrStartAddr+576	; offset 1382
-	push hl	; offset 1385
-	push de	; offset 1386
-	push bc	; offset 1387
-	exx    	; offset 1388
-	push hl	; offset 1389
-	push de	; offset 1390
-	push bc	; offset 1391
-
-	; src_attr_data blit 48
-	ld bc,3598	; offset 1392
-	ld de,3598	; offset 1395
-	ld hl,3598	; offset 1398
-	exx    	; offset 1401
-	ld bc,3598	; offset 1402
-	ld de,3598	; offset 1405
-	ld hl,3598	; offset 1408
-	ld sp,attrStartAddr+588	; offset 1411
-	push hl	; offset 1414
-	push de	; offset 1415
-	push bc	; offset 1416
-	exx    	; offset 1417
-	push hl	; offset 1418
-	push de	; offset 1419
-	push bc	; offset 1420
-
-	; src_attr_data blit 49
-	ld bc,3598	; offset 1421
-	ld de,3598	; offset 1424
-	ld hl,3598	; offset 1427
-	exx    	; offset 1430
-	ld bc,3598	; offset 1431
-	ld de,3598	; offset 1434
-	ld hl,3598	; offset 1437
-	ld sp,attrStartAddr+600	; offset 1440
-	push hl	; offset 1443
-	push de	; offset 1444
-	push bc	; offset 1445
-	exx    	; offset 1446
-	push hl	; offset 1447
-	push de	; offset 1448
-	push bc	; offset 1449
-
-	; src_attr_data blit 50
-	ld bc,3598	; offset 1450
-	ld de,3598	; offset 1453
-	ld hl,3598	; offset 1456
-	exx    	; offset 1459
-	ld bc,3598	; offset 1460
-	ld de,3598	; offset 1463
-	ld hl,3598	; offset 1466
-	ld sp,attrStartAddr+612	; offset 1469
-	push hl	; offset 1472
-	push de	; offset 1473
-	push bc	; offset 1474
-	exx    	; offset 1475
-	push hl	; offset 1476
-	push de	; offset 1477
-	push bc	; offset 1478
-
-	; src_attr_data blit 51
-	ld bc,3598	; offset 1479
-	ld de,3598	; offset 1482
-	ld hl,3598	; offset 1485
-	exx    	; offset 1488
-	ld bc,3598	; offset 1489
-	ld de,3598	; offset 1492
-	ld hl,3598	; offset 1495
-	ld sp,attrStartAddr+624	; offset 1498
-	push hl	; offset 1501
-	push de	; offset 1502
-	push bc	; offset 1503
-	exx    	; offset 1504
-	push hl	; offset 1505
-	push de	; offset 1506
-	push bc	; offset 1507
-
-	; src_attr_data blit 52
-	ld bc,3598	; offset 1508
-	ld de,3598	; offset 1511
-	ld hl,3598	; offset 1514
-	exx    	; offset 1517
-	ld bc,3598	; offset 1518
-	ld de,3598	; offset 1521
-	ld hl,3598	; offset 1524
-	ld sp,attrStartAddr+636	; offset 1527
-	push hl	; offset 1530
-	push de	; offset 1531
-	push bc	; offset 1532
-	exx    	; offset 1533
-	push hl	; offset 1534
-	push de	; offset 1535
-	push bc	; offset 1536
-
-	; src_attr_data blit 53
-	ld bc,3598	; offset 1537
-	ld de,3598	; offset 1540
-	ld hl,3598	; offset 1543
-	exx    	; offset 1546
-	ld bc,3598	; offset 1547
-	ld de,3598	; offset 1550
-	ld hl,3598	; offset 1553
-	ld sp,attrStartAddr+648	; offset 1556
-	push hl	; offset 1559
-	push de	; offset 1560
-	push bc	; offset 1561
-	exx    	; offset 1562
-	push hl	; offset 1563
-	push de	; offset 1564
-	push bc	; offset 1565
-
-	; src_attr_data blit 54
-	ld bc,3598	; offset 1566
-	ld de,3598	; offset 1569
-	ld hl,3598	; offset 1572
-	exx    	; offset 1575
-	ld bc,3598	; offset 1576
-	ld de,3598	; offset 1579
-	ld hl,3598	; offset 1582
-	ld sp,attrStartAddr+660	; offset 1585
-	push hl	; offset 1588
-	push de	; offset 1589
-	push bc	; offset 1590
-	exx    	; offset 1591
-	push hl	; offset 1592
-	push de	; offset 1593
-	push bc	; offset 1594
-
-	; src_attr_data blit 55
-	ld bc,3598	; offset 1595
-	ld de,3598	; offset 1598
-	ld hl,3598	; offset 1601
-	exx    	; offset 1604
-	ld bc,3598	; offset 1605
-	ld de,3598	; offset 1608
-	ld hl,3598	; offset 1611
-	ld sp,attrStartAddr+672	; offset 1614
-	push hl	; offset 1617
-	push de	; offset 1618
-	push bc	; offset 1619
-	exx    	; offset 1620
-	push hl	; offset 1621
-	push de	; offset 1622
-	push bc	; offset 1623
-
-	; src_attr_data blit 56
-	ld bc,3598	; offset 1624
-	ld de,3598	; offset 1627
-	ld hl,3598	; offset 1630
-	exx    	; offset 1633
-	ld bc,3598	; offset 1634
-	ld de,3598	; offset 1637
-	ld hl,3598	; offset 1640
-	ld sp,attrStartAddr+684	; offset 1643
-	push hl	; offset 1646
-	push de	; offset 1647
-	push bc	; offset 1648
-	exx    	; offset 1649
-	push hl	; offset 1650
-	push de	; offset 1651
-	push bc	; offset 1652
-
-	; src_attr_data blit 57
-	ld bc,3598	; offset 1653
-	ld de,3598	; offset 1656
-	ld hl,3598	; offset 1659
-	exx    	; offset 1662
-	ld bc,3598	; offset 1663
-	ld de,3598	; offset 1666
-	ld hl,3598	; offset 1669
-	ld sp,attrStartAddr+696	; offset 1672
-	push hl	; offset 1675
-	push de	; offset 1676
-	push bc	; offset 1677
-	exx    	; offset 1678
-	push hl	; offset 1679
-	push de	; offset 1680
-	push bc	; offset 1681
-
-	; src_attr_data blit 58
-	ld bc,3598	; offset 1682
-	ld de,3598	; offset 1685
-	ld hl,3598	; offset 1688
-	exx    	; offset 1691
-	ld bc,3598	; offset 1692
-	ld de,3598	; offset 1695
-	ld hl,3598	; offset 1698
-	ld sp,attrStartAddr+708	; offset 1701
-	push hl	; offset 1704
-	push de	; offset 1705
-	push bc	; offset 1706
-	exx    	; offset 1707
-	push hl	; offset 1708
-	push de	; offset 1709
-	push bc	; offset 1710
-
-	; src_attr_data blit 59
-	ld bc,3598	; offset 1711
-	ld de,3598	; offset 1714
-	ld hl,3598	; offset 1717
-	exx    	; offset 1720
-	ld bc,3598	; offset 1721
-	ld de,3598	; offset 1724
-	ld hl,3598	; offset 1727
-	ld sp,attrStartAddr+720	; offset 1730
-	push hl	; offset 1733
-	push de	; offset 1734
-	push bc	; offset 1735
-	exx    	; offset 1736
-	push hl	; offset 1737
-	push de	; offset 1738
-	push bc	; offset 1739
-
-	; src_attr_data blit 60
-	ld bc,3598	; offset 1740
-	ld de,3598	; offset 1743
-	ld hl,3598	; offset 1746
-	exx    	; offset 1749
-	ld bc,3598	; offset 1750
-	ld de,3598	; offset 1753
-	ld hl,3598	; offset 1756
-	ld sp,attrStartAddr+732	; offset 1759
-	push hl	; offset 1762
-	push de	; offset 1763
-	push bc	; offset 1764
-	exx    	; offset 1765
-	push hl	; offset 1766
-	push de	; offset 1767
-	push bc	; offset 1768
-
-	; src_attr_data blit 61
-	ld bc,3598	; offset 1769
-	ld de,3598	; offset 1772
-	ld hl,3598	; offset 1775
-	exx    	; offset 1778
-	ld bc,3598	; offset 1779
-	ld de,3598	; offset 1782
-	ld hl,3598	; offset 1785
-	ld sp,attrStartAddr+744	; offset 1788
-	push hl	; offset 1791
-	push de	; offset 1792
-	push bc	; offset 1793
-	exx    	; offset 1794
-	push hl	; offset 1795
-	push de	; offset 1796
-	push bc	; offset 1797
-
-	; src_attr_data blit 62
-	ld bc,3598	; offset 1798
-	ld de,3598	; offset 1801
-	ld hl,3598	; offset 1804
-	exx    	; offset 1807
-	ld bc,3598	; offset 1808
-	ld de,3598	; offset 1811
-	ld hl,3598	; offset 1814
-	ld sp,attrStartAddr+756	; offset 1817
-	push hl	; offset 1820
-	push de	; offset 1821
-	push bc	; offset 1822
-	exx    	; offset 1823
-	push hl	; offset 1824
-	push de	; offset 1825
-	push bc	; offset 1826
-
-	; src_attr_data blit 63
-	ld bc,3598	; offset 1827
-	ld de,3598	; offset 1830
-	ld hl,3598	; offset 1833
-	exx    	; offset 1836
-	ld bc,3598	; offset 1837
-	ld de,3598	; offset 1840
-	ld hl,3598	; offset 1843
-	ld sp,attrStartAddr+768	; offset 1846
-	push hl	; offset 1849
-	push de	; offset 1850
-	push bc	; offset 1851
-	exx    	; offset 1852
-	push hl	; offset 1853
-	push de	; offset 1854
-	push bc	; offset 1855
-
-	; src_data blit 241
-	ld bc,52428	; offset 1856
-	ld de,52428	; offset 1859
-	ld hl,52428	; offset 1862
-	exx    	; offset 1865
-	ld bc,52428	; offset 1866
-	ld de,52428	; offset 1869
-	ld hl,52428	; offset 1872
-	ld sp,screenStartAddr+2184	; offset 1875
-	push hl	; offset 1878
-	push de	; offset 1879
-	push bc	; offset 1880
-	exx    	; offset 1881
-	push hl	; offset 1882
-	push de	; offset 1883
-	push bc	; offset 1884
-	; Clock offset: -7488
-
-	; src_data blit 242
-	ld bc,52428	; offset 1885
-	ld de,52428	; offset 1888
-	ld hl,52428	; offset 1891
-	exx    	; offset 1894
-	ld bc,52428	; offset 1895
-	ld de,52428	; offset 1898
-	ld hl,52428	; offset 1901
-	ld sp,screenStartAddr+2412	; offset 1904
-	push hl	; offset 1907
-	push de	; offset 1908
-	push bc	; offset 1909
-	exx    	; offset 1910
-	push hl	; offset 1911
-	push de	; offset 1912
-	push bc	; offset 1913
-	; Clock offset: -7344
-
-	; src_data blit 243
-	ld bc,52428	; offset 1914
-	ld de,52428	; offset 1917
-	ld hl,52428	; offset 1920
-	exx    	; offset 1923
-	ld bc,52428	; offset 1924
-	ld de,52428	; offset 1927
-	ld hl,52428	; offset 1930
-	ld sp,screenStartAddr+2424	; offset 1933
-	push hl	; offset 1936
-	push de	; offset 1937
-	push bc	; offset 1938
-	exx    	; offset 1939
-	push hl	; offset 1940
-	push de	; offset 1941
-	push bc	; offset 1942
-	; Clock offset: -7200
-
-	; src_data blit 244
-	ld bc,52428	; offset 1943
-	ld de,52428	; offset 1946
-	ld hl,52428	; offset 1949
-	exx    	; offset 1952
-	ld bc,52428	; offset 1953
-	ld de,52428	; offset 1956
-	ld hl,52428	; offset 1959
-	ld sp,screenStartAddr+2436	; offset 1962
-	push hl	; offset 1965
-	push de	; offset 1966
-	push bc	; offset 1967
-	exx    	; offset 1968
-	push hl	; offset 1969
-	push de	; offset 1970
-	push bc	; offset 1971
-	; Clock offset: -7056
-
-	; src_data blit 245
-	ld bc,52428	; offset 1972
-	ld de,52428	; offset 1975
-	ld hl,52428	; offset 1978
-	exx    	; offset 1981
-	ld bc,52428	; offset 1982
-	ld de,52428	; offset 1985
-	ld hl,52428	; offset 1988
-	ld sp,screenStartAddr+2676	; offset 1991
-	push hl	; offset 1994
-	push de	; offset 1995
-	push bc	; offset 1996
-	exx    	; offset 1997
-	push hl	; offset 1998
-	push de	; offset 1999
-	push bc	; offset 2000
-	; Clock offset: -6912
-
-	; src_data blit 246
-	ld bc,52428	; offset 2001
-	ld de,52428	; offset 2004
-	ld hl,52428	; offset 2007
-	exx    	; offset 2010
-	ld bc,52428	; offset 2011
-	ld de,52428	; offset 2014
-	ld hl,52428	; offset 2017
-	ld sp,screenStartAddr+2688	; offset 2020
-	push hl	; offset 2023
-	push de	; offset 2024
-	push bc	; offset 2025
-	exx    	; offset 2026
-	push hl	; offset 2027
-	push de	; offset 2028
-	push bc	; offset 2029
-	; Clock offset: -6768
-
-	; src_data blit 247
-	ld bc,52428	; offset 2030
-	ld de,52428	; offset 2033
-	ld hl,52428	; offset 2036
-	exx    	; offset 2039
-	ld bc,52428	; offset 2040
-	ld de,52428	; offset 2043
-	ld hl,52428	; offset 2046
-	ld sp,screenStartAddr+2928	; offset 2049
-	push hl	; offset 2052
-	push de	; offset 2053
-	push bc	; offset 2054
-	exx    	; offset 2055
-	push hl	; offset 2056
-	push de	; offset 2057
-	push bc	; offset 2058
-	; Clock offset: -6624
-
-	; src_data blit 248
-	ld bc,52428	; offset 2059
-	ld de,52428	; offset 2062
-	ld hl,52428	; offset 2065
-	exx    	; offset 2068
-	ld bc,52428	; offset 2069
-	ld de,52428	; offset 2072
-	ld hl,52428	; offset 2075
-	ld sp,screenStartAddr+2940	; offset 2078
-	push hl	; offset 2081
-	push de	; offset 2082
-	push bc	; offset 2083
-	exx    	; offset 2084
-	push hl	; offset 2085
-	push de	; offset 2086
-	push bc	; offset 2087
-	; Clock offset: -6480
-
-	; src_data blit 249
-	ld bc,52428	; offset 2088
-	ld de,52428	; offset 2091
-	ld hl,52428	; offset 2094
-	exx    	; offset 2097
-	ld bc,52428	; offset 2098
-	ld de,52428	; offset 2101
-	ld hl,52428	; offset 2104
-	ld sp,screenStartAddr+2952	; offset 2107
-	push hl	; offset 2110
-	push de	; offset 2111
-	push bc	; offset 2112
-	exx    	; offset 2113
-	push hl	; offset 2114
-	push de	; offset 2115
-	push bc	; offset 2116
-	; Clock offset: -6336
-
-	; src_data blit 250
-	ld bc,52428	; offset 2117
-	ld de,52428	; offset 2120
-	ld hl,52428	; offset 2123
-	exx    	; offset 2126
-	ld bc,52428	; offset 2127
-	ld de,52428	; offset 2130
-	ld hl,52428	; offset 2133
-	ld sp,screenStartAddr+3180	; offset 2136
-	push hl	; offset 2139
-	push de	; offset 2140
-	push bc	; offset 2141
-	exx    	; offset 2142
-	push hl	; offset 2143
-	push de	; offset 2144
-	push bc	; offset 2145
-	; Clock offset: -6192
-
-	; src_data blit 251
-	ld bc,52428	; offset 2146
-	ld de,52428	; offset 2149
-	ld hl,52428	; offset 2152
-	exx    	; offset 2155
-	ld bc,52428	; offset 2156
-	ld de,52428	; offset 2159
-	ld hl,52428	; offset 2162
-	ld sp,screenStartAddr+3192	; offset 2165
-	push hl	; offset 2168
-	push de	; offset 2169
-	push bc	; offset 2170
-	exx    	; offset 2171
-	push hl	; offset 2172
-	push de	; offset 2173
-	push bc	; offset 2174
-	; Clock offset: -6048
-
-	; src_data blit 252
-	ld bc,52428	; offset 2175
-	ld de,52428	; offset 2178
-	ld hl,52428	; offset 2181
-	exx    	; offset 2184
-	ld bc,52428	; offset 2185
-	ld de,52428	; offset 2188
-	ld hl,52428	; offset 2191
-	ld sp,screenStartAddr+3204	; offset 2194
-	push hl	; offset 2197
-	push de	; offset 2198
-	push bc	; offset 2199
-	exx    	; offset 2200
-	push hl	; offset 2201
-	push de	; offset 2202
-	push bc	; offset 2203
-	; Clock offset: -5904
-
-	; src_data blit 253
-	ld bc,52428	; offset 2204
-	ld de,52428	; offset 2207
-	ld hl,52428	; offset 2210
-	exx    	; offset 2213
-	ld bc,52428	; offset 2214
-	ld de,52428	; offset 2217
-	ld hl,52428	; offset 2220
-	ld sp,screenStartAddr+3444	; offset 2223
-	push hl	; offset 2226
-	push de	; offset 2227
-	push bc	; offset 2228
-	exx    	; offset 2229
-	push hl	; offset 2230
-	push de	; offset 2231
-	push bc	; offset 2232
-	; Clock offset: -5760
-
-	; src_data blit 254
-	ld bc,52428	; offset 2233
-	ld de,52428	; offset 2236
-	ld hl,52428	; offset 2239
-	exx    	; offset 2242
-	ld bc,52428	; offset 2243
-	ld de,52428	; offset 2246
-	ld hl,52428	; offset 2249
-	ld sp,screenStartAddr+3456	; offset 2252
-	push hl	; offset 2255
-	push de	; offset 2256
-	push bc	; offset 2257
-	exx    	; offset 2258
-	push hl	; offset 2259
-	push de	; offset 2260
-	push bc	; offset 2261
-	; Clock offset: -5616
-
-	; src_data blit 255
-	ld bc,52428	; offset 2262
-	ld de,52428	; offset 2265
-	ld hl,52428	; offset 2268
-	exx    	; offset 2271
-	ld bc,52428	; offset 2272
-	ld de,52428	; offset 2275
-	ld hl,52428	; offset 2278
-	ld sp,screenStartAddr+3696	; offset 2281
-	push hl	; offset 2284
-	push de	; offset 2285
-	push bc	; offset 2286
-	exx    	; offset 2287
-	push hl	; offset 2288
-	push de	; offset 2289
-	push bc	; offset 2290
-	; Clock offset: -5472
-
-	; src_data blit 256
-	ld bc,52428	; offset 2291
-	ld de,52428	; offset 2294
-	ld hl,52428	; offset 2297
-	exx    	; offset 2300
-	ld bc,52428	; offset 2301
-	ld de,52428	; offset 2304
-	ld hl,52428	; offset 2307
-	ld sp,screenStartAddr+3708	; offset 2310
-	push hl	; offset 2313
-	push de	; offset 2314
-	push bc	; offset 2315
-	exx    	; offset 2316
-	push hl	; offset 2317
-	push de	; offset 2318
-	push bc	; offset 2319
-	; Clock offset: -5328
-
-	; src_data blit 257
-	ld bc,52428	; offset 2320
-	ld de,52428	; offset 2323
-	ld hl,52428	; offset 2326
-	exx    	; offset 2329
-	ld bc,52428	; offset 2330
-	ld de,52428	; offset 2333
-	ld hl,52428	; offset 2336
-	ld sp,screenStartAddr+3720	; offset 2339
-	push hl	; offset 2342
-	push de	; offset 2343
-	push bc	; offset 2344
-	exx    	; offset 2345
-	push hl	; offset 2346
-	push de	; offset 2347
-	push bc	; offset 2348
-	; Clock offset: -5184
-
-	; src_data blit 258
-	ld bc,52428	; offset 2349
-	ld de,52428	; offset 2352
-	ld hl,52428	; offset 2355
-	exx    	; offset 2358
-	ld bc,52428	; offset 2359
-	ld de,52428	; offset 2362
-	ld hl,52428	; offset 2365
-	ld sp,screenStartAddr+3948	; offset 2368
-	push hl	; offset 2371
-	push de	; offset 2372
-	push bc	; offset 2373
-	exx    	; offset 2374
-	push hl	; offset 2375
-	push de	; offset 2376
-	push bc	; offset 2377
-	; Clock offset: -5040
-
-	; src_data blit 259
-	ld bc,52428	; offset 2378
-	ld de,52428	; offset 2381
-	ld hl,52428	; offset 2384
-	exx    	; offset 2387
-	ld bc,52428	; offset 2388
-	ld de,52428	; offset 2391
-	ld hl,52428	; offset 2394
-	ld sp,screenStartAddr+3960	; offset 2397
-	push hl	; offset 2400
-	push de	; offset 2401
-	push bc	; offset 2402
-	exx    	; offset 2403
-	push hl	; offset 2404
-	push de	; offset 2405
-	push bc	; offset 2406
-	; Clock offset: -4896
-
-	; src_data blit 260
-	ld bc,52428	; offset 2407
-	ld de,52428	; offset 2410
-	ld hl,52428	; offset 2413
-	exx    	; offset 2416
-	ld bc,52428	; offset 2417
-	ld de,52428	; offset 2420
-	ld hl,52428	; offset 2423
-	ld sp,screenStartAddr+3972	; offset 2426
-	push hl	; offset 2429
-	push de	; offset 2430
-	push bc	; offset 2431
-	exx    	; offset 2432
-	push hl	; offset 2433
-	push de	; offset 2434
-	push bc	; offset 2435
-	; Clock offset: -4752
-
-	; src_data blit 261
-	ld bc,52428	; offset 2436
-	ld de,52428	; offset 2439
-	ld hl,52428	; offset 2442
-	exx    	; offset 2445
-	ld bc,52428	; offset 2446
-	ld de,52428	; offset 2449
-	ld hl,52428	; offset 2452
-	ld sp,screenStartAddr+2196	; offset 2455
-	push hl	; offset 2458
-	push de	; offset 2459
-	push bc	; offset 2460
-	exx    	; offset 2461
-	push hl	; offset 2462
-	push de	; offset 2463
-	push bc	; offset 2464
-	; Clock offset: -4608
-
-	; src_data blit 262
-	ld bc,52428	; offset 2465
-	ld de,52428	; offset 2468
-	ld hl,52428	; offset 2471
-	exx    	; offset 2474
-	ld bc,52428	; offset 2475
-	ld de,52428	; offset 2478
-	ld hl,52428	; offset 2481
-	ld sp,screenStartAddr+2208	; offset 2484
-	push hl	; offset 2487
-	push de	; offset 2488
-	push bc	; offset 2489
-	exx    	; offset 2490
-	push hl	; offset 2491
-	push de	; offset 2492
-	push bc	; offset 2493
-	; Clock offset: -4464
-
-	; src_data blit 263
-	ld bc,52428	; offset 2494
-	ld de,52428	; offset 2497
-	ld hl,52428	; offset 2500
-	exx    	; offset 2503
-	ld bc,52428	; offset 2504
-	ld de,52428	; offset 2507
-	ld hl,52428	; offset 2510
-	ld sp,screenStartAddr+2448	; offset 2513
-	push hl	; offset 2516
-	push de	; offset 2517
-	push bc	; offset 2518
-	exx    	; offset 2519
-	push hl	; offset 2520
-	push de	; offset 2521
-	push bc	; offset 2522
-	; Clock offset: -4320
-
-	; src_data blit 264
-	ld bc,52428	; offset 2523
-	ld de,52428	; offset 2526
-	ld hl,52428	; offset 2529
-	exx    	; offset 2532
-	ld bc,52428	; offset 2533
-	ld de,52428	; offset 2536
-	ld hl,52428	; offset 2539
-	ld sp,screenStartAddr+2460	; offset 2542
-	push hl	; offset 2545
-	push de	; offset 2546
-	push bc	; offset 2547
-	exx    	; offset 2548
-	push hl	; offset 2549
-	push de	; offset 2550
-	push bc	; offset 2551
-	; Clock offset: -4176
-
-	; src_data blit 265
-	ld bc,52428	; offset 2552
-	ld de,52428	; offset 2555
-	ld hl,52428	; offset 2558
-	exx    	; offset 2561
-	ld bc,52428	; offset 2562
-	ld de,52428	; offset 2565
-	ld hl,52428	; offset 2568
-	ld sp,screenStartAddr+2472	; offset 2571
-	push hl	; offset 2574
-	push de	; offset 2575
-	push bc	; offset 2576
-	exx    	; offset 2577
-	push hl	; offset 2578
-	push de	; offset 2579
-	push bc	; offset 2580
-	; Clock offset: -4032
-
-	; src_data blit 266
-	ld bc,52428	; offset 2581
-	ld de,52428	; offset 2584
-	ld hl,52428	; offset 2587
-	exx    	; offset 2590
-	ld bc,52428	; offset 2591
-	ld de,52428	; offset 2594
-	ld hl,52428	; offset 2597
-	ld sp,screenStartAddr+2700	; offset 2600
-	push hl	; offset 2603
-	push de	; offset 2604
-	push bc	; offset 2605
-	exx    	; offset 2606
-	push hl	; offset 2607
-	push de	; offset 2608
-	push bc	; offset 2609
-	; Clock offset: -3888
-
-	; src_data blit 267
-	ld bc,52428	; offset 2610
-	ld de,52428	; offset 2613
-	ld hl,52428	; offset 2616
-	exx    	; offset 2619
-	ld bc,52428	; offset 2620
-	ld de,52428	; offset 2623
-	ld hl,52428	; offset 2626
-	ld sp,screenStartAddr+2712	; offset 2629
-	push hl	; offset 2632
-	push de	; offset 2633
-	push bc	; offset 2634
-	exx    	; offset 2635
-	push hl	; offset 2636
-	push de	; offset 2637
-	push bc	; offset 2638
-	; Clock offset: -3744
-
-	; src_data blit 268
-	ld bc,52428	; offset 2639
-	ld de,52428	; offset 2642
-	ld hl,52428	; offset 2645
-	exx    	; offset 2648
-	ld bc,52428	; offset 2649
-	ld de,52428	; offset 2652
-	ld hl,52428	; offset 2655
-	ld sp,screenStartAddr+2724	; offset 2658
-	push hl	; offset 2661
-	push de	; offset 2662
-	push bc	; offset 2663
-	exx    	; offset 2664
-	push hl	; offset 2665
-	push de	; offset 2666
-	push bc	; offset 2667
-	; Clock offset: -3600
-
-	; src_data blit 269
-	ld bc,52428	; offset 2668
-	ld de,52428	; offset 2671
-	ld hl,52428	; offset 2674
-	exx    	; offset 2677
-	ld bc,52428	; offset 2678
-	ld de,52428	; offset 2681
-	ld hl,52428	; offset 2684
-	ld sp,screenStartAddr+2964	; offset 2687
-	push hl	; offset 2690
-	push de	; offset 2691
-	push bc	; offset 2692
-	exx    	; offset 2693
-	push hl	; offset 2694
-	push de	; offset 2695
-	push bc	; offset 2696
-	; Clock offset: -3456
-
-	; src_data blit 270
-	ld bc,52428	; offset 2697
-	ld de,52428	; offset 2700
-	ld hl,52428	; offset 2703
-	exx    	; offset 2706
-	ld bc,52428	; offset 2707
-	ld de,52428	; offset 2710
-	ld hl,52428	; offset 2713
-	ld sp,screenStartAddr+2976	; offset 2716
-	push hl	; offset 2719
-	push de	; offset 2720
-	push bc	; offset 2721
-	exx    	; offset 2722
-	push hl	; offset 2723
-	push de	; offset 2724
-	push bc	; offset 2725
-	; Clock offset: -3312
-
-	; src_data blit 271
-	ld bc,52428	; offset 2726
-	ld de,52428	; offset 2729
-	ld hl,52428	; offset 2732
-	exx    	; offset 2735
-	ld bc,52428	; offset 2736
-	ld de,52428	; offset 2739
-	ld hl,52428	; offset 2742
-	ld sp,screenStartAddr+3216	; offset 2745
-	push hl	; offset 2748
-	push de	; offset 2749
-	push bc	; offset 2750
-	exx    	; offset 2751
-	push hl	; offset 2752
-	push de	; offset 2753
-	push bc	; offset 2754
-	; Clock offset: -3168
-
-	; src_data blit 272
-	ld bc,52428	; offset 2755
-	ld de,52428	; offset 2758
-	ld hl,52428	; offset 2761
-	exx    	; offset 2764
-	ld bc,52428	; offset 2765
-	ld de,52428	; offset 2768
-	ld hl,52428	; offset 2771
-	ld sp,screenStartAddr+3228	; offset 2774
-	push hl	; offset 2777
-	push de	; offset 2778
-	push bc	; offset 2779
-	exx    	; offset 2780
-	push hl	; offset 2781
-	push de	; offset 2782
-	push bc	; offset 2783
-	; Clock offset: -3024
-
-	; src_data blit 273
-	ld bc,52428	; offset 2784
-	ld de,52428	; offset 2787
-	ld hl,52428	; offset 2790
-	exx    	; offset 2793
-	ld bc,52428	; offset 2794
-	ld de,52428	; offset 2797
-	ld hl,52428	; offset 2800
-	ld sp,screenStartAddr+3240	; offset 2803
-	push hl	; offset 2806
-	push de	; offset 2807
-	push bc	; offset 2808
-	exx    	; offset 2809
-	push hl	; offset 2810
-	push de	; offset 2811
-	push bc	; offset 2812
-	; Clock offset: -2880
-
-	; src_data blit 274
-	ld bc,52428	; offset 2813
-	ld de,52428	; offset 2816
-	ld hl,52428	; offset 2819
-	exx    	; offset 2822
-	ld bc,52428	; offset 2823
-	ld de,52428	; offset 2826
-	ld hl,52428	; offset 2829
-	ld sp,screenStartAddr+3468	; offset 2832
-	push hl	; offset 2835
-	push de	; offset 2836
-	push bc	; offset 2837
-	exx    	; offset 2838
-	push hl	; offset 2839
-	push de	; offset 2840
-	push bc	; offset 2841
-	; Clock offset: -2736
-
-	; src_data blit 275
-	ld bc,52428	; offset 2842
-	ld de,52428	; offset 2845
-	ld hl,52428	; offset 2848
-	exx    	; offset 2851
-	ld bc,52428	; offset 2852
-	ld de,52428	; offset 2855
-	ld hl,52428	; offset 2858
-	ld sp,screenStartAddr+3480	; offset 2861
-	push hl	; offset 2864
-	push de	; offset 2865
-	push bc	; offset 2866
-	exx    	; offset 2867
-	push hl	; offset 2868
-	push de	; offset 2869
-	push bc	; offset 2870
-	; Clock offset: -2592
-
-	; src_data blit 276
-	ld bc,52428	; offset 2871
-	ld de,52428	; offset 2874
-	ld hl,52428	; offset 2877
-	exx    	; offset 2880
-	ld bc,52428	; offset 2881
-	ld de,52428	; offset 2884
-	ld hl,52428	; offset 2887
-	ld sp,screenStartAddr+3492	; offset 2890
-	push hl	; offset 2893
-	push de	; offset 2894
-	push bc	; offset 2895
-	exx    	; offset 2896
-	push hl	; offset 2897
-	push de	; offset 2898
-	push bc	; offset 2899
-	; Clock offset: -2448
-
-	; src_data blit 277
-	ld bc,52428	; offset 2900
-	ld de,52428	; offset 2903
-	ld hl,52428	; offset 2906
-	exx    	; offset 2909
-	ld bc,52428	; offset 2910
-	ld de,52428	; offset 2913
-	ld hl,52428	; offset 2916
-	ld sp,screenStartAddr+3732	; offset 2919
-	push hl	; offset 2922
-	push de	; offset 2923
-	push bc	; offset 2924
-	exx    	; offset 2925
-	push hl	; offset 2926
-	push de	; offset 2927
-	push bc	; offset 2928
-	; Clock offset: -2304
-
-	; src_data blit 278
-	ld bc,52428	; offset 2929
-	ld de,52428	; offset 2932
-	ld hl,52428	; offset 2935
-	exx    	; offset 2938
-	ld bc,52428	; offset 2939
-	ld de,52428	; offset 2942
-	ld hl,52428	; offset 2945
-	ld sp,screenStartAddr+3744	; offset 2948
-	push hl	; offset 2951
-	push de	; offset 2952
-	push bc	; offset 2953
-	exx    	; offset 2954
-	push hl	; offset 2955
-	push de	; offset 2956
-	push bc	; offset 2957
-	; Clock offset: -2160
-
-	; src_data blit 279
-	ld bc,52428	; offset 2958
-	ld de,52428	; offset 2961
-	ld hl,52428	; offset 2964
-	exx    	; offset 2967
-	ld bc,52428	; offset 2968
-	ld de,52428	; offset 2971
-	ld hl,52428	; offset 2974
-	ld sp,screenStartAddr+3984	; offset 2977
-	push hl	; offset 2980
-	push de	; offset 2981
-	push bc	; offset 2982
-	exx    	; offset 2983
-	push hl	; offset 2984
-	push de	; offset 2985
-	push bc	; offset 2986
-	; Clock offset: -2016
-
-	; src_data blit 280
-	ld bc,52428	; offset 2987
-	ld de,52428	; offset 2990
-	ld hl,52428	; offset 2993
-	exx    	; offset 2996
-	ld bc,52428	; offset 2997
-	ld de,52428	; offset 3000
-	ld hl,52428	; offset 3003
-	ld sp,screenStartAddr+3996	; offset 3006
-	push hl	; offset 3009
-	push de	; offset 3010
-	push bc	; offset 3011
-	exx    	; offset 3012
-	push hl	; offset 3013
-	push de	; offset 3014
-	push bc	; offset 3015
-	; Clock offset: -1872
-
-	; src_data blit 281
-	ld bc,52428	; offset 3016
-	ld de,52428	; offset 3019
-	ld hl,52428	; offset 3022
-	exx    	; offset 3025
-	ld bc,52428	; offset 3026
-	ld de,52428	; offset 3029
-	ld hl,52428	; offset 3032
-	ld sp,screenStartAddr+4008	; offset 3035
-	push hl	; offset 3038
-	push de	; offset 3039
-	push bc	; offset 3040
-	exx    	; offset 3041
-	push hl	; offset 3042
-	push de	; offset 3043
-	push bc	; offset 3044
-	; Clock offset: -1728
-
-	; src_data blit 282
-	ld bc,52428	; offset 3045
-	ld de,52428	; offset 3048
-	ld hl,52428	; offset 3051
-	exx    	; offset 3054
-	ld bc,52428	; offset 3055
-	ld de,52428	; offset 3058
-	ld hl,52428	; offset 3061
-	ld sp,screenStartAddr+2220	; offset 3064
-	push hl	; offset 3067
-	push de	; offset 3068
-	push bc	; offset 3069
-	exx    	; offset 3070
-	push hl	; offset 3071
-	push de	; offset 3072
-	push bc	; offset 3073
-	; Clock offset: -1584
-
-	; src_data blit 283
-	ld bc,52428	; offset 3074
-	ld de,52428	; offset 3077
-	ld hl,52428	; offset 3080
-	exx    	; offset 3083
-	ld bc,52428	; offset 3084
-	ld de,52428	; offset 3087
-	ld hl,52428	; offset 3090
-	ld sp,screenStartAddr+2232	; offset 3093
-	push hl	; offset 3096
-	push de	; offset 3097
-	push bc	; offset 3098
-	exx    	; offset 3099
-	push hl	; offset 3100
-	push de	; offset 3101
-	push bc	; offset 3102
-	; Clock offset: -1440
-
-	; src_data blit 284
-	ld bc,52428	; offset 3103
-	ld de,52428	; offset 3106
-	ld hl,52428	; offset 3109
-	exx    	; offset 3112
-	ld bc,52428	; offset 3113
-	ld de,52428	; offset 3116
-	ld hl,52428	; offset 3119
-	ld sp,screenStartAddr+2244	; offset 3122
-	push hl	; offset 3125
-	push de	; offset 3126
-	push bc	; offset 3127
-	exx    	; offset 3128
-	push hl	; offset 3129
-	push de	; offset 3130
-	push bc	; offset 3131
-	; Clock offset: -1296
-
-	; src_data blit 285
-	ld bc,52428	; offset 3132
-	ld de,52428	; offset 3135
-	ld hl,52428	; offset 3138
-	exx    	; offset 3141
-	ld bc,52428	; offset 3142
-	ld de,52428	; offset 3145
-	ld hl,52428	; offset 3148
-	ld sp,screenStartAddr+2484	; offset 3151
-	push hl	; offset 3154
-	push de	; offset 3155
-	push bc	; offset 3156
-	exx    	; offset 3157
-	push hl	; offset 3158
-	push de	; offset 3159
-	push bc	; offset 3160
-	; Clock offset: -1152
-
-	; src_data blit 286
-	ld bc,52428	; offset 3161
-	ld de,52428	; offset 3164
-	ld hl,52428	; offset 3167
-	exx    	; offset 3170
-	ld bc,52428	; offset 3171
-	ld de,52428	; offset 3174
-	ld hl,52428	; offset 3177
-	ld sp,screenStartAddr+2496	; offset 3180
-	push hl	; offset 3183
-	push de	; offset 3184
-	push bc	; offset 3185
-	exx    	; offset 3186
-	push hl	; offset 3187
-	push de	; offset 3188
-	push bc	; offset 3189
-	; Clock offset: -1008
-
-	; src_data blit 287
-	ld bc,52428	; offset 3190
-	ld de,52428	; offset 3193
-	ld hl,52428	; offset 3196
-	exx    	; offset 3199
-	ld bc,52428	; offset 3200
-	ld de,52428	; offset 3203
-	ld hl,52428	; offset 3206
-	ld sp,screenStartAddr+2736	; offset 3209
-	push hl	; offset 3212
-	push de	; offset 3213
-	push bc	; offset 3214
-	exx    	; offset 3215
-	push hl	; offset 3216
-	push de	; offset 3217
-	push bc	; offset 3218
-	; Clock offset: -864
-
-	; src_data blit 288
-	ld bc,52428	; offset 3219
-	ld de,52428	; offset 3222
-	ld hl,52428	; offset 3225
-	exx    	; offset 3228
-	ld bc,52428	; offset 3229
-	ld de,52428	; offset 3232
-	ld hl,52428	; offset 3235
-	ld sp,screenStartAddr+2748	; offset 3238
-	push hl	; offset 3241
-	push de	; offset 3242
-	push bc	; offset 3243
-	exx    	; offset 3244
-	push hl	; offset 3245
-	push de	; offset 3246
-	push bc	; offset 3247
-	; Clock offset: -720
-
-	; src_data blit 289
-	ld bc,52428	; offset 3248
-	ld de,52428	; offset 3251
-	ld hl,52428	; offset 3254
-	exx    	; offset 3257
-	ld bc,52428	; offset 3258
-	ld de,52428	; offset 3261
-	ld hl,52428	; offset 3264
-	ld sp,screenStartAddr+2760	; offset 3267
-	push hl	; offset 3270
-	push de	; offset 3271
-	push bc	; offset 3272
-	exx    	; offset 3273
-	push hl	; offset 3274
-	push de	; offset 3275
-	push bc	; offset 3276
-	; Clock offset: -576
-
-	; src_data blit 290
-	ld bc,52428	; offset 3277
-	ld de,52428	; offset 3280
-	ld hl,52428	; offset 3283
-	exx    	; offset 3286
-	ld bc,52428	; offset 3287
-	ld de,52428	; offset 3290
-	ld hl,52428	; offset 3293
-	ld sp,screenStartAddr+2988	; offset 3296
-	push hl	; offset 3299
-	push de	; offset 3300
-	push bc	; offset 3301
-	exx    	; offset 3302
-	push hl	; offset 3303
-	push de	; offset 3304
-	push bc	; offset 3305
-	; Clock offset: -432
-
-	; src_data blit 291
-	ld bc,52428	; offset 3306
-	ld de,52428	; offset 3309
-	ld hl,52428	; offset 3312
-	exx    	; offset 3315
-	ld bc,52428	; offset 3316
-	ld de,52428	; offset 3319
-	ld hl,52428	; offset 3322
-	ld sp,screenStartAddr+3000	; offset 3325
-	push hl	; offset 3328
-	push de	; offset 3329
-	push bc	; offset 3330
-	exx    	; offset 3331
-	push hl	; offset 3332
-	push de	; offset 3333
-	push bc	; offset 3334
-	; Clock offset: -288
-
-	; src_data blit 292
-	ld bc,52428	; offset 3335
-	ld de,52428	; offset 3338
-	ld hl,52428	; offset 3341
-	exx    	; offset 3344
-	ld bc,52428	; offset 3345
-	ld de,52428	; offset 3348
-	ld hl,52428	; offset 3351
-	ld sp,screenStartAddr+3012	; offset 3354
-	push hl	; offset 3357
-	push de	; offset 3358
-	push bc	; offset 3359
-	exx    	; offset 3360
-	push hl	; offset 3361
-	push de	; offset 3362
-	push bc	; offset 3363
-	; Clock offset: -144
-
-	; src_data blit 293
-	ld bc,52428	; offset 3364
-	ld de,52428	; offset 3367
-	ld hl,52428	; offset 3370
-	exx    	; offset 3373
-	ld bc,52428	; offset 3374
-	ld de,52428	; offset 3377
-	ld hl,52428	; offset 3380
-	ld sp,screenStartAddr+3252	; offset 3383
-	push hl	; offset 3386
-	push de	; offset 3387
-	push bc	; offset 3388
-	exx    	; offset 3389
-	push hl	; offset 3390
-	push de	; offset 3391
-	push bc	; offset 3392
-	; Clock offset: 0
+		; offset 0x764, 4 T-states remaining
+	nop   	; offset 0x765, 0 T-states remaining
+
+	; src_data blit 0
+	ld sp,screenStartAddr+12	; offset 0x768
+	ld hl,44975	; offset 0x76b
+	push hl	; offset 0x76c
+	ld hl,44975	; offset 0x76f
+	push hl	; offset 0x770
+	ld hl,44975	; offset 0x773
+	push hl	; offset 0x774
+	ld hl,44975	; offset 0x777
+	push hl	; offset 0x778
+	ld hl,44975	; offset 0x77b
+	push hl	; offset 0x77c
+	ld hl,44975	; offset 0x77f
+	push hl	; offset 0x780
+	; src_data blit 1
+	ld sp,screenStartAddr+24	; offset 0x783
+	ld hl,44975	; offset 0x786
+	push hl	; offset 0x787
+	ld hl,44975	; offset 0x78a
+	push hl	; offset 0x78b
+	ld hl,44975	; offset 0x78e
+	push hl	; offset 0x78f
+	ld hl,44975	; offset 0x792
+	push hl	; offset 0x793
+	ld hl,44975	; offset 0x796
+	push hl	; offset 0x797
+	ld hl,44975	; offset 0x79a
+	push hl	; offset 0x79b
+	; src_data blit 2
+	ld sp,screenStartAddr+276	; offset 0x79e
+	ld hl,44975	; offset 0x7a1
+	push hl	; offset 0x7a2
+	ld hl,44975	; offset 0x7a5
+	push hl	; offset 0x7a6
+	ld hl,44975	; offset 0x7a9
+	push hl	; offset 0x7aa
+	ld hl,44975	; offset 0x7ad
+	push hl	; offset 0x7ae
+	ld hl,44975	; offset 0x7b1
+	push hl	; offset 0x7b2
+	ld hl,44975	; offset 0x7b5
+	push hl	; offset 0x7b6
 
 	; attr draw 0
-	ld sp,0x8020
-	ld bc,10280
-	push bc
-	ld bc,10280
-	push bc
-	pop af
+	ld sp,attr8and16vals+4
+	pop af	; src 16
 	ex af,af'
-	pop af
+	pop af	; src 8
+	ld bc,10280	; src 18
+	ld de,10280	; src 20
+	ld hl,10280	; src 22
+	ld ix,10280	; src 4
+	ld iy,10280	; src 6
+	exx
+	ld bc,10280	; src 10
+	ld de,10280	; src 12
+	ld hl,10280	; src 0
+
 	ld sp,attrStartAddr+16+0
-	ld de,10280
-	ld hl,10280
-	ld ix,10280
-	ld iy,10280
-	exx
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	; start chasing raster here to update ATTR memory
 
-	; start chasing raster here
-
-	ld (attrStartAddr+0),hl
-	ld hl,10280
-	ld (attrStartAddr+2+0),hl
-	ld hl,10280
-	push hl
-	push de
-	push bc
-	push af
+	ld (attrStartAddr+0),hl	; dest 0
+	ld hl,10280	; src 2
+	ld (attrStartAddr+2+0),hl	; dest 2
+	ld hl,10280	; src 14
+	push hl	; dest 14
+	push de	; dest 12
+	push bc	; dest 10
+	push af	; dest 8
 	exx
 	ex af,af'
-	push iy
-	push ix
+	push iy	; dest 6
+	push ix	; dest 4
 	ld sp,attrStartAddr+24+0
-	push hl
-	push de
-	push bc
-	push af
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	push hl	; dest 22
+	push de	; dest 20
+	push bc	; dest 18
+	push af	; dest 16
+	ld bc,10280	; src 24
+	ld de,10280	; src 16
+	ld hl,10280	; src 28
 	ld sp,attrStartAddr+30+0
-	push hl
-	push de
-	push bc
-	ld hl,10280
-	ld (attrStartAddr+30+0),hl
-	; src_data filler blit 0
-	ld bc,52428	; offset 3848
-	ld de,52428	; offset 3851
-	exx    	; offset 3854
-	ld bc,52428	; offset 3855
-	ld de,52428	; offset 3858
-	ld sp,screenStartAddr+5780	; offset 3861
-	push de	; offset 3864
-	push bc	; offset 3865
-	exx    	; offset 3866
-	push de	; offset 3867
-	push bc	; offset 3868
-	nop
-	; end attr draw 0
-	; Clock offset: -1008
+	push hl	; dest 28
+	push de	; dest 26
+	push bc	; dest 24
+	ld hl,10280	; src 30
+	ld (attrStartAddr+30+0),hl;	 dest 30
+	; end attr draw 0, offset 0x95d
+	; Clock offset: -1152
 
-	; src_data blit 294
-	ld bc,52428	; offset 3870
-	ld de,52428	; offset 3873
-	ld hl,52428	; offset 3876
-	exx    	; offset 3879
-	ld bc,52428	; offset 3880
-	ld de,52428	; offset 3883
-	ld hl,52428	; offset 3886
-	ld sp,screenStartAddr+3264	; offset 3889
-	push hl	; offset 3892
-	push de	; offset 3893
-	push bc	; offset 3894
-	exx    	; offset 3895
-	push hl	; offset 3896
-	push de	; offset 3897
-	push bc	; offset 3898
-	; Clock offset: -864
-
-	; src_data blit 295
-	ld bc,52428	; offset 3899
-	ld de,52428	; offset 3902
-	ld hl,52428	; offset 3905
-	exx    	; offset 3908
-	ld bc,52428	; offset 3909
-	ld de,52428	; offset 3912
-	ld hl,52428	; offset 3915
-	ld sp,screenStartAddr+3504	; offset 3918
-	push hl	; offset 3921
-	push de	; offset 3922
-	push bc	; offset 3923
-	exx    	; offset 3924
-	push hl	; offset 3925
-	push de	; offset 3926
-	push bc	; offset 3927
-	; Clock offset: -720
-
-	; src_data blit 296
-	ld bc,52428	; offset 3928
-	ld de,52428	; offset 3931
-	ld hl,52428	; offset 3934
-	exx    	; offset 3937
-	ld bc,52428	; offset 3938
-	ld de,52428	; offset 3941
-	ld hl,52428	; offset 3944
-	ld sp,screenStartAddr+3516	; offset 3947
-	push hl	; offset 3950
-	push de	; offset 3951
-	push bc	; offset 3952
-	exx    	; offset 3953
-	push hl	; offset 3954
-	push de	; offset 3955
-	push bc	; offset 3956
-	; Clock offset: -576
-
-	; src_data blit 297
-	ld bc,52428	; offset 3957
-	ld de,52428	; offset 3960
-	ld hl,52428	; offset 3963
-	exx    	; offset 3966
-	ld bc,52428	; offset 3967
-	ld de,52428	; offset 3970
-	ld hl,52428	; offset 3973
-	ld sp,screenStartAddr+3528	; offset 3976
-	push hl	; offset 3979
-	push de	; offset 3980
-	push bc	; offset 3981
-	exx    	; offset 3982
-	push hl	; offset 3983
-	push de	; offset 3984
-	push bc	; offset 3985
-	; Clock offset: -432
-
-	; src_data blit 298
-	ld bc,52428	; offset 3986
-	ld de,52428	; offset 3989
-	ld hl,52428	; offset 3992
-	exx    	; offset 3995
-	ld bc,52428	; offset 3996
-	ld de,52428	; offset 3999
-	ld hl,52428	; offset 4002
-	ld sp,screenStartAddr+3756	; offset 4005
-	push hl	; offset 4008
-	push de	; offset 4009
-	push bc	; offset 4010
-	exx    	; offset 4011
-	push hl	; offset 4012
-	push de	; offset 4013
-	push bc	; offset 4014
-	; Clock offset: -288
-
-	; src_data blit 299
-	ld bc,52428	; offset 4015
-	ld de,52428	; offset 4018
-	ld hl,52428	; offset 4021
-	exx    	; offset 4024
-	ld bc,52428	; offset 4025
-	ld de,52428	; offset 4028
-	ld hl,52428	; offset 4031
-	ld sp,screenStartAddr+3768	; offset 4034
-	push hl	; offset 4037
-	push de	; offset 4038
-	push bc	; offset 4039
-	exx    	; offset 4040
-	push hl	; offset 4041
-	push de	; offset 4042
-	push bc	; offset 4043
-	; Clock offset: -144
-
-	; src_data blit 300
-	ld bc,52428	; offset 4044
-	ld de,52428	; offset 4047
-	ld hl,52428	; offset 4050
-	exx    	; offset 4053
-	ld bc,52428	; offset 4054
-	ld de,52428	; offset 4057
-	ld hl,52428	; offset 4060
-	ld sp,screenStartAddr+3780	; offset 4063
-	push hl	; offset 4066
-	push de	; offset 4067
-	push bc	; offset 4068
-	exx    	; offset 4069
-	push hl	; offset 4070
-	push de	; offset 4071
-	push bc	; offset 4072
-	; Clock offset: 0
+	; src_data blit 3
+	ld sp,screenStartAddr+288	; offset 0x960
+	ld hl,44975	; offset 0x963
+	push hl	; offset 0x964
+	ld hl,44975	; offset 0x967
+	push hl	; offset 0x968
+	ld hl,44975	; offset 0x96b
+	push hl	; offset 0x96c
+	ld hl,44975	; offset 0x96f
+	push hl	; offset 0x970
+	ld hl,44975	; offset 0x973
+	push hl	; offset 0x974
+	ld hl,44975	; offset 0x977
+	push hl	; offset 0x978
+	; src_data blit 4
+	ld sp,screenStartAddr+528	; offset 0x97b
+	ld hl,44975	; offset 0x97e
+	push hl	; offset 0x97f
+	ld hl,44975	; offset 0x982
+	push hl	; offset 0x983
+	ld hl,44975	; offset 0x986
+	push hl	; offset 0x987
+	ld hl,44975	; offset 0x98a
+	push hl	; offset 0x98b
+	ld hl,44975	; offset 0x98e
+	push hl	; offset 0x98f
+	ld hl,44975	; offset 0x992
+	push hl	; offset 0x993
+	; src_data blit 5
+	ld sp,screenStartAddr+540	; offset 0x996
+	ld hl,44975	; offset 0x999
+	push hl	; offset 0x99a
+	ld hl,44975	; offset 0x99d
+	push hl	; offset 0x99e
+	ld hl,44975	; offset 0x9a1
+	push hl	; offset 0x9a2
+	ld hl,44975	; offset 0x9a5
+	push hl	; offset 0x9a6
+	ld hl,44975	; offset 0x9a9
+	push hl	; offset 0x9aa
+	ld hl,44975	; offset 0x9ad
+	push hl	; offset 0x9ae
+	; src_data blit 6
+	ld sp,screenStartAddr+780	; offset 0x9b1
+	ld hl,44975	; offset 0x9b4
+	push hl	; offset 0x9b5
+	ld hl,44975	; offset 0x9b8
+	push hl	; offset 0x9b9
+	ld hl,44975	; offset 0x9bc
+	push hl	; offset 0x9bd
+	ld hl,44975	; offset 0x9c0
+	push hl	; offset 0x9c1
+	ld hl,44975	; offset 0x9c4
+	push hl	; offset 0x9c5
+	ld hl,44975	; offset 0x9c8
+	push hl	; offset 0x9c9
+	; src_data blit 7
+	ld sp,screenStartAddr+792	; offset 0x9cc
+	ld hl,44975	; offset 0x9cf
+	push hl	; offset 0x9d0
+	ld hl,44975	; offset 0x9d3
+	push hl	; offset 0x9d4
+	ld hl,44975	; offset 0x9d7
+	push hl	; offset 0x9d8
+	ld hl,44975	; offset 0x9db
+	push hl	; offset 0x9dc
+	ld hl,44975	; offset 0x9df
+	push hl	; offset 0x9e0
+	ld hl,44975	; offset 0x9e3
+	push hl	; offset 0x9e4
+	; src_data blit 8
+	ld sp,screenStartAddr+1044	; offset 0x9e7
+	ld hl,44975	; offset 0x9ea
+	push hl	; offset 0x9eb
+	ld hl,44975	; offset 0x9ee
+	push hl	; offset 0x9ef
+	ld hl,44975	; offset 0x9f2
+	push hl	; offset 0x9f3
+	ld hl,44975	; offset 0x9f6
+	push hl	; offset 0x9f7
+	ld hl,44975	; offset 0x9fa
+	push hl	; offset 0x9fb
+	ld hl,44975	; offset 0x9fe
+	push hl	; offset 0x9ff
+	; src_data blit 9
+	ld sp,screenStartAddr+1056	; offset 0xa02
+	ld hl,44975	; offset 0xa05
+	push hl	; offset 0xa06
+	ld hl,44975	; offset 0xa09
+	push hl	; offset 0xa0a
+	ld hl,44975	; offset 0xa0d
+	push hl	; offset 0xa0e
+	ld hl,44975	; offset 0xa11
+	push hl	; offset 0xa12
+	ld hl,44975	; offset 0xa15
+	push hl	; offset 0xa16
+	ld hl,44975	; offset 0xa19
+	push hl	; offset 0xa1a
+	; src_data blit 10
+	ld sp,screenStartAddr+1296	; offset 0xa1d
+	ld hl,44975	; offset 0xa20
+	push hl	; offset 0xa21
+	ld hl,44975	; offset 0xa24
+	push hl	; offset 0xa25
+	ld hl,44975	; offset 0xa28
+	push hl	; offset 0xa29
+	ld hl,44975	; offset 0xa2c
+	push hl	; offset 0xa2d
+	ld hl,44975	; offset 0xa30
+	push hl	; offset 0xa31
+	ld hl,44975	; offset 0xa34
+	push hl	; offset 0xa35
 
 	; attr draw 1
-	ld sp,0x8020
-	ld bc,10280
-	push bc
-	ld bc,10280
-	push bc
-	pop af
+	ld sp,attr8and16vals+4
+	pop af	; src 16
 	ex af,af'
-	pop af
+	pop af	; src 8
+	ld bc,10280	; src 18
+	ld de,10280	; src 20
+	ld hl,10280	; src 22
+	ld ix,10280	; src 4
+	ld iy,10280	; src 6
+	exx
+	ld bc,10280	; src 10
+	ld de,10280	; src 12
+	ld hl,10280	; src 0
+
 	ld sp,attrStartAddr+16+32
-	ld de,10280
-	ld hl,10280
-	ld ix,10280
-	ld iy,10280
-	exx
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	; start chasing raster here to update ATTR memory
 
-	; start chasing raster here
-
-	ld (attrStartAddr+32),hl
-	ld hl,10280
-	ld (attrStartAddr+2+32),hl
-	ld hl,10280
-	push hl
-	push de
-	push bc
-	push af
+	ld (attrStartAddr+32),hl	; dest 0
+	ld hl,10280	; src 2
+	ld (attrStartAddr+2+32),hl	; dest 2
+	ld hl,10280	; src 14
+	push hl	; dest 14
+	push de	; dest 12
+	push bc	; dest 10
+	push af	; dest 8
 	exx
 	ex af,af'
-	push iy
-	push ix
+	push iy	; dest 6
+	push ix	; dest 4
 	ld sp,attrStartAddr+24+32
-	push hl
-	push de
-	push bc
-	push af
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	push hl	; dest 22
+	push de	; dest 20
+	push bc	; dest 18
+	push af	; dest 16
+	ld bc,10280	; src 24
+	ld de,10280	; src 16
+	ld hl,10280	; src 28
 	ld sp,attrStartAddr+30+32
-	push hl
-	push de
-	push bc
-	ld hl,10280
-	ld (attrStartAddr+30+32),hl
-	; src_data filler blit 32
-	ld bc,52428	; offset 4528
-	ld de,52428	; offset 4531
-	exx    	; offset 4534
-	ld bc,52428	; offset 4535
-	ld de,52428	; offset 4538
-	ld sp,screenStartAddr+5788	; offset 4541
-	push de	; offset 4544
-	push bc	; offset 4545
-	exx    	; offset 4546
-	push de	; offset 4547
-	push bc	; offset 4548
-	nop
-	; end attr draw 1
-	; Clock offset: -1008
+	push hl	; dest 28
+	push de	; dest 26
+	push bc	; dest 24
+	ld hl,10280	; src 30
+	ld (attrStartAddr+30+32),hl;	 dest 30
+	; end attr draw 1, offset 0xbdc
+	; Clock offset: -1152
 
-	; src_data blit 301
-	ld bc,52428	; offset 4550
-	ld de,52428	; offset 4553
-	ld hl,52428	; offset 4556
-	exx    	; offset 4559
-	ld bc,52428	; offset 4560
-	ld de,52428	; offset 4563
-	ld hl,52428	; offset 4566
-	ld sp,screenStartAddr+4020	; offset 4569
-	push hl	; offset 4572
-	push de	; offset 4573
-	push bc	; offset 4574
-	exx    	; offset 4575
-	push hl	; offset 4576
-	push de	; offset 4577
-	push bc	; offset 4578
-	; Clock offset: -864
-
-	; src_data blit 302
-	ld bc,52428	; offset 4579
-	ld de,52428	; offset 4582
-	ld hl,52428	; offset 4585
-	exx    	; offset 4588
-	ld bc,52428	; offset 4589
-	ld de,52428	; offset 4592
-	ld hl,52428	; offset 4595
-	ld sp,screenStartAddr+4032	; offset 4598
-	push hl	; offset 4601
-	push de	; offset 4602
-	push bc	; offset 4603
-	exx    	; offset 4604
-	push hl	; offset 4605
-	push de	; offset 4606
-	push bc	; offset 4607
-	; Clock offset: -720
-
-	; src_data blit 303
-	ld bc,52428	; offset 4608
-	ld de,52428	; offset 4611
-	ld hl,52428	; offset 4614
-	exx    	; offset 4617
-	ld bc,52428	; offset 4618
-	ld de,52428	; offset 4621
-	ld hl,52428	; offset 4624
-	ld sp,screenStartAddr+2256	; offset 4627
-	push hl	; offset 4630
-	push de	; offset 4631
-	push bc	; offset 4632
-	exx    	; offset 4633
-	push hl	; offset 4634
-	push de	; offset 4635
-	push bc	; offset 4636
-	; Clock offset: -576
-
-	; src_data blit 304
-	ld bc,52428	; offset 4637
-	ld de,52428	; offset 4640
-	ld hl,52428	; offset 4643
-	exx    	; offset 4646
-	ld bc,52428	; offset 4647
-	ld de,52428	; offset 4650
-	ld hl,52428	; offset 4653
-	ld sp,screenStartAddr+2268	; offset 4656
-	push hl	; offset 4659
-	push de	; offset 4660
-	push bc	; offset 4661
-	exx    	; offset 4662
-	push hl	; offset 4663
-	push de	; offset 4664
-	push bc	; offset 4665
-	; Clock offset: -432
-
-	; src_data blit 305
-	ld bc,52428	; offset 4666
-	ld de,52428	; offset 4669
-	ld hl,52428	; offset 4672
-	exx    	; offset 4675
-	ld bc,52428	; offset 4676
-	ld de,52428	; offset 4679
-	ld hl,52428	; offset 4682
-	ld sp,screenStartAddr+2280	; offset 4685
-	push hl	; offset 4688
-	push de	; offset 4689
-	push bc	; offset 4690
-	exx    	; offset 4691
-	push hl	; offset 4692
-	push de	; offset 4693
-	push bc	; offset 4694
-	; Clock offset: -288
-
-	; src_data blit 306
-	ld bc,52428	; offset 4695
-	ld de,52428	; offset 4698
-	ld hl,52428	; offset 4701
-	exx    	; offset 4704
-	ld bc,52428	; offset 4705
-	ld de,52428	; offset 4708
-	ld hl,52428	; offset 4711
-	ld sp,screenStartAddr+2508	; offset 4714
-	push hl	; offset 4717
-	push de	; offset 4718
-	push bc	; offset 4719
-	exx    	; offset 4720
-	push hl	; offset 4721
-	push de	; offset 4722
-	push bc	; offset 4723
-	; Clock offset: -144
-
-	; src_data blit 307
-	ld bc,52428	; offset 4724
-	ld de,52428	; offset 4727
-	ld hl,52428	; offset 4730
-	exx    	; offset 4733
-	ld bc,52428	; offset 4734
-	ld de,52428	; offset 4737
-	ld hl,52428	; offset 4740
-	ld sp,screenStartAddr+2520	; offset 4743
-	push hl	; offset 4746
-	push de	; offset 4747
-	push bc	; offset 4748
-	exx    	; offset 4749
-	push hl	; offset 4750
-	push de	; offset 4751
-	push bc	; offset 4752
-	; Clock offset: 0
+	; src_data blit 11
+	ld sp,screenStartAddr+1308	; offset 0xbdf
+	ld hl,44975	; offset 0xbe2
+	push hl	; offset 0xbe3
+	ld hl,44975	; offset 0xbe6
+	push hl	; offset 0xbe7
+	ld hl,44975	; offset 0xbea
+	push hl	; offset 0xbeb
+	ld hl,44975	; offset 0xbee
+	push hl	; offset 0xbef
+	ld hl,44975	; offset 0xbf2
+	push hl	; offset 0xbf3
+	ld hl,44975	; offset 0xbf6
+	push hl	; offset 0xbf7
+	; src_data blit 12
+	ld sp,screenStartAddr+1548	; offset 0xbfa
+	ld hl,44975	; offset 0xbfd
+	push hl	; offset 0xbfe
+	ld hl,44975	; offset 0xc01
+	push hl	; offset 0xc02
+	ld hl,44975	; offset 0xc05
+	push hl	; offset 0xc06
+	ld hl,44975	; offset 0xc09
+	push hl	; offset 0xc0a
+	ld hl,44975	; offset 0xc0d
+	push hl	; offset 0xc0e
+	ld hl,44975	; offset 0xc11
+	push hl	; offset 0xc12
+	; src_data blit 13
+	ld sp,screenStartAddr+1560	; offset 0xc15
+	ld hl,44975	; offset 0xc18
+	push hl	; offset 0xc19
+	ld hl,44975	; offset 0xc1c
+	push hl	; offset 0xc1d
+	ld hl,44975	; offset 0xc20
+	push hl	; offset 0xc21
+	ld hl,44975	; offset 0xc24
+	push hl	; offset 0xc25
+	ld hl,44975	; offset 0xc28
+	push hl	; offset 0xc29
+	ld hl,44975	; offset 0xc2c
+	push hl	; offset 0xc2d
+	; src_data blit 14
+	ld sp,screenStartAddr+1812	; offset 0xc30
+	ld hl,44975	; offset 0xc33
+	push hl	; offset 0xc34
+	ld hl,44975	; offset 0xc37
+	push hl	; offset 0xc38
+	ld hl,44975	; offset 0xc3b
+	push hl	; offset 0xc3c
+	ld hl,44975	; offset 0xc3f
+	push hl	; offset 0xc40
+	ld hl,44975	; offset 0xc43
+	push hl	; offset 0xc44
+	ld hl,44975	; offset 0xc47
+	push hl	; offset 0xc48
+	; src_data blit 15
+	ld sp,screenStartAddr+1824	; offset 0xc4b
+	ld hl,44975	; offset 0xc4e
+	push hl	; offset 0xc4f
+	ld hl,44975	; offset 0xc52
+	push hl	; offset 0xc53
+	ld hl,44975	; offset 0xc56
+	push hl	; offset 0xc57
+	ld hl,44975	; offset 0xc5a
+	push hl	; offset 0xc5b
+	ld hl,44975	; offset 0xc5e
+	push hl	; offset 0xc5f
+	ld hl,44975	; offset 0xc62
+	push hl	; offset 0xc63
+	; src_data blit 16
+	ld sp,screenStartAddr+36	; offset 0xc66
+	ld hl,44975	; offset 0xc69
+	push hl	; offset 0xc6a
+	ld hl,44975	; offset 0xc6d
+	push hl	; offset 0xc6e
+	ld hl,44975	; offset 0xc71
+	push hl	; offset 0xc72
+	ld hl,44975	; offset 0xc75
+	push hl	; offset 0xc76
+	ld hl,44975	; offset 0xc79
+	push hl	; offset 0xc7a
+	ld hl,44975	; offset 0xc7d
+	push hl	; offset 0xc7e
+	; src_data blit 17
+	ld sp,screenStartAddr+264	; offset 0xc81
+	ld hl,44975	; offset 0xc84
+	push hl	; offset 0xc85
+	ld hl,44975	; offset 0xc88
+	push hl	; offset 0xc89
+	ld hl,44975	; offset 0xc8c
+	push hl	; offset 0xc8d
+	ld hl,44975	; offset 0xc90
+	push hl	; offset 0xc91
+	ld hl,44975	; offset 0xc94
+	push hl	; offset 0xc95
+	ld hl,44975	; offset 0xc98
+	push hl	; offset 0xc99
+	; src_data blit 18
+	ld sp,screenStartAddr+516	; offset 0xc9c
+	ld hl,44975	; offset 0xc9f
+	push hl	; offset 0xca0
+	ld hl,44975	; offset 0xca3
+	push hl	; offset 0xca4
+	ld hl,44975	; offset 0xca7
+	push hl	; offset 0xca8
+	ld hl,44975	; offset 0xcab
+	push hl	; offset 0xcac
+	ld hl,44975	; offset 0xcaf
+	push hl	; offset 0xcb0
+	ld hl,44975	; offset 0xcb3
+	push hl	; offset 0xcb4
 
 	; attr draw 2
-	ld sp,0x8020
-	ld bc,10280
-	push bc
-	ld bc,10280
-	push bc
-	pop af
+	ld sp,attr8and16vals+4
+	pop af	; src 16
 	ex af,af'
-	pop af
+	pop af	; src 8
+	ld bc,10280	; src 18
+	ld de,10280	; src 20
+	ld hl,10280	; src 22
+	ld ix,10280	; src 4
+	ld iy,10280	; src 6
+	exx
+	ld bc,10280	; src 10
+	ld de,10280	; src 12
+	ld hl,10280	; src 0
+
 	ld sp,attrStartAddr+16+64
-	ld de,10280
-	ld hl,10280
-	ld ix,10280
-	ld iy,10280
-	exx
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	; start chasing raster here to update ATTR memory
 
-	; start chasing raster here
-
-	ld (attrStartAddr+64),hl
-	ld hl,10280
-	ld (attrStartAddr+2+64),hl
-	ld hl,10280
-	push hl
-	push de
-	push bc
-	push af
+	ld (attrStartAddr+64),hl	; dest 0
+	ld hl,10280	; src 2
+	ld (attrStartAddr+2+64),hl	; dest 2
+	ld hl,10280	; src 14
+	push hl	; dest 14
+	push de	; dest 12
+	push bc	; dest 10
+	push af	; dest 8
 	exx
 	ex af,af'
-	push iy
-	push ix
+	push iy	; dest 6
+	push ix	; dest 4
 	ld sp,attrStartAddr+24+64
-	push hl
-	push de
-	push bc
-	push af
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	push hl	; dest 22
+	push de	; dest 20
+	push bc	; dest 18
+	push af	; dest 16
+	ld bc,10280	; src 24
+	ld de,10280	; src 16
+	ld hl,10280	; src 28
 	ld sp,attrStartAddr+30+64
-	push hl
-	push de
-	push bc
-	ld hl,10280
-	ld (attrStartAddr+30+64),hl
-	; src_data filler blit 64
-	ld bc,52428	; offset 5208
-	ld de,52428	; offset 5211
-	exx    	; offset 5214
-	ld bc,52428	; offset 5215
-	ld de,52428	; offset 5218
-	ld sp,screenStartAddr+5796	; offset 5221
-	push de	; offset 5224
-	push bc	; offset 5225
-	exx    	; offset 5226
-	push de	; offset 5227
-	push bc	; offset 5228
-	nop
-	; end attr draw 2
-	; Clock offset: -1008
+	push hl	; dest 28
+	push de	; dest 26
+	push bc	; dest 24
+	ld hl,10280	; src 30
+	ld (attrStartAddr+30+64),hl;	 dest 30
+	; end attr draw 2, offset 0xe5b
+	; Clock offset: -1152
 
-	; src_data blit 308
-	ld bc,52428	; offset 5230
-	ld de,52428	; offset 5233
-	ld hl,52428	; offset 5236
-	exx    	; offset 5239
-	ld bc,52428	; offset 5240
-	ld de,52428	; offset 5243
-	ld hl,52428	; offset 5246
-	ld sp,screenStartAddr+2532	; offset 5249
-	push hl	; offset 5252
-	push de	; offset 5253
-	push bc	; offset 5254
-	exx    	; offset 5255
-	push hl	; offset 5256
-	push de	; offset 5257
-	push bc	; offset 5258
-	; Clock offset: -864
-
-	; src_data blit 309
-	ld bc,52428	; offset 5259
-	ld de,52428	; offset 5262
-	ld hl,52428	; offset 5265
-	exx    	; offset 5268
-	ld bc,52428	; offset 5269
-	ld de,52428	; offset 5272
-	ld hl,52428	; offset 5275
-	ld sp,screenStartAddr+2772	; offset 5278
-	push hl	; offset 5281
-	push de	; offset 5282
-	push bc	; offset 5283
-	exx    	; offset 5284
-	push hl	; offset 5285
-	push de	; offset 5286
-	push bc	; offset 5287
-	; Clock offset: -720
-
-	; src_data blit 310
-	ld bc,52428	; offset 5288
-	ld de,52428	; offset 5291
-	ld hl,52428	; offset 5294
-	exx    	; offset 5297
-	ld bc,52428	; offset 5298
-	ld de,52428	; offset 5301
-	ld hl,52428	; offset 5304
-	ld sp,screenStartAddr+2784	; offset 5307
-	push hl	; offset 5310
-	push de	; offset 5311
-	push bc	; offset 5312
-	exx    	; offset 5313
-	push hl	; offset 5314
-	push de	; offset 5315
-	push bc	; offset 5316
-	; Clock offset: -576
-
-	; src_data blit 311
-	ld bc,52428	; offset 5317
-	ld de,52428	; offset 5320
-	ld hl,52428	; offset 5323
-	exx    	; offset 5326
-	ld bc,52428	; offset 5327
-	ld de,52428	; offset 5330
-	ld hl,52428	; offset 5333
-	ld sp,screenStartAddr+3024	; offset 5336
-	push hl	; offset 5339
-	push de	; offset 5340
-	push bc	; offset 5341
-	exx    	; offset 5342
-	push hl	; offset 5343
-	push de	; offset 5344
-	push bc	; offset 5345
-	; Clock offset: -432
-
-	; src_data blit 312
-	ld bc,52428	; offset 5346
-	ld de,52428	; offset 5349
-	ld hl,52428	; offset 5352
-	exx    	; offset 5355
-	ld bc,52428	; offset 5356
-	ld de,52428	; offset 5359
-	ld hl,52428	; offset 5362
-	ld sp,screenStartAddr+3036	; offset 5365
-	push hl	; offset 5368
-	push de	; offset 5369
-	push bc	; offset 5370
-	exx    	; offset 5371
-	push hl	; offset 5372
-	push de	; offset 5373
-	push bc	; offset 5374
-	; Clock offset: -288
-
-	; src_data blit 313
-	ld bc,52428	; offset 5375
-	ld de,52428	; offset 5378
-	ld hl,52428	; offset 5381
-	exx    	; offset 5384
-	ld bc,52428	; offset 5385
-	ld de,52428	; offset 5388
-	ld hl,52428	; offset 5391
-	ld sp,screenStartAddr+3048	; offset 5394
-	push hl	; offset 5397
-	push de	; offset 5398
-	push bc	; offset 5399
-	exx    	; offset 5400
-	push hl	; offset 5401
-	push de	; offset 5402
-	push bc	; offset 5403
-	; Clock offset: -144
-
-	; src_data blit 314
-	ld bc,52428	; offset 5404
-	ld de,52428	; offset 5407
-	ld hl,52428	; offset 5410
-	exx    	; offset 5413
-	ld bc,52428	; offset 5414
-	ld de,52428	; offset 5417
-	ld hl,52428	; offset 5420
-	ld sp,screenStartAddr+3276	; offset 5423
-	push hl	; offset 5426
-	push de	; offset 5427
-	push bc	; offset 5428
-	exx    	; offset 5429
-	push hl	; offset 5430
-	push de	; offset 5431
-	push bc	; offset 5432
-	; Clock offset: 0
+	; src_data blit 19
+	ld sp,screenStartAddr+552	; offset 0xe5e
+	ld hl,44975	; offset 0xe61
+	push hl	; offset 0xe62
+	ld hl,44975	; offset 0xe65
+	push hl	; offset 0xe66
+	ld hl,44975	; offset 0xe69
+	push hl	; offset 0xe6a
+	ld hl,44975	; offset 0xe6d
+	push hl	; offset 0xe6e
+	ld hl,44975	; offset 0xe71
+	push hl	; offset 0xe72
+	ld hl,44975	; offset 0xe75
+	push hl	; offset 0xe76
+	; src_data blit 20
+	ld sp,screenStartAddr+804	; offset 0xe79
+	ld hl,44975	; offset 0xe7c
+	push hl	; offset 0xe7d
+	ld hl,44975	; offset 0xe80
+	push hl	; offset 0xe81
+	ld hl,44975	; offset 0xe84
+	push hl	; offset 0xe85
+	ld hl,44975	; offset 0xe88
+	push hl	; offset 0xe89
+	ld hl,44975	; offset 0xe8c
+	push hl	; offset 0xe8d
+	ld hl,44975	; offset 0xe90
+	push hl	; offset 0xe91
+	; src_data blit 21
+	ld sp,screenStartAddr+1032	; offset 0xe94
+	ld hl,44975	; offset 0xe97
+	push hl	; offset 0xe98
+	ld hl,44975	; offset 0xe9b
+	push hl	; offset 0xe9c
+	ld hl,44975	; offset 0xe9f
+	push hl	; offset 0xea0
+	ld hl,44975	; offset 0xea3
+	push hl	; offset 0xea4
+	ld hl,44975	; offset 0xea7
+	push hl	; offset 0xea8
+	ld hl,44975	; offset 0xeab
+	push hl	; offset 0xeac
+	; src_data blit 22
+	ld sp,screenStartAddr+1284	; offset 0xeaf
+	ld hl,44975	; offset 0xeb2
+	push hl	; offset 0xeb3
+	ld hl,44975	; offset 0xeb6
+	push hl	; offset 0xeb7
+	ld hl,44975	; offset 0xeba
+	push hl	; offset 0xebb
+	ld hl,44975	; offset 0xebe
+	push hl	; offset 0xebf
+	ld hl,44975	; offset 0xec2
+	push hl	; offset 0xec3
+	ld hl,44975	; offset 0xec6
+	push hl	; offset 0xec7
+	; src_data blit 23
+	ld sp,screenStartAddr+1320	; offset 0xeca
+	ld hl,44975	; offset 0xecd
+	push hl	; offset 0xece
+	ld hl,44975	; offset 0xed1
+	push hl	; offset 0xed2
+	ld hl,44975	; offset 0xed5
+	push hl	; offset 0xed6
+	ld hl,44975	; offset 0xed9
+	push hl	; offset 0xeda
+	ld hl,44975	; offset 0xedd
+	push hl	; offset 0xede
+	ld hl,44975	; offset 0xee1
+	push hl	; offset 0xee2
+	; src_data blit 24
+	ld sp,screenStartAddr+1572	; offset 0xee5
+	ld hl,44975	; offset 0xee8
+	push hl	; offset 0xee9
+	ld hl,44975	; offset 0xeec
+	push hl	; offset 0xeed
+	ld hl,44975	; offset 0xef0
+	push hl	; offset 0xef1
+	ld hl,44975	; offset 0xef4
+	push hl	; offset 0xef5
+	ld hl,44975	; offset 0xef8
+	push hl	; offset 0xef9
+	ld hl,44975	; offset 0xefc
+	push hl	; offset 0xefd
+	; src_data blit 25
+	ld sp,screenStartAddr+1800	; offset 0xf00
+	ld hl,44975	; offset 0xf03
+	push hl	; offset 0xf04
+	ld hl,44975	; offset 0xf07
+	push hl	; offset 0xf08
+	ld hl,44975	; offset 0xf0b
+	push hl	; offset 0xf0c
+	ld hl,44975	; offset 0xf0f
+	push hl	; offset 0xf10
+	ld hl,44975	; offset 0xf13
+	push hl	; offset 0xf14
+	ld hl,44975	; offset 0xf17
+	push hl	; offset 0xf18
+	; src_data blit 26
+	ld sp,screenStartAddr+48	; offset 0xf1b
+	ld hl,44975	; offset 0xf1e
+	push hl	; offset 0xf1f
+	ld hl,44975	; offset 0xf22
+	push hl	; offset 0xf23
+	ld hl,44975	; offset 0xf26
+	push hl	; offset 0xf27
+	ld hl,44975	; offset 0xf2a
+	push hl	; offset 0xf2b
+	ld hl,44975	; offset 0xf2e
+	push hl	; offset 0xf2f
+	ld hl,44975	; offset 0xf32
+	push hl	; offset 0xf33
 
 	; attr draw 3
-	ld sp,0x8020
-	ld bc,10280
-	push bc
-	ld bc,10280
-	push bc
-	pop af
+	ld sp,attr8and16vals+4
+	pop af	; src 16
 	ex af,af'
-	pop af
+	pop af	; src 8
+	ld bc,10280	; src 18
+	ld de,10280	; src 20
+	ld hl,10280	; src 22
+	ld ix,10280	; src 4
+	ld iy,10280	; src 6
+	exx
+	ld bc,10280	; src 10
+	ld de,10280	; src 12
+	ld hl,10280	; src 0
+
 	ld sp,attrStartAddr+16+96
-	ld de,10280
-	ld hl,10280
-	ld ix,10280
-	ld iy,10280
-	exx
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	; start chasing raster here to update ATTR memory
 
-	; start chasing raster here
-
-	ld (attrStartAddr+96),hl
-	ld hl,10280
-	ld (attrStartAddr+2+96),hl
-	ld hl,10280
-	push hl
-	push de
-	push bc
-	push af
+	ld (attrStartAddr+96),hl	; dest 0
+	ld hl,10280	; src 2
+	ld (attrStartAddr+2+96),hl	; dest 2
+	ld hl,10280	; src 14
+	push hl	; dest 14
+	push de	; dest 12
+	push bc	; dest 10
+	push af	; dest 8
 	exx
 	ex af,af'
-	push iy
-	push ix
+	push iy	; dest 6
+	push ix	; dest 4
 	ld sp,attrStartAddr+24+96
-	push hl
-	push de
-	push bc
-	push af
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	push hl	; dest 22
+	push de	; dest 20
+	push bc	; dest 18
+	push af	; dest 16
+	ld bc,10280	; src 24
+	ld de,10280	; src 16
+	ld hl,10280	; src 28
 	ld sp,attrStartAddr+30+96
-	push hl
-	push de
-	push bc
-	ld hl,10280
-	ld (attrStartAddr+30+96),hl
-	; src_data filler blit 96
-	ld bc,52428	; offset 5888
-	ld de,52428	; offset 5891
-	exx    	; offset 5894
-	ld bc,52428	; offset 5895
-	ld de,52428	; offset 5898
-	ld sp,screenStartAddr+5804	; offset 5901
-	push de	; offset 5904
-	push bc	; offset 5905
-	exx    	; offset 5906
-	push de	; offset 5907
-	push bc	; offset 5908
-	nop
-	; end attr draw 3
-	; Clock offset: -1008
+	push hl	; dest 28
+	push de	; dest 26
+	push bc	; dest 24
+	ld hl,10280	; src 30
+	ld (attrStartAddr+30+96),hl;	 dest 30
+	; end attr draw 3, offset 0x10da
+	; Clock offset: -1152
 
-	; src_data blit 315
-	ld bc,52428	; offset 5910
-	ld de,52428	; offset 5913
-	ld hl,52428	; offset 5916
-	exx    	; offset 5919
-	ld bc,52428	; offset 5920
-	ld de,52428	; offset 5923
-	ld hl,52428	; offset 5926
-	ld sp,screenStartAddr+3288	; offset 5929
-	push hl	; offset 5932
-	push de	; offset 5933
-	push bc	; offset 5934
-	exx    	; offset 5935
-	push hl	; offset 5936
-	push de	; offset 5937
-	push bc	; offset 5938
-	; Clock offset: -864
-
-	; src_data blit 316
-	ld bc,52428	; offset 5939
-	ld de,52428	; offset 5942
-	ld hl,52428	; offset 5945
-	exx    	; offset 5948
-	ld bc,52428	; offset 5949
-	ld de,52428	; offset 5952
-	ld hl,52428	; offset 5955
-	ld sp,screenStartAddr+3300	; offset 5958
-	push hl	; offset 5961
-	push de	; offset 5962
-	push bc	; offset 5963
-	exx    	; offset 5964
-	push hl	; offset 5965
-	push de	; offset 5966
-	push bc	; offset 5967
-	; Clock offset: -720
-
-	; src_data blit 317
-	ld bc,52428	; offset 5968
-	ld de,52428	; offset 5971
-	ld hl,52428	; offset 5974
-	exx    	; offset 5977
-	ld bc,52428	; offset 5978
-	ld de,52428	; offset 5981
-	ld hl,52428	; offset 5984
-	ld sp,screenStartAddr+3540	; offset 5987
-	push hl	; offset 5990
-	push de	; offset 5991
-	push bc	; offset 5992
-	exx    	; offset 5993
-	push hl	; offset 5994
-	push de	; offset 5995
-	push bc	; offset 5996
-	; Clock offset: -576
-
-	; src_data blit 318
-	ld bc,52428	; offset 5997
-	ld de,52428	; offset 6000
-	ld hl,52428	; offset 6003
-	exx    	; offset 6006
-	ld bc,52428	; offset 6007
-	ld de,52428	; offset 6010
-	ld hl,52428	; offset 6013
-	ld sp,screenStartAddr+3552	; offset 6016
-	push hl	; offset 6019
-	push de	; offset 6020
-	push bc	; offset 6021
-	exx    	; offset 6022
-	push hl	; offset 6023
-	push de	; offset 6024
-	push bc	; offset 6025
-	; Clock offset: -432
-
-	; src_data blit 319
-	ld bc,52428	; offset 6026
-	ld de,52428	; offset 6029
-	ld hl,52428	; offset 6032
-	exx    	; offset 6035
-	ld bc,52428	; offset 6036
-	ld de,52428	; offset 6039
-	ld hl,52428	; offset 6042
-	ld sp,screenStartAddr+3792	; offset 6045
-	push hl	; offset 6048
-	push de	; offset 6049
-	push bc	; offset 6050
-	exx    	; offset 6051
-	push hl	; offset 6052
-	push de	; offset 6053
-	push bc	; offset 6054
-	; Clock offset: -288
-
-	; src_data blit 320
-	ld bc,52428	; offset 6055
-	ld de,52428	; offset 6058
-	ld hl,52428	; offset 6061
-	exx    	; offset 6064
-	ld bc,52428	; offset 6065
-	ld de,52428	; offset 6068
-	ld hl,52428	; offset 6071
-	ld sp,screenStartAddr+3804	; offset 6074
-	push hl	; offset 6077
-	push de	; offset 6078
-	push bc	; offset 6079
-	exx    	; offset 6080
-	push hl	; offset 6081
-	push de	; offset 6082
-	push bc	; offset 6083
-	; Clock offset: -144
-
-	; src_data blit 321
-	ld bc,52428	; offset 6084
-	ld de,52428	; offset 6087
-	ld hl,52428	; offset 6090
-	exx    	; offset 6093
-	ld bc,52428	; offset 6094
-	ld de,52428	; offset 6097
-	ld hl,52428	; offset 6100
-	ld sp,screenStartAddr+3816	; offset 6103
-	push hl	; offset 6106
-	push de	; offset 6107
-	push bc	; offset 6108
-	exx    	; offset 6109
-	push hl	; offset 6110
-	push de	; offset 6111
-	push bc	; offset 6112
-	; Clock offset: 0
+	; src_data blit 27
+	ld sp,screenStartAddr+60	; offset 0x10dd
+	ld hl,44975	; offset 0x10e0
+	push hl	; offset 0x10e1
+	ld hl,44975	; offset 0x10e4
+	push hl	; offset 0x10e5
+	ld hl,44975	; offset 0x10e8
+	push hl	; offset 0x10e9
+	ld hl,44975	; offset 0x10ec
+	push hl	; offset 0x10ed
+	ld hl,44975	; offset 0x10f0
+	push hl	; offset 0x10f1
+	ld hl,44975	; offset 0x10f4
+	push hl	; offset 0x10f5
+	; src_data blit 28
+	ld sp,screenStartAddr+72	; offset 0x10f8
+	ld hl,44975	; offset 0x10fb
+	push hl	; offset 0x10fc
+	ld hl,44975	; offset 0x10ff
+	push hl	; offset 0x1100
+	ld hl,44975	; offset 0x1103
+	push hl	; offset 0x1104
+	ld hl,44975	; offset 0x1107
+	push hl	; offset 0x1108
+	ld hl,44975	; offset 0x110b
+	push hl	; offset 0x110c
+	ld hl,44975	; offset 0x110f
+	push hl	; offset 0x1110
+	; src_data blit 29
+	ld sp,screenStartAddr+300	; offset 0x1113
+	ld hl,44975	; offset 0x1116
+	push hl	; offset 0x1117
+	ld hl,44975	; offset 0x111a
+	push hl	; offset 0x111b
+	ld hl,44975	; offset 0x111e
+	push hl	; offset 0x111f
+	ld hl,44975	; offset 0x1122
+	push hl	; offset 0x1123
+	ld hl,44975	; offset 0x1126
+	push hl	; offset 0x1127
+	ld hl,44975	; offset 0x112a
+	push hl	; offset 0x112b
+	; src_data blit 30
+	ld sp,screenStartAddr+312	; offset 0x112e
+	ld hl,44975	; offset 0x1131
+	push hl	; offset 0x1132
+	ld hl,44975	; offset 0x1135
+	push hl	; offset 0x1136
+	ld hl,44975	; offset 0x1139
+	push hl	; offset 0x113a
+	ld hl,44975	; offset 0x113d
+	push hl	; offset 0x113e
+	ld hl,44975	; offset 0x1141
+	push hl	; offset 0x1142
+	ld hl,44975	; offset 0x1145
+	push hl	; offset 0x1146
+	; src_data blit 31
+	ld sp,screenStartAddr+324	; offset 0x1149
+	ld hl,44975	; offset 0x114c
+	push hl	; offset 0x114d
+	ld hl,44975	; offset 0x1150
+	push hl	; offset 0x1151
+	ld hl,44975	; offset 0x1154
+	push hl	; offset 0x1155
+	ld hl,44975	; offset 0x1158
+	push hl	; offset 0x1159
+	ld hl,44975	; offset 0x115c
+	push hl	; offset 0x115d
+	ld hl,44975	; offset 0x1160
+	push hl	; offset 0x1161
+	; src_data blit 32
+	ld sp,screenStartAddr+564	; offset 0x1164
+	ld hl,44975	; offset 0x1167
+	push hl	; offset 0x1168
+	ld hl,44975	; offset 0x116b
+	push hl	; offset 0x116c
+	ld hl,44975	; offset 0x116f
+	push hl	; offset 0x1170
+	ld hl,44975	; offset 0x1173
+	push hl	; offset 0x1174
+	ld hl,44975	; offset 0x1177
+	push hl	; offset 0x1178
+	ld hl,44975	; offset 0x117b
+	push hl	; offset 0x117c
+	; src_data blit 33
+	ld sp,screenStartAddr+576	; offset 0x117f
+	ld hl,44975	; offset 0x1182
+	push hl	; offset 0x1183
+	ld hl,44975	; offset 0x1186
+	push hl	; offset 0x1187
+	ld hl,44975	; offset 0x118a
+	push hl	; offset 0x118b
+	ld hl,44975	; offset 0x118e
+	push hl	; offset 0x118f
+	ld hl,44975	; offset 0x1192
+	push hl	; offset 0x1193
+	ld hl,44975	; offset 0x1196
+	push hl	; offset 0x1197
+	; src_data blit 34
+	ld sp,screenStartAddr+816	; offset 0x119a
+	ld hl,44975	; offset 0x119d
+	push hl	; offset 0x119e
+	ld hl,44975	; offset 0x11a1
+	push hl	; offset 0x11a2
+	ld hl,44975	; offset 0x11a5
+	push hl	; offset 0x11a6
+	ld hl,44975	; offset 0x11a9
+	push hl	; offset 0x11aa
+	ld hl,44975	; offset 0x11ad
+	push hl	; offset 0x11ae
+	ld hl,44975	; offset 0x11b1
+	push hl	; offset 0x11b2
 
 	; attr draw 4
-	ld sp,0x8020
-	ld bc,10280
-	push bc
-	ld bc,10280
-	push bc
-	pop af
+	ld sp,attr8and16vals+4
+	pop af	; src 16
 	ex af,af'
-	pop af
+	pop af	; src 8
+	ld bc,10280	; src 18
+	ld de,10280	; src 20
+	ld hl,10280	; src 22
+	ld ix,10280	; src 4
+	ld iy,10280	; src 6
+	exx
+	ld bc,10280	; src 10
+	ld de,10280	; src 12
+	ld hl,10280	; src 0
+
 	ld sp,attrStartAddr+16+128
-	ld de,10280
-	ld hl,10280
-	ld ix,10280
-	ld iy,10280
-	exx
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	; start chasing raster here to update ATTR memory
 
-	; start chasing raster here
-
-	ld (attrStartAddr+128),hl
-	ld hl,10280
-	ld (attrStartAddr+2+128),hl
-	ld hl,10280
-	push hl
-	push de
-	push bc
-	push af
+	ld (attrStartAddr+128),hl	; dest 0
+	ld hl,10280	; src 2
+	ld (attrStartAddr+2+128),hl	; dest 2
+	ld hl,10280	; src 14
+	push hl	; dest 14
+	push de	; dest 12
+	push bc	; dest 10
+	push af	; dest 8
 	exx
 	ex af,af'
-	push iy
-	push ix
+	push iy	; dest 6
+	push ix	; dest 4
 	ld sp,attrStartAddr+24+128
-	push hl
-	push de
-	push bc
-	push af
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	push hl	; dest 22
+	push de	; dest 20
+	push bc	; dest 18
+	push af	; dest 16
+	ld bc,10280	; src 24
+	ld de,10280	; src 16
+	ld hl,10280	; src 28
 	ld sp,attrStartAddr+30+128
-	push hl
-	push de
-	push bc
-	ld hl,10280
-	ld (attrStartAddr+30+128),hl
-	; src_data filler blit 128
-	ld bc,52428	; offset 6568
-	ld de,52428	; offset 6571
-	exx    	; offset 6574
-	ld bc,52428	; offset 6575
-	ld de,52428	; offset 6578
-	ld sp,screenStartAddr+5812	; offset 6581
-	push de	; offset 6584
-	push bc	; offset 6585
-	exx    	; offset 6586
-	push de	; offset 6587
-	push bc	; offset 6588
-	nop
-	; end attr draw 4
-	; Clock offset: -1008
+	push hl	; dest 28
+	push de	; dest 26
+	push bc	; dest 24
+	ld hl,10280	; src 30
+	ld (attrStartAddr+30+128),hl;	 dest 30
+	; end attr draw 4, offset 0x1359
+	; Clock offset: -1152
 
-	; src_data blit 322
-	ld bc,52428	; offset 6590
-	ld de,52428	; offset 6593
-	ld hl,52428	; offset 6596
-	exx    	; offset 6599
-	ld bc,52428	; offset 6600
-	ld de,52428	; offset 6603
-	ld hl,52428	; offset 6606
-	ld sp,screenStartAddr+4044	; offset 6609
-	push hl	; offset 6612
-	push de	; offset 6613
-	push bc	; offset 6614
-	exx    	; offset 6615
-	push hl	; offset 6616
-	push de	; offset 6617
-	push bc	; offset 6618
-	; Clock offset: -864
-
-	; src_data blit 323
-	ld bc,52428	; offset 6619
-	ld de,52428	; offset 6622
-	ld hl,52428	; offset 6625
-	exx    	; offset 6628
-	ld bc,52428	; offset 6629
-	ld de,52428	; offset 6632
-	ld hl,52428	; offset 6635
-	ld sp,screenStartAddr+4056	; offset 6638
-	push hl	; offset 6641
-	push de	; offset 6642
-	push bc	; offset 6643
-	exx    	; offset 6644
-	push hl	; offset 6645
-	push de	; offset 6646
-	push bc	; offset 6647
-	; Clock offset: -720
-
-	; src_data blit 324
-	ld bc,52428	; offset 6648
-	ld de,52428	; offset 6651
-	ld hl,52428	; offset 6654
-	exx    	; offset 6657
-	ld bc,52428	; offset 6658
-	ld de,52428	; offset 6661
-	ld hl,52428	; offset 6664
-	ld sp,screenStartAddr+4068	; offset 6667
-	push hl	; offset 6670
-	push de	; offset 6671
-	push bc	; offset 6672
-	exx    	; offset 6673
-	push hl	; offset 6674
-	push de	; offset 6675
-	push bc	; offset 6676
-	; Clock offset: -576
-
-	; src_data blit 325
-	ld bc,52428	; offset 6677
-	ld de,52428	; offset 6680
-	ld hl,52428	; offset 6683
-	exx    	; offset 6686
-	ld bc,52428	; offset 6687
-	ld de,52428	; offset 6690
-	ld hl,52428	; offset 6693
-	ld sp,screenStartAddr+2292	; offset 6696
-	push hl	; offset 6699
-	push de	; offset 6700
-	push bc	; offset 6701
-	exx    	; offset 6702
-	push hl	; offset 6703
-	push de	; offset 6704
-	push bc	; offset 6705
-	; Clock offset: -432
-
-	; src_data blit 326
-	ld bc,52428	; offset 6706
-	ld de,52428	; offset 6709
-	ld hl,52428	; offset 6712
-	exx    	; offset 6715
-	ld bc,52428	; offset 6716
-	ld de,52428	; offset 6719
-	ld hl,52428	; offset 6722
-	ld sp,screenStartAddr+2304	; offset 6725
-	push hl	; offset 6728
-	push de	; offset 6729
-	push bc	; offset 6730
-	exx    	; offset 6731
-	push hl	; offset 6732
-	push de	; offset 6733
-	push bc	; offset 6734
-	; Clock offset: -288
-
-	; src_data blit 327
-	ld bc,52428	; offset 6735
-	ld de,52428	; offset 6738
-	ld hl,52428	; offset 6741
-	exx    	; offset 6744
-	ld bc,52428	; offset 6745
-	ld de,52428	; offset 6748
-	ld hl,52428	; offset 6751
-	ld sp,screenStartAddr+2544	; offset 6754
-	push hl	; offset 6757
-	push de	; offset 6758
-	push bc	; offset 6759
-	exx    	; offset 6760
-	push hl	; offset 6761
-	push de	; offset 6762
-	push bc	; offset 6763
-	; Clock offset: -144
-
-	; src_data blit 328
-	ld bc,52428	; offset 6764
-	ld de,52428	; offset 6767
-	ld hl,52428	; offset 6770
-	exx    	; offset 6773
-	ld bc,52428	; offset 6774
-	ld de,52428	; offset 6777
-	ld hl,52428	; offset 6780
-	ld sp,screenStartAddr+2556	; offset 6783
-	push hl	; offset 6786
-	push de	; offset 6787
-	push bc	; offset 6788
-	exx    	; offset 6789
-	push hl	; offset 6790
-	push de	; offset 6791
-	push bc	; offset 6792
-	; Clock offset: 0
+	; src_data blit 35
+	ld sp,screenStartAddr+828	; offset 0x135c
+	ld hl,44975	; offset 0x135f
+	push hl	; offset 0x1360
+	ld hl,44975	; offset 0x1363
+	push hl	; offset 0x1364
+	ld hl,44975	; offset 0x1367
+	push hl	; offset 0x1368
+	ld hl,44975	; offset 0x136b
+	push hl	; offset 0x136c
+	ld hl,44975	; offset 0x136f
+	push hl	; offset 0x1370
+	ld hl,44975	; offset 0x1373
+	push hl	; offset 0x1374
+	; src_data blit 36
+	ld sp,screenStartAddr+840	; offset 0x1377
+	ld hl,44975	; offset 0x137a
+	push hl	; offset 0x137b
+	ld hl,44975	; offset 0x137e
+	push hl	; offset 0x137f
+	ld hl,44975	; offset 0x1382
+	push hl	; offset 0x1383
+	ld hl,44975	; offset 0x1386
+	push hl	; offset 0x1387
+	ld hl,44975	; offset 0x138a
+	push hl	; offset 0x138b
+	ld hl,44975	; offset 0x138e
+	push hl	; offset 0x138f
+	; src_data blit 37
+	ld sp,screenStartAddr+1068	; offset 0x1392
+	ld hl,44975	; offset 0x1395
+	push hl	; offset 0x1396
+	ld hl,44975	; offset 0x1399
+	push hl	; offset 0x139a
+	ld hl,44975	; offset 0x139d
+	push hl	; offset 0x139e
+	ld hl,44975	; offset 0x13a1
+	push hl	; offset 0x13a2
+	ld hl,44975	; offset 0x13a5
+	push hl	; offset 0x13a6
+	ld hl,44975	; offset 0x13a9
+	push hl	; offset 0x13aa
+	; src_data blit 38
+	ld sp,screenStartAddr+1080	; offset 0x13ad
+	ld hl,44975	; offset 0x13b0
+	push hl	; offset 0x13b1
+	ld hl,44975	; offset 0x13b4
+	push hl	; offset 0x13b5
+	ld hl,44975	; offset 0x13b8
+	push hl	; offset 0x13b9
+	ld hl,44975	; offset 0x13bc
+	push hl	; offset 0x13bd
+	ld hl,44975	; offset 0x13c0
+	push hl	; offset 0x13c1
+	ld hl,44975	; offset 0x13c4
+	push hl	; offset 0x13c5
+	; src_data blit 39
+	ld sp,screenStartAddr+1092	; offset 0x13c8
+	ld hl,44975	; offset 0x13cb
+	push hl	; offset 0x13cc
+	ld hl,44975	; offset 0x13cf
+	push hl	; offset 0x13d0
+	ld hl,44975	; offset 0x13d3
+	push hl	; offset 0x13d4
+	ld hl,44975	; offset 0x13d7
+	push hl	; offset 0x13d8
+	ld hl,44975	; offset 0x13db
+	push hl	; offset 0x13dc
+	ld hl,44975	; offset 0x13df
+	push hl	; offset 0x13e0
+	; src_data blit 40
+	ld sp,screenStartAddr+1332	; offset 0x13e3
+	ld hl,44975	; offset 0x13e6
+	push hl	; offset 0x13e7
+	ld hl,44975	; offset 0x13ea
+	push hl	; offset 0x13eb
+	ld hl,44975	; offset 0x13ee
+	push hl	; offset 0x13ef
+	ld hl,44975	; offset 0x13f2
+	push hl	; offset 0x13f3
+	ld hl,44975	; offset 0x13f6
+	push hl	; offset 0x13f7
+	ld hl,44975	; offset 0x13fa
+	push hl	; offset 0x13fb
+	; src_data blit 41
+	ld sp,screenStartAddr+1344	; offset 0x13fe
+	ld hl,44975	; offset 0x1401
+	push hl	; offset 0x1402
+	ld hl,44975	; offset 0x1405
+	push hl	; offset 0x1406
+	ld hl,44975	; offset 0x1409
+	push hl	; offset 0x140a
+	ld hl,44975	; offset 0x140d
+	push hl	; offset 0x140e
+	ld hl,44975	; offset 0x1411
+	push hl	; offset 0x1412
+	ld hl,44975	; offset 0x1415
+	push hl	; offset 0x1416
+	; src_data blit 42
+	ld sp,screenStartAddr+1584	; offset 0x1419
+	ld hl,44975	; offset 0x141c
+	push hl	; offset 0x141d
+	ld hl,44975	; offset 0x1420
+	push hl	; offset 0x1421
+	ld hl,44975	; offset 0x1424
+	push hl	; offset 0x1425
+	ld hl,44975	; offset 0x1428
+	push hl	; offset 0x1429
+	ld hl,44975	; offset 0x142c
+	push hl	; offset 0x142d
+	ld hl,44975	; offset 0x1430
+	push hl	; offset 0x1431
 
 	; attr draw 5
-	ld sp,0x8020
-	ld bc,10280
-	push bc
-	ld bc,10280
-	push bc
-	pop af
+	ld sp,attr8and16vals+4
+	pop af	; src 16
 	ex af,af'
-	pop af
+	pop af	; src 8
+	ld bc,10280	; src 18
+	ld de,10280	; src 20
+	ld hl,10280	; src 22
+	ld ix,10280	; src 4
+	ld iy,10280	; src 6
+	exx
+	ld bc,10280	; src 10
+	ld de,10280	; src 12
+	ld hl,10280	; src 0
+
 	ld sp,attrStartAddr+16+160
-	ld de,10280
-	ld hl,10280
-	ld ix,10280
-	ld iy,10280
-	exx
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	; start chasing raster here to update ATTR memory
 
-	; start chasing raster here
-
-	ld (attrStartAddr+160),hl
-	ld hl,10280
-	ld (attrStartAddr+2+160),hl
-	ld hl,10280
-	push hl
-	push de
-	push bc
-	push af
+	ld (attrStartAddr+160),hl	; dest 0
+	ld hl,10280	; src 2
+	ld (attrStartAddr+2+160),hl	; dest 2
+	ld hl,10280	; src 14
+	push hl	; dest 14
+	push de	; dest 12
+	push bc	; dest 10
+	push af	; dest 8
 	exx
 	ex af,af'
-	push iy
-	push ix
+	push iy	; dest 6
+	push ix	; dest 4
 	ld sp,attrStartAddr+24+160
-	push hl
-	push de
-	push bc
-	push af
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	push hl	; dest 22
+	push de	; dest 20
+	push bc	; dest 18
+	push af	; dest 16
+	ld bc,10280	; src 24
+	ld de,10280	; src 16
+	ld hl,10280	; src 28
 	ld sp,attrStartAddr+30+160
-	push hl
-	push de
-	push bc
-	ld hl,10280
-	ld (attrStartAddr+30+160),hl
-	; src_data filler blit 160
-	ld bc,52428	; offset 7248
-	ld de,52428	; offset 7251
-	exx    	; offset 7254
-	ld bc,52428	; offset 7255
-	ld de,52428	; offset 7258
-	ld sp,screenStartAddr+5820	; offset 7261
-	push de	; offset 7264
-	push bc	; offset 7265
-	exx    	; offset 7266
-	push de	; offset 7267
-	push bc	; offset 7268
-	nop
-	; end attr draw 5
-	; Clock offset: -1008
+	push hl	; dest 28
+	push de	; dest 26
+	push bc	; dest 24
+	ld hl,10280	; src 30
+	ld (attrStartAddr+30+160),hl;	 dest 30
+	; end attr draw 5, offset 0x15d8
+	; Clock offset: -1152
 
-	; src_data blit 329
-	ld bc,52428	; offset 7270
-	ld de,52428	; offset 7273
-	ld hl,52428	; offset 7276
-	exx    	; offset 7279
-	ld bc,52428	; offset 7280
-	ld de,52428	; offset 7283
-	ld hl,52428	; offset 7286
-	ld sp,screenStartAddr+2796	; offset 7289
-	push hl	; offset 7292
-	push de	; offset 7293
-	push bc	; offset 7294
-	exx    	; offset 7295
-	push hl	; offset 7296
-	push de	; offset 7297
-	push bc	; offset 7298
-	; Clock offset: -864
-
-	; src_data blit 330
-	ld bc,52428	; offset 7299
-	ld de,52428	; offset 7302
-	ld hl,52428	; offset 7305
-	exx    	; offset 7308
-	ld bc,52428	; offset 7309
-	ld de,52428	; offset 7312
-	ld hl,52428	; offset 7315
-	ld sp,screenStartAddr+2808	; offset 7318
-	push hl	; offset 7321
-	push de	; offset 7322
-	push bc	; offset 7323
-	exx    	; offset 7324
-	push hl	; offset 7325
-	push de	; offset 7326
-	push bc	; offset 7327
-	; Clock offset: -720
-
-	; src_data blit 331
-	ld bc,52428	; offset 7328
-	ld de,52428	; offset 7331
-	ld hl,52428	; offset 7334
-	exx    	; offset 7337
-	ld bc,52428	; offset 7338
-	ld de,52428	; offset 7341
-	ld hl,52428	; offset 7344
-	ld sp,screenStartAddr+3060	; offset 7347
-	push hl	; offset 7350
-	push de	; offset 7351
-	push bc	; offset 7352
-	exx    	; offset 7353
-	push hl	; offset 7354
-	push de	; offset 7355
-	push bc	; offset 7356
-	; Clock offset: -576
-
-	; src_data blit 332
-	ld bc,52428	; offset 7357
-	ld de,52428	; offset 7360
-	ld hl,52428	; offset 7363
-	exx    	; offset 7366
-	ld bc,52428	; offset 7367
-	ld de,52428	; offset 7370
-	ld hl,52428	; offset 7373
-	ld sp,screenStartAddr+3072	; offset 7376
-	push hl	; offset 7379
-	push de	; offset 7380
-	push bc	; offset 7381
-	exx    	; offset 7382
-	push hl	; offset 7383
-	push de	; offset 7384
-	push bc	; offset 7385
-	; Clock offset: -432
-
-	; src_data blit 333
-	ld bc,52428	; offset 7386
-	ld de,52428	; offset 7389
-	ld hl,52428	; offset 7392
-	exx    	; offset 7395
-	ld bc,52428	; offset 7396
-	ld de,52428	; offset 7399
-	ld hl,52428	; offset 7402
-	ld sp,screenStartAddr+3312	; offset 7405
-	push hl	; offset 7408
-	push de	; offset 7409
-	push bc	; offset 7410
-	exx    	; offset 7411
-	push hl	; offset 7412
-	push de	; offset 7413
-	push bc	; offset 7414
-	; Clock offset: -288
-
-	; src_data blit 334
-	ld bc,52428	; offset 7415
-	ld de,52428	; offset 7418
-	ld hl,52428	; offset 7421
-	exx    	; offset 7424
-	ld bc,52428	; offset 7425
-	ld de,52428	; offset 7428
-	ld hl,52428	; offset 7431
-	ld sp,screenStartAddr+3324	; offset 7434
-	push hl	; offset 7437
-	push de	; offset 7438
-	push bc	; offset 7439
-	exx    	; offset 7440
-	push hl	; offset 7441
-	push de	; offset 7442
-	push bc	; offset 7443
-	; Clock offset: -144
-
-	; src_data blit 335
-	ld bc,52428	; offset 7444
-	ld de,52428	; offset 7447
-	ld hl,52428	; offset 7450
-	exx    	; offset 7453
-	ld bc,52428	; offset 7454
-	ld de,52428	; offset 7457
-	ld hl,52428	; offset 7460
-	ld sp,screenStartAddr+3564	; offset 7463
-	push hl	; offset 7466
-	push de	; offset 7467
-	push bc	; offset 7468
-	exx    	; offset 7469
-	push hl	; offset 7470
-	push de	; offset 7471
-	push bc	; offset 7472
-	; Clock offset: 0
+	; src_data blit 43
+	ld sp,screenStartAddr+1596	; offset 0x15db
+	ld hl,44975	; offset 0x15de
+	push hl	; offset 0x15df
+	ld hl,44975	; offset 0x15e2
+	push hl	; offset 0x15e3
+	ld hl,44975	; offset 0x15e6
+	push hl	; offset 0x15e7
+	ld hl,44975	; offset 0x15ea
+	push hl	; offset 0x15eb
+	ld hl,44975	; offset 0x15ee
+	push hl	; offset 0x15ef
+	ld hl,44975	; offset 0x15f2
+	push hl	; offset 0x15f3
+	; src_data blit 44
+	ld sp,screenStartAddr+1608	; offset 0x15f6
+	ld hl,44975	; offset 0x15f9
+	push hl	; offset 0x15fa
+	ld hl,44975	; offset 0x15fd
+	push hl	; offset 0x15fe
+	ld hl,44975	; offset 0x1601
+	push hl	; offset 0x1602
+	ld hl,44975	; offset 0x1605
+	push hl	; offset 0x1606
+	ld hl,44975	; offset 0x1609
+	push hl	; offset 0x160a
+	ld hl,44975	; offset 0x160d
+	push hl	; offset 0x160e
+	; src_data blit 45
+	ld sp,screenStartAddr+1836	; offset 0x1611
+	ld hl,44975	; offset 0x1614
+	push hl	; offset 0x1615
+	ld hl,44975	; offset 0x1618
+	push hl	; offset 0x1619
+	ld hl,44975	; offset 0x161c
+	push hl	; offset 0x161d
+	ld hl,44975	; offset 0x1620
+	push hl	; offset 0x1621
+	ld hl,44975	; offset 0x1624
+	push hl	; offset 0x1625
+	ld hl,44975	; offset 0x1628
+	push hl	; offset 0x1629
+	; src_data blit 46
+	ld sp,screenStartAddr+1848	; offset 0x162c
+	ld hl,44975	; offset 0x162f
+	push hl	; offset 0x1630
+	ld hl,44975	; offset 0x1633
+	push hl	; offset 0x1634
+	ld hl,44975	; offset 0x1637
+	push hl	; offset 0x1638
+	ld hl,44975	; offset 0x163b
+	push hl	; offset 0x163c
+	ld hl,44975	; offset 0x163f
+	push hl	; offset 0x1640
+	ld hl,44975	; offset 0x1643
+	push hl	; offset 0x1644
+	; src_data blit 47
+	ld sp,screenStartAddr+1860	; offset 0x1647
+	ld hl,44975	; offset 0x164a
+	push hl	; offset 0x164b
+	ld hl,44975	; offset 0x164e
+	push hl	; offset 0x164f
+	ld hl,44975	; offset 0x1652
+	push hl	; offset 0x1653
+	ld hl,44975	; offset 0x1656
+	push hl	; offset 0x1657
+	ld hl,44975	; offset 0x165a
+	push hl	; offset 0x165b
+	ld hl,44975	; offset 0x165e
+	push hl	; offset 0x165f
+	; src_data blit 48
+	ld sp,screenStartAddr+84	; offset 0x1662
+	ld hl,44975	; offset 0x1665
+	push hl	; offset 0x1666
+	ld hl,44975	; offset 0x1669
+	push hl	; offset 0x166a
+	ld hl,44975	; offset 0x166d
+	push hl	; offset 0x166e
+	ld hl,44975	; offset 0x1671
+	push hl	; offset 0x1672
+	ld hl,44975	; offset 0x1675
+	push hl	; offset 0x1676
+	ld hl,44975	; offset 0x1679
+	push hl	; offset 0x167a
+	; src_data blit 49
+	ld sp,screenStartAddr+96	; offset 0x167d
+	ld hl,44975	; offset 0x1680
+	push hl	; offset 0x1681
+	ld hl,44975	; offset 0x1684
+	push hl	; offset 0x1685
+	ld hl,44975	; offset 0x1688
+	push hl	; offset 0x1689
+	ld hl,44975	; offset 0x168c
+	push hl	; offset 0x168d
+	ld hl,44975	; offset 0x1690
+	push hl	; offset 0x1691
+	ld hl,44975	; offset 0x1694
+	push hl	; offset 0x1695
+	; src_data blit 50
+	ld sp,screenStartAddr+336	; offset 0x1698
+	ld hl,44975	; offset 0x169b
+	push hl	; offset 0x169c
+	ld hl,44975	; offset 0x169f
+	push hl	; offset 0x16a0
+	ld hl,44975	; offset 0x16a3
+	push hl	; offset 0x16a4
+	ld hl,44975	; offset 0x16a7
+	push hl	; offset 0x16a8
+	ld hl,44975	; offset 0x16ab
+	push hl	; offset 0x16ac
+	ld hl,44975	; offset 0x16af
+	push hl	; offset 0x16b0
 
 	; attr draw 6
-	ld sp,0x8020
-	ld bc,10280
-	push bc
-	ld bc,10280
-	push bc
-	pop af
+	ld sp,attr8and16vals+4
+	pop af	; src 16
 	ex af,af'
-	pop af
+	pop af	; src 8
+	ld bc,10280	; src 18
+	ld de,10280	; src 20
+	ld hl,10280	; src 22
+	ld ix,10280	; src 4
+	ld iy,10280	; src 6
+	exx
+	ld bc,10280	; src 10
+	ld de,10280	; src 12
+	ld hl,10280	; src 0
+
 	ld sp,attrStartAddr+16+192
-	ld de,10280
-	ld hl,10280
-	ld ix,10280
-	ld iy,10280
-	exx
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	; start chasing raster here to update ATTR memory
 
-	; start chasing raster here
-
-	ld (attrStartAddr+192),hl
-	ld hl,10280
-	ld (attrStartAddr+2+192),hl
-	ld hl,10280
-	push hl
-	push de
-	push bc
-	push af
+	ld (attrStartAddr+192),hl	; dest 0
+	ld hl,10280	; src 2
+	ld (attrStartAddr+2+192),hl	; dest 2
+	ld hl,10280	; src 14
+	push hl	; dest 14
+	push de	; dest 12
+	push bc	; dest 10
+	push af	; dest 8
 	exx
 	ex af,af'
-	push iy
-	push ix
+	push iy	; dest 6
+	push ix	; dest 4
 	ld sp,attrStartAddr+24+192
-	push hl
-	push de
-	push bc
-	push af
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	push hl	; dest 22
+	push de	; dest 20
+	push bc	; dest 18
+	push af	; dest 16
+	ld bc,10280	; src 24
+	ld de,10280	; src 16
+	ld hl,10280	; src 28
 	ld sp,attrStartAddr+30+192
-	push hl
-	push de
-	push bc
-	ld hl,10280
-	ld (attrStartAddr+30+192),hl
-	; src_data filler blit 192
-	ld bc,52428	; offset 7928
-	ld de,52428	; offset 7931
-	exx    	; offset 7934
-	ld bc,52428	; offset 7935
-	ld de,52428	; offset 7938
-	ld sp,screenStartAddr+5828	; offset 7941
-	push de	; offset 7944
-	push bc	; offset 7945
-	exx    	; offset 7946
-	push de	; offset 7947
-	push bc	; offset 7948
-	nop
-	; end attr draw 6
-	; Clock offset: -1008
+	push hl	; dest 28
+	push de	; dest 26
+	push bc	; dest 24
+	ld hl,10280	; src 30
+	ld (attrStartAddr+30+192),hl;	 dest 30
+	; end attr draw 6, offset 0x1857
+	; Clock offset: -1152
 
-	; src_data blit 336
-	ld bc,52428	; offset 7950
-	ld de,52428	; offset 7953
-	ld hl,52428	; offset 7956
-	exx    	; offset 7959
-	ld bc,52428	; offset 7960
-	ld de,52428	; offset 7963
-	ld hl,52428	; offset 7966
-	ld sp,screenStartAddr+3576	; offset 7969
-	push hl	; offset 7972
-	push de	; offset 7973
-	push bc	; offset 7974
-	exx    	; offset 7975
-	push hl	; offset 7976
-	push de	; offset 7977
-	push bc	; offset 7978
-	; Clock offset: -864
-
-	; src_data blit 337
-	ld bc,52428	; offset 7979
-	ld de,52428	; offset 7982
-	ld hl,52428	; offset 7985
-	exx    	; offset 7988
-	ld bc,52428	; offset 7989
-	ld de,52428	; offset 7992
-	ld hl,52428	; offset 7995
-	ld sp,screenStartAddr+3828	; offset 7998
-	push hl	; offset 8001
-	push de	; offset 8002
-	push bc	; offset 8003
-	exx    	; offset 8004
-	push hl	; offset 8005
-	push de	; offset 8006
-	push bc	; offset 8007
-	; Clock offset: -720
-
-	; src_data blit 338
-	ld bc,52428	; offset 8008
-	ld de,52428	; offset 8011
-	ld hl,52428	; offset 8014
-	exx    	; offset 8017
-	ld bc,52428	; offset 8018
-	ld de,52428	; offset 8021
-	ld hl,52428	; offset 8024
-	ld sp,screenStartAddr+3840	; offset 8027
-	push hl	; offset 8030
-	push de	; offset 8031
-	push bc	; offset 8032
-	exx    	; offset 8033
-	push hl	; offset 8034
-	push de	; offset 8035
-	push bc	; offset 8036
-	; Clock offset: -576
-
-	; src_data blit 339
-	ld bc,52428	; offset 8037
-	ld de,52428	; offset 8040
-	ld hl,52428	; offset 8043
-	exx    	; offset 8046
-	ld bc,52428	; offset 8047
-	ld de,52428	; offset 8050
-	ld hl,52428	; offset 8053
-	ld sp,screenStartAddr+4080	; offset 8056
-	push hl	; offset 8059
-	push de	; offset 8060
-	push bc	; offset 8061
-	exx    	; offset 8062
-	push hl	; offset 8063
-	push de	; offset 8064
-	push bc	; offset 8065
-	; Clock offset: -432
-
-	; src_data blit 340
-	ld bc,52428	; offset 8066
-	ld de,52428	; offset 8069
-	ld hl,52428	; offset 8072
-	exx    	; offset 8075
-	ld bc,52428	; offset 8076
-	ld de,52428	; offset 8079
-	ld hl,52428	; offset 8082
-	ld sp,screenStartAddr+4092	; offset 8085
-	push hl	; offset 8088
-	push de	; offset 8089
-	push bc	; offset 8090
-	exx    	; offset 8091
-	push hl	; offset 8092
-	push de	; offset 8093
-	push bc	; offset 8094
-	; Clock offset: -288
-
-	; src_data blit 341
-	ld bc,52428	; offset 8095
-	ld de,52428	; offset 8098
-	ld hl,52428	; offset 8101
-	exx    	; offset 8104
-	ld bc,52428	; offset 8105
-	ld de,52428	; offset 8108
-	ld hl,52428	; offset 8111
-	ld sp,screenStartAddr+4104	; offset 8114
-	push hl	; offset 8117
-	push de	; offset 8118
-	push bc	; offset 8119
-	exx    	; offset 8120
-	push hl	; offset 8121
-	push de	; offset 8122
-	push bc	; offset 8123
-	; Clock offset: -144
-
-	; src_data blit 342
-	ld bc,52428	; offset 8124
-	ld de,52428	; offset 8127
-	ld hl,52428	; offset 8130
-	exx    	; offset 8133
-	ld bc,52428	; offset 8134
-	ld de,52428	; offset 8137
-	ld hl,52428	; offset 8140
-	ld sp,screenStartAddr+4116	; offset 8143
-	push hl	; offset 8146
-	push de	; offset 8147
-	push bc	; offset 8148
-	exx    	; offset 8149
-	push hl	; offset 8150
-	push de	; offset 8151
-	push bc	; offset 8152
-	; Clock offset: 0
+	; src_data blit 51
+	ld sp,screenStartAddr+348	; offset 0x185a
+	ld hl,44975	; offset 0x185d
+	push hl	; offset 0x185e
+	ld hl,44975	; offset 0x1861
+	push hl	; offset 0x1862
+	ld hl,44975	; offset 0x1865
+	push hl	; offset 0x1866
+	ld hl,44975	; offset 0x1869
+	push hl	; offset 0x186a
+	ld hl,44975	; offset 0x186d
+	push hl	; offset 0x186e
+	ld hl,44975	; offset 0x1871
+	push hl	; offset 0x1872
+	; src_data blit 52
+	ld sp,screenStartAddr+360	; offset 0x1875
+	ld hl,44975	; offset 0x1878
+	push hl	; offset 0x1879
+	ld hl,44975	; offset 0x187c
+	push hl	; offset 0x187d
+	ld hl,44975	; offset 0x1880
+	push hl	; offset 0x1881
+	ld hl,44975	; offset 0x1884
+	push hl	; offset 0x1885
+	ld hl,44975	; offset 0x1888
+	push hl	; offset 0x1889
+	ld hl,44975	; offset 0x188c
+	push hl	; offset 0x188d
+	; src_data blit 53
+	ld sp,screenStartAddr+588	; offset 0x1890
+	ld hl,44975	; offset 0x1893
+	push hl	; offset 0x1894
+	ld hl,44975	; offset 0x1897
+	push hl	; offset 0x1898
+	ld hl,44975	; offset 0x189b
+	push hl	; offset 0x189c
+	ld hl,44975	; offset 0x189f
+	push hl	; offset 0x18a0
+	ld hl,44975	; offset 0x18a3
+	push hl	; offset 0x18a4
+	ld hl,44975	; offset 0x18a7
+	push hl	; offset 0x18a8
+	; src_data blit 54
+	ld sp,screenStartAddr+600	; offset 0x18ab
+	ld hl,44975	; offset 0x18ae
+	push hl	; offset 0x18af
+	ld hl,44975	; offset 0x18b2
+	push hl	; offset 0x18b3
+	ld hl,44975	; offset 0x18b6
+	push hl	; offset 0x18b7
+	ld hl,44975	; offset 0x18ba
+	push hl	; offset 0x18bb
+	ld hl,44975	; offset 0x18be
+	push hl	; offset 0x18bf
+	ld hl,44975	; offset 0x18c2
+	push hl	; offset 0x18c3
+	; src_data blit 55
+	ld sp,screenStartAddr+612	; offset 0x18c6
+	ld hl,44975	; offset 0x18c9
+	push hl	; offset 0x18ca
+	ld hl,44975	; offset 0x18cd
+	push hl	; offset 0x18ce
+	ld hl,44975	; offset 0x18d1
+	push hl	; offset 0x18d2
+	ld hl,44975	; offset 0x18d5
+	push hl	; offset 0x18d6
+	ld hl,44975	; offset 0x18d9
+	push hl	; offset 0x18da
+	ld hl,44975	; offset 0x18dd
+	push hl	; offset 0x18de
+	; src_data blit 56
+	ld sp,screenStartAddr+852	; offset 0x18e1
+	ld hl,44975	; offset 0x18e4
+	push hl	; offset 0x18e5
+	ld hl,44975	; offset 0x18e8
+	push hl	; offset 0x18e9
+	ld hl,44975	; offset 0x18ec
+	push hl	; offset 0x18ed
+	ld hl,44975	; offset 0x18f0
+	push hl	; offset 0x18f1
+	ld hl,44975	; offset 0x18f4
+	push hl	; offset 0x18f5
+	ld hl,44975	; offset 0x18f8
+	push hl	; offset 0x18f9
+	; src_data blit 57
+	ld sp,screenStartAddr+864	; offset 0x18fc
+	ld hl,44975	; offset 0x18ff
+	push hl	; offset 0x1900
+	ld hl,44975	; offset 0x1903
+	push hl	; offset 0x1904
+	ld hl,44975	; offset 0x1907
+	push hl	; offset 0x1908
+	ld hl,44975	; offset 0x190b
+	push hl	; offset 0x190c
+	ld hl,44975	; offset 0x190f
+	push hl	; offset 0x1910
+	ld hl,44975	; offset 0x1913
+	push hl	; offset 0x1914
+	; src_data blit 58
+	ld sp,screenStartAddr+1104	; offset 0x1917
+	ld hl,44975	; offset 0x191a
+	push hl	; offset 0x191b
+	ld hl,44975	; offset 0x191e
+	push hl	; offset 0x191f
+	ld hl,44975	; offset 0x1922
+	push hl	; offset 0x1923
+	ld hl,44975	; offset 0x1926
+	push hl	; offset 0x1927
+	ld hl,44975	; offset 0x192a
+	push hl	; offset 0x192b
+	ld hl,44975	; offset 0x192e
+	push hl	; offset 0x192f
 
 	; attr draw 7
-	ld sp,0x8020
-	ld bc,10280
-	push bc
-	ld bc,10280
-	push bc
-	pop af
+	ld sp,attr8and16vals+4
+	pop af	; src 16
 	ex af,af'
-	pop af
+	pop af	; src 8
+	ld bc,10280	; src 18
+	ld de,10280	; src 20
+	ld hl,10280	; src 22
+	ld ix,10280	; src 4
+	ld iy,10280	; src 6
+	exx
+	ld bc,10280	; src 10
+	ld de,10280	; src 12
+	ld hl,10280	; src 0
+
 	ld sp,attrStartAddr+16+224
-	ld de,10280
-	ld hl,10280
-	ld ix,10280
-	ld iy,10280
-	exx
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	; start chasing raster here to update ATTR memory
 
-	; start chasing raster here
-
-	ld (attrStartAddr+224),hl
-	ld hl,10280
-	ld (attrStartAddr+2+224),hl
-	ld hl,10280
-	push hl
-	push de
-	push bc
-	push af
+	ld (attrStartAddr+224),hl	; dest 0
+	ld hl,10280	; src 2
+	ld (attrStartAddr+2+224),hl	; dest 2
+	ld hl,10280	; src 14
+	push hl	; dest 14
+	push de	; dest 12
+	push bc	; dest 10
+	push af	; dest 8
 	exx
 	ex af,af'
-	push iy
-	push ix
+	push iy	; dest 6
+	push ix	; dest 4
 	ld sp,attrStartAddr+24+224
-	push hl
-	push de
-	push bc
-	push af
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	push hl	; dest 22
+	push de	; dest 20
+	push bc	; dest 18
+	push af	; dest 16
+	ld bc,10280	; src 24
+	ld de,10280	; src 16
+	ld hl,10280	; src 28
 	ld sp,attrStartAddr+30+224
-	push hl
-	push de
-	push bc
-	ld hl,10280
-	ld (attrStartAddr+30+224),hl
-	; src_data filler blit 224
-	ld bc,52428	; offset 8608
-	ld de,52428	; offset 8611
-	exx    	; offset 8614
-	ld bc,52428	; offset 8615
-	ld de,52428	; offset 8618
-	ld sp,screenStartAddr+5836	; offset 8621
-	push de	; offset 8624
-	push bc	; offset 8625
-	exx    	; offset 8626
-	push de	; offset 8627
-	push bc	; offset 8628
-	nop
-	; end attr draw 7
-	; Clock offset: -1008
+	push hl	; dest 28
+	push de	; dest 26
+	push bc	; dest 24
+	ld hl,10280	; src 30
+	ld (attrStartAddr+30+224),hl;	 dest 30
+	; end attr draw 7, offset 0x1ad6
+	; Clock offset: -1152
 
-	; src_data blit 343
-	ld bc,52428	; offset 8630
-	ld de,52428	; offset 8633
-	ld hl,52428	; offset 8636
-	exx    	; offset 8639
-	ld bc,52428	; offset 8640
-	ld de,52428	; offset 8643
-	ld hl,52428	; offset 8646
-	ld sp,screenStartAddr+4128	; offset 8649
-	push hl	; offset 8652
-	push de	; offset 8653
-	push bc	; offset 8654
-	exx    	; offset 8655
-	push hl	; offset 8656
-	push de	; offset 8657
-	push bc	; offset 8658
-	; Clock offset: -864
-
-	; src_data blit 344
-	ld bc,52428	; offset 8659
-	ld de,52428	; offset 8662
-	ld hl,52428	; offset 8665
-	exx    	; offset 8668
-	ld bc,52428	; offset 8669
-	ld de,52428	; offset 8672
-	ld hl,52428	; offset 8675
-	ld sp,screenStartAddr+4356	; offset 8678
-	push hl	; offset 8681
-	push de	; offset 8682
-	push bc	; offset 8683
-	exx    	; offset 8684
-	push hl	; offset 8685
-	push de	; offset 8686
-	push bc	; offset 8687
-	; Clock offset: -720
-
-	; src_data blit 345
-	ld bc,52428	; offset 8688
-	ld de,52428	; offset 8691
-	ld hl,52428	; offset 8694
-	exx    	; offset 8697
-	ld bc,52428	; offset 8698
-	ld de,52428	; offset 8701
-	ld hl,52428	; offset 8704
-	ld sp,screenStartAddr+4368	; offset 8707
-	push hl	; offset 8710
-	push de	; offset 8711
-	push bc	; offset 8712
-	exx    	; offset 8713
-	push hl	; offset 8714
-	push de	; offset 8715
-	push bc	; offset 8716
-	; Clock offset: -576
-
-	; src_data blit 346
-	ld bc,52428	; offset 8717
-	ld de,52428	; offset 8720
-	ld hl,52428	; offset 8723
-	exx    	; offset 8726
-	ld bc,52428	; offset 8727
-	ld de,52428	; offset 8730
-	ld hl,52428	; offset 8733
-	ld sp,screenStartAddr+4380	; offset 8736
-	push hl	; offset 8739
-	push de	; offset 8740
-	push bc	; offset 8741
-	exx    	; offset 8742
-	push hl	; offset 8743
-	push de	; offset 8744
-	push bc	; offset 8745
-	; Clock offset: -432
-
-	; src_data blit 347
-	ld bc,52428	; offset 8746
-	ld de,52428	; offset 8749
-	ld hl,52428	; offset 8752
-	exx    	; offset 8755
-	ld bc,52428	; offset 8756
-	ld de,52428	; offset 8759
-	ld hl,52428	; offset 8762
-	ld sp,screenStartAddr+4392	; offset 8765
-	push hl	; offset 8768
-	push de	; offset 8769
-	push bc	; offset 8770
-	exx    	; offset 8771
-	push hl	; offset 8772
-	push de	; offset 8773
-	push bc	; offset 8774
-	; Clock offset: -288
-
-	; src_data blit 348
-	ld bc,52428	; offset 8775
-	ld de,52428	; offset 8778
-	ld hl,52428	; offset 8781
-	exx    	; offset 8784
-	ld bc,52428	; offset 8785
-	ld de,52428	; offset 8788
-	ld hl,52428	; offset 8791
-	ld sp,screenStartAddr+4620	; offset 8794
-	push hl	; offset 8797
-	push de	; offset 8798
-	push bc	; offset 8799
-	exx    	; offset 8800
-	push hl	; offset 8801
-	push de	; offset 8802
-	push bc	; offset 8803
-	; Clock offset: -144
-
-	; src_data blit 349
-	ld bc,52428	; offset 8804
-	ld de,52428	; offset 8807
-	ld hl,52428	; offset 8810
-	exx    	; offset 8813
-	ld bc,52428	; offset 8814
-	ld de,52428	; offset 8817
-	ld hl,52428	; offset 8820
-	ld sp,screenStartAddr+4632	; offset 8823
-	push hl	; offset 8826
-	push de	; offset 8827
-	push bc	; offset 8828
-	exx    	; offset 8829
-	push hl	; offset 8830
-	push de	; offset 8831
-	push bc	; offset 8832
-	; Clock offset: 0
+	; src_data blit 59
+	ld sp,screenStartAddr+1116	; offset 0x1ad9
+	ld hl,44975	; offset 0x1adc
+	push hl	; offset 0x1add
+	ld hl,44975	; offset 0x1ae0
+	push hl	; offset 0x1ae1
+	ld hl,44975	; offset 0x1ae4
+	push hl	; offset 0x1ae5
+	ld hl,44975	; offset 0x1ae8
+	push hl	; offset 0x1ae9
+	ld hl,44975	; offset 0x1aec
+	push hl	; offset 0x1aed
+	ld hl,44975	; offset 0x1af0
+	push hl	; offset 0x1af1
+	; src_data blit 60
+	ld sp,screenStartAddr+1128	; offset 0x1af4
+	ld hl,44975	; offset 0x1af7
+	push hl	; offset 0x1af8
+	ld hl,44975	; offset 0x1afb
+	push hl	; offset 0x1afc
+	ld hl,44975	; offset 0x1aff
+	push hl	; offset 0x1b00
+	ld hl,44975	; offset 0x1b03
+	push hl	; offset 0x1b04
+	ld hl,44975	; offset 0x1b07
+	push hl	; offset 0x1b08
+	ld hl,44975	; offset 0x1b0b
+	push hl	; offset 0x1b0c
+	; src_data blit 61
+	ld sp,screenStartAddr+1356	; offset 0x1b0f
+	ld hl,44975	; offset 0x1b12
+	push hl	; offset 0x1b13
+	ld hl,44975	; offset 0x1b16
+	push hl	; offset 0x1b17
+	ld hl,44975	; offset 0x1b1a
+	push hl	; offset 0x1b1b
+	ld hl,44975	; offset 0x1b1e
+	push hl	; offset 0x1b1f
+	ld hl,44975	; offset 0x1b22
+	push hl	; offset 0x1b23
+	ld hl,44975	; offset 0x1b26
+	push hl	; offset 0x1b27
+	; src_data blit 62
+	ld sp,screenStartAddr+1368	; offset 0x1b2a
+	ld hl,44975	; offset 0x1b2d
+	push hl	; offset 0x1b2e
+	ld hl,44975	; offset 0x1b31
+	push hl	; offset 0x1b32
+	ld hl,44975	; offset 0x1b35
+	push hl	; offset 0x1b36
+	ld hl,44975	; offset 0x1b39
+	push hl	; offset 0x1b3a
+	ld hl,44975	; offset 0x1b3d
+	push hl	; offset 0x1b3e
+	ld hl,44975	; offset 0x1b41
+	push hl	; offset 0x1b42
+	; src_data blit 63
+	ld sp,screenStartAddr+1380	; offset 0x1b45
+	ld hl,44975	; offset 0x1b48
+	push hl	; offset 0x1b49
+	ld hl,44975	; offset 0x1b4c
+	push hl	; offset 0x1b4d
+	ld hl,44975	; offset 0x1b50
+	push hl	; offset 0x1b51
+	ld hl,44975	; offset 0x1b54
+	push hl	; offset 0x1b55
+	ld hl,44975	; offset 0x1b58
+	push hl	; offset 0x1b59
+	ld hl,44975	; offset 0x1b5c
+	push hl	; offset 0x1b5d
+	; src_data blit 64
+	ld sp,screenStartAddr+1620	; offset 0x1b60
+	ld hl,44975	; offset 0x1b63
+	push hl	; offset 0x1b64
+	ld hl,44975	; offset 0x1b67
+	push hl	; offset 0x1b68
+	ld hl,44975	; offset 0x1b6b
+	push hl	; offset 0x1b6c
+	ld hl,44975	; offset 0x1b6f
+	push hl	; offset 0x1b70
+	ld hl,44975	; offset 0x1b73
+	push hl	; offset 0x1b74
+	ld hl,44975	; offset 0x1b77
+	push hl	; offset 0x1b78
+	; src_data blit 65
+	ld sp,screenStartAddr+1632	; offset 0x1b7b
+	ld hl,44975	; offset 0x1b7e
+	push hl	; offset 0x1b7f
+	ld hl,44975	; offset 0x1b82
+	push hl	; offset 0x1b83
+	ld hl,44975	; offset 0x1b86
+	push hl	; offset 0x1b87
+	ld hl,44975	; offset 0x1b8a
+	push hl	; offset 0x1b8b
+	ld hl,44975	; offset 0x1b8e
+	push hl	; offset 0x1b8f
+	ld hl,44975	; offset 0x1b92
+	push hl	; offset 0x1b93
+	; src_data blit 66
+	ld sp,screenStartAddr+1872	; offset 0x1b96
+	ld hl,44975	; offset 0x1b99
+	push hl	; offset 0x1b9a
+	ld hl,44975	; offset 0x1b9d
+	push hl	; offset 0x1b9e
+	ld hl,44975	; offset 0x1ba1
+	push hl	; offset 0x1ba2
+	ld hl,44975	; offset 0x1ba5
+	push hl	; offset 0x1ba6
+	ld hl,44975	; offset 0x1ba9
+	push hl	; offset 0x1baa
+	ld hl,44975	; offset 0x1bad
+	push hl	; offset 0x1bae
 
 	; attr draw 8
-	ld sp,0x8020
-	ld bc,10280
-	push bc
-	ld bc,10280
-	push bc
-	pop af
+	ld sp,attr8and16vals+4
+	pop af	; src 16
 	ex af,af'
-	pop af
+	pop af	; src 8
+	ld bc,10280	; src 18
+	ld de,10280	; src 20
+	ld hl,10280	; src 22
+	ld ix,10280	; src 4
+	ld iy,10280	; src 6
+	exx
+	ld bc,10280	; src 10
+	ld de,10280	; src 12
+	ld hl,10280	; src 0
+
 	ld sp,attrStartAddr+16+256
-	ld de,10280
-	ld hl,10280
-	ld ix,10280
-	ld iy,10280
-	exx
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	; start chasing raster here to update ATTR memory
 
-	; start chasing raster here
-
-	ld (attrStartAddr+256),hl
-	ld hl,10280
-	ld (attrStartAddr+2+256),hl
-	ld hl,10280
-	push hl
-	push de
-	push bc
-	push af
+	ld (attrStartAddr+256),hl	; dest 0
+	ld hl,10280	; src 2
+	ld (attrStartAddr+2+256),hl	; dest 2
+	ld hl,10280	; src 14
+	push hl	; dest 14
+	push de	; dest 12
+	push bc	; dest 10
+	push af	; dest 8
 	exx
 	ex af,af'
-	push iy
-	push ix
+	push iy	; dest 6
+	push ix	; dest 4
 	ld sp,attrStartAddr+24+256
-	push hl
-	push de
-	push bc
-	push af
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	push hl	; dest 22
+	push de	; dest 20
+	push bc	; dest 18
+	push af	; dest 16
+	ld bc,10280	; src 24
+	ld de,10280	; src 16
+	ld hl,10280	; src 28
 	ld sp,attrStartAddr+30+256
-	push hl
-	push de
-	push bc
-	ld hl,10280
-	ld (attrStartAddr+30+256),hl
-	; src_data filler blit 256
-	ld bc,52428	; offset 9288
-	ld de,52428	; offset 9291
-	exx    	; offset 9294
-	ld bc,52428	; offset 9295
-	ld de,52428	; offset 9298
-	ld sp,screenStartAddr+5844	; offset 9301
-	push de	; offset 9304
-	push bc	; offset 9305
-	exx    	; offset 9306
-	push de	; offset 9307
-	push bc	; offset 9308
-	nop
-	; end attr draw 8
-	; Clock offset: -1008
+	push hl	; dest 28
+	push de	; dest 26
+	push bc	; dest 24
+	ld hl,10280	; src 30
+	ld (attrStartAddr+30+256),hl;	 dest 30
+	; end attr draw 8, offset 0x1d55
+	; Clock offset: -1152
 
-	; src_data blit 350
-	ld bc,52428	; offset 9310
-	ld de,52428	; offset 9313
-	ld hl,52428	; offset 9316
-	exx    	; offset 9319
-	ld bc,52428	; offset 9320
-	ld de,52428	; offset 9323
-	ld hl,52428	; offset 9326
-	ld sp,screenStartAddr+4644	; offset 9329
-	push hl	; offset 9332
-	push de	; offset 9333
-	push bc	; offset 9334
-	exx    	; offset 9335
-	push hl	; offset 9336
-	push de	; offset 9337
-	push bc	; offset 9338
-	; Clock offset: -864
-
-	; src_data blit 351
-	ld bc,52428	; offset 9339
-	ld de,52428	; offset 9342
-	ld hl,52428	; offset 9345
-	exx    	; offset 9348
-	ld bc,52428	; offset 9349
-	ld de,52428	; offset 9352
-	ld hl,52428	; offset 9355
-	ld sp,screenStartAddr+4872	; offset 9358
-	push hl	; offset 9361
-	push de	; offset 9362
-	push bc	; offset 9363
-	exx    	; offset 9364
-	push hl	; offset 9365
-	push de	; offset 9366
-	push bc	; offset 9367
-	; Clock offset: -720
-
-	; src_data blit 352
-	ld bc,52428	; offset 9368
-	ld de,52428	; offset 9371
-	ld hl,52428	; offset 9374
-	exx    	; offset 9377
-	ld bc,52428	; offset 9378
-	ld de,52428	; offset 9381
-	ld hl,52428	; offset 9384
-	ld sp,screenStartAddr+4884	; offset 9387
-	push hl	; offset 9390
-	push de	; offset 9391
-	push bc	; offset 9392
-	exx    	; offset 9393
-	push hl	; offset 9394
-	push de	; offset 9395
-	push bc	; offset 9396
-	; Clock offset: -576
-
-	; src_data blit 353
-	ld bc,52428	; offset 9397
-	ld de,52428	; offset 9400
-	ld hl,52428	; offset 9403
-	exx    	; offset 9406
-	ld bc,52428	; offset 9407
-	ld de,52428	; offset 9410
-	ld hl,52428	; offset 9413
-	ld sp,screenStartAddr+4896	; offset 9416
-	push hl	; offset 9419
-	push de	; offset 9420
-	push bc	; offset 9421
-	exx    	; offset 9422
-	push hl	; offset 9423
-	push de	; offset 9424
-	push bc	; offset 9425
-	; Clock offset: -432
-
-	; src_data blit 354
-	ld bc,52428	; offset 9426
-	ld de,52428	; offset 9429
-	ld hl,52428	; offset 9432
-	exx    	; offset 9435
-	ld bc,52428	; offset 9436
-	ld de,52428	; offset 9439
-	ld hl,52428	; offset 9442
-	ld sp,screenStartAddr+5124	; offset 9445
-	push hl	; offset 9448
-	push de	; offset 9449
-	push bc	; offset 9450
-	exx    	; offset 9451
-	push hl	; offset 9452
-	push de	; offset 9453
-	push bc	; offset 9454
-	; Clock offset: -288
-
-	; src_data blit 355
-	ld bc,52428	; offset 9455
-	ld de,52428	; offset 9458
-	ld hl,52428	; offset 9461
-	exx    	; offset 9464
-	ld bc,52428	; offset 9465
-	ld de,52428	; offset 9468
-	ld hl,52428	; offset 9471
-	ld sp,screenStartAddr+5136	; offset 9474
-	push hl	; offset 9477
-	push de	; offset 9478
-	push bc	; offset 9479
-	exx    	; offset 9480
-	push hl	; offset 9481
-	push de	; offset 9482
-	push bc	; offset 9483
-	; Clock offset: -144
-
-	; src_data blit 356
-	ld bc,52428	; offset 9484
-	ld de,52428	; offset 9487
-	ld hl,52428	; offset 9490
-	exx    	; offset 9493
-	ld bc,52428	; offset 9494
-	ld de,52428	; offset 9497
-	ld hl,52428	; offset 9500
-	ld sp,screenStartAddr+5148	; offset 9503
-	push hl	; offset 9506
-	push de	; offset 9507
-	push bc	; offset 9508
-	exx    	; offset 9509
-	push hl	; offset 9510
-	push de	; offset 9511
-	push bc	; offset 9512
-	; Clock offset: 0
+	; src_data blit 67
+	ld sp,screenStartAddr+1884	; offset 0x1d58
+	ld hl,44975	; offset 0x1d5b
+	push hl	; offset 0x1d5c
+	ld hl,44975	; offset 0x1d5f
+	push hl	; offset 0x1d60
+	ld hl,44975	; offset 0x1d63
+	push hl	; offset 0x1d64
+	ld hl,44975	; offset 0x1d67
+	push hl	; offset 0x1d68
+	ld hl,44975	; offset 0x1d6b
+	push hl	; offset 0x1d6c
+	ld hl,44975	; offset 0x1d6f
+	push hl	; offset 0x1d70
+	; src_data blit 68
+	ld sp,screenStartAddr+1896	; offset 0x1d73
+	ld hl,44975	; offset 0x1d76
+	push hl	; offset 0x1d77
+	ld hl,44975	; offset 0x1d7a
+	push hl	; offset 0x1d7b
+	ld hl,44975	; offset 0x1d7e
+	push hl	; offset 0x1d7f
+	ld hl,44975	; offset 0x1d82
+	push hl	; offset 0x1d83
+	ld hl,44975	; offset 0x1d86
+	push hl	; offset 0x1d87
+	ld hl,44975	; offset 0x1d8a
+	push hl	; offset 0x1d8b
+	; src_data blit 69
+	ld sp,screenStartAddr+108	; offset 0x1d8e
+	ld hl,44975	; offset 0x1d91
+	push hl	; offset 0x1d92
+	ld hl,44975	; offset 0x1d95
+	push hl	; offset 0x1d96
+	ld hl,44975	; offset 0x1d99
+	push hl	; offset 0x1d9a
+	ld hl,44975	; offset 0x1d9d
+	push hl	; offset 0x1d9e
+	ld hl,44975	; offset 0x1da1
+	push hl	; offset 0x1da2
+	ld hl,44975	; offset 0x1da5
+	push hl	; offset 0x1da6
+	; src_data blit 70
+	ld sp,screenStartAddr+120	; offset 0x1da9
+	ld hl,44975	; offset 0x1dac
+	push hl	; offset 0x1dad
+	ld hl,44975	; offset 0x1db0
+	push hl	; offset 0x1db1
+	ld hl,44975	; offset 0x1db4
+	push hl	; offset 0x1db5
+	ld hl,44975	; offset 0x1db8
+	push hl	; offset 0x1db9
+	ld hl,44975	; offset 0x1dbc
+	push hl	; offset 0x1dbd
+	ld hl,44975	; offset 0x1dc0
+	push hl	; offset 0x1dc1
+	; src_data blit 71
+	ld sp,screenStartAddr+132	; offset 0x1dc4
+	ld hl,44975	; offset 0x1dc7
+	push hl	; offset 0x1dc8
+	ld hl,44975	; offset 0x1dcb
+	push hl	; offset 0x1dcc
+	ld hl,44975	; offset 0x1dcf
+	push hl	; offset 0x1dd0
+	ld hl,44975	; offset 0x1dd3
+	push hl	; offset 0x1dd4
+	ld hl,44975	; offset 0x1dd7
+	push hl	; offset 0x1dd8
+	ld hl,44975	; offset 0x1ddb
+	push hl	; offset 0x1ddc
+	; src_data blit 72
+	ld sp,screenStartAddr+372	; offset 0x1ddf
+	ld hl,44975	; offset 0x1de2
+	push hl	; offset 0x1de3
+	ld hl,44975	; offset 0x1de6
+	push hl	; offset 0x1de7
+	ld hl,44975	; offset 0x1dea
+	push hl	; offset 0x1deb
+	ld hl,44975	; offset 0x1dee
+	push hl	; offset 0x1def
+	ld hl,44975	; offset 0x1df2
+	push hl	; offset 0x1df3
+	ld hl,44975	; offset 0x1df6
+	push hl	; offset 0x1df7
+	; src_data blit 73
+	ld sp,screenStartAddr+384	; offset 0x1dfa
+	ld hl,44975	; offset 0x1dfd
+	push hl	; offset 0x1dfe
+	ld hl,44975	; offset 0x1e01
+	push hl	; offset 0x1e02
+	ld hl,44975	; offset 0x1e05
+	push hl	; offset 0x1e06
+	ld hl,44975	; offset 0x1e09
+	push hl	; offset 0x1e0a
+	ld hl,44975	; offset 0x1e0d
+	push hl	; offset 0x1e0e
+	ld hl,44975	; offset 0x1e11
+	push hl	; offset 0x1e12
+	; src_data blit 74
+	ld sp,screenStartAddr+624	; offset 0x1e15
+	ld hl,44975	; offset 0x1e18
+	push hl	; offset 0x1e19
+	ld hl,44975	; offset 0x1e1c
+	push hl	; offset 0x1e1d
+	ld hl,44975	; offset 0x1e20
+	push hl	; offset 0x1e21
+	ld hl,44975	; offset 0x1e24
+	push hl	; offset 0x1e25
+	ld hl,44975	; offset 0x1e28
+	push hl	; offset 0x1e29
+	ld hl,44975	; offset 0x1e2c
+	push hl	; offset 0x1e2d
 
 	; attr draw 9
-	ld sp,0x8020
-	ld bc,10280
-	push bc
-	ld bc,10280
-	push bc
-	pop af
+	ld sp,attr8and16vals+4
+	pop af	; src 16
 	ex af,af'
-	pop af
+	pop af	; src 8
+	ld bc,10280	; src 18
+	ld de,10280	; src 20
+	ld hl,10280	; src 22
+	ld ix,10280	; src 4
+	ld iy,10280	; src 6
+	exx
+	ld bc,10280	; src 10
+	ld de,10280	; src 12
+	ld hl,10280	; src 0
+
 	ld sp,attrStartAddr+16+288
-	ld de,10280
-	ld hl,10280
-	ld ix,10280
-	ld iy,10280
-	exx
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	; start chasing raster here to update ATTR memory
 
-	; start chasing raster here
-
-	ld (attrStartAddr+288),hl
-	ld hl,10280
-	ld (attrStartAddr+2+288),hl
-	ld hl,10280
-	push hl
-	push de
-	push bc
-	push af
+	ld (attrStartAddr+288),hl	; dest 0
+	ld hl,10280	; src 2
+	ld (attrStartAddr+2+288),hl	; dest 2
+	ld hl,10280	; src 14
+	push hl	; dest 14
+	push de	; dest 12
+	push bc	; dest 10
+	push af	; dest 8
 	exx
 	ex af,af'
-	push iy
-	push ix
+	push iy	; dest 6
+	push ix	; dest 4
 	ld sp,attrStartAddr+24+288
-	push hl
-	push de
-	push bc
-	push af
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	push hl	; dest 22
+	push de	; dest 20
+	push bc	; dest 18
+	push af	; dest 16
+	ld bc,10280	; src 24
+	ld de,10280	; src 16
+	ld hl,10280	; src 28
 	ld sp,attrStartAddr+30+288
-	push hl
-	push de
-	push bc
-	ld hl,10280
-	ld (attrStartAddr+30+288),hl
-	; src_data filler blit 288
-	ld bc,52428	; offset 9968
-	ld de,52428	; offset 9971
-	exx    	; offset 9974
-	ld bc,52428	; offset 9975
-	ld de,52428	; offset 9978
-	ld sp,screenStartAddr+5852	; offset 9981
-	push de	; offset 9984
-	push bc	; offset 9985
-	exx    	; offset 9986
-	push de	; offset 9987
-	push bc	; offset 9988
-	nop
-	; end attr draw 9
-	; Clock offset: -1008
+	push hl	; dest 28
+	push de	; dest 26
+	push bc	; dest 24
+	ld hl,10280	; src 30
+	ld (attrStartAddr+30+288),hl;	 dest 30
+	; end attr draw 9, offset 0x1fd4
+	; Clock offset: -1152
 
-	; src_data blit 357
-	ld bc,52428	; offset 9990
-	ld de,52428	; offset 9993
-	ld hl,52428	; offset 9996
-	exx    	; offset 9999
-	ld bc,52428	; offset 10000
-	ld de,52428	; offset 10003
-	ld hl,52428	; offset 10006
-	ld sp,screenStartAddr+5160	; offset 10009
-	push hl	; offset 10012
-	push de	; offset 10013
-	push bc	; offset 10014
-	exx    	; offset 10015
-	push hl	; offset 10016
-	push de	; offset 10017
-	push bc	; offset 10018
-	; Clock offset: -864
-
-	; src_data blit 358
-	ld bc,52428	; offset 10019
-	ld de,52428	; offset 10022
-	ld hl,52428	; offset 10025
-	exx    	; offset 10028
-	ld bc,52428	; offset 10029
-	ld de,52428	; offset 10032
-	ld hl,52428	; offset 10035
-	ld sp,screenStartAddr+5388	; offset 10038
-	push hl	; offset 10041
-	push de	; offset 10042
-	push bc	; offset 10043
-	exx    	; offset 10044
-	push hl	; offset 10045
-	push de	; offset 10046
-	push bc	; offset 10047
-	; Clock offset: -720
-
-	; src_data blit 359
-	ld bc,52428	; offset 10048
-	ld de,52428	; offset 10051
-	ld hl,52428	; offset 10054
-	exx    	; offset 10057
-	ld bc,52428	; offset 10058
-	ld de,52428	; offset 10061
-	ld hl,52428	; offset 10064
-	ld sp,screenStartAddr+5400	; offset 10067
-	push hl	; offset 10070
-	push de	; offset 10071
-	push bc	; offset 10072
-	exx    	; offset 10073
-	push hl	; offset 10074
-	push de	; offset 10075
-	push bc	; offset 10076
-	; Clock offset: -576
-
-	; src_data blit 360
-	ld bc,52428	; offset 10077
-	ld de,52428	; offset 10080
-	ld hl,52428	; offset 10083
-	exx    	; offset 10086
-	ld bc,52428	; offset 10087
-	ld de,52428	; offset 10090
-	ld hl,52428	; offset 10093
-	ld sp,screenStartAddr+5412	; offset 10096
-	push hl	; offset 10099
-	push de	; offset 10100
-	push bc	; offset 10101
-	exx    	; offset 10102
-	push hl	; offset 10103
-	push de	; offset 10104
-	push bc	; offset 10105
-	; Clock offset: -432
-
-	; src_data blit 361
-	ld bc,52428	; offset 10106
-	ld de,52428	; offset 10109
-	ld hl,52428	; offset 10112
-	exx    	; offset 10115
-	ld bc,52428	; offset 10116
-	ld de,52428	; offset 10119
-	ld hl,52428	; offset 10122
-	ld sp,screenStartAddr+5640	; offset 10125
-	push hl	; offset 10128
-	push de	; offset 10129
-	push bc	; offset 10130
-	exx    	; offset 10131
-	push hl	; offset 10132
-	push de	; offset 10133
-	push bc	; offset 10134
-	; Clock offset: -288
-
-	; src_data blit 362
-	ld bc,52428	; offset 10135
-	ld de,52428	; offset 10138
-	ld hl,52428	; offset 10141
-	exx    	; offset 10144
-	ld bc,52428	; offset 10145
-	ld de,52428	; offset 10148
-	ld hl,52428	; offset 10151
-	ld sp,screenStartAddr+5652	; offset 10154
-	push hl	; offset 10157
-	push de	; offset 10158
-	push bc	; offset 10159
-	exx    	; offset 10160
-	push hl	; offset 10161
-	push de	; offset 10162
-	push bc	; offset 10163
-	; Clock offset: -144
-
-	; src_data blit 363
-	ld bc,52428	; offset 10164
-	ld de,52428	; offset 10167
-	ld hl,52428	; offset 10170
-	exx    	; offset 10173
-	ld bc,52428	; offset 10174
-	ld de,52428	; offset 10177
-	ld hl,52428	; offset 10180
-	ld sp,screenStartAddr+5664	; offset 10183
-	push hl	; offset 10186
-	push de	; offset 10187
-	push bc	; offset 10188
-	exx    	; offset 10189
-	push hl	; offset 10190
-	push de	; offset 10191
-	push bc	; offset 10192
-	; Clock offset: 0
+	; src_data blit 75
+	ld sp,screenStartAddr+636	; offset 0x1fd7
+	ld hl,44975	; offset 0x1fda
+	push hl	; offset 0x1fdb
+	ld hl,44975	; offset 0x1fde
+	push hl	; offset 0x1fdf
+	ld hl,44975	; offset 0x1fe2
+	push hl	; offset 0x1fe3
+	ld hl,44975	; offset 0x1fe6
+	push hl	; offset 0x1fe7
+	ld hl,44975	; offset 0x1fea
+	push hl	; offset 0x1feb
+	ld hl,44975	; offset 0x1fee
+	push hl	; offset 0x1fef
+	; src_data blit 76
+	ld sp,screenStartAddr+648	; offset 0x1ff2
+	ld hl,44975	; offset 0x1ff5
+	push hl	; offset 0x1ff6
+	ld hl,44975	; offset 0x1ff9
+	push hl	; offset 0x1ffa
+	ld hl,44975	; offset 0x1ffd
+	push hl	; offset 0x1ffe
+	ld hl,44975	; offset 0x2001
+	push hl	; offset 0x2002
+	ld hl,44975	; offset 0x2005
+	push hl	; offset 0x2006
+	ld hl,44975	; offset 0x2009
+	push hl	; offset 0x200a
+	; src_data blit 77
+	ld sp,screenStartAddr+876	; offset 0x200d
+	ld hl,44975	; offset 0x2010
+	push hl	; offset 0x2011
+	ld hl,44975	; offset 0x2014
+	push hl	; offset 0x2015
+	ld hl,44975	; offset 0x2018
+	push hl	; offset 0x2019
+	ld hl,44975	; offset 0x201c
+	push hl	; offset 0x201d
+	ld hl,44975	; offset 0x2020
+	push hl	; offset 0x2021
+	ld hl,44975	; offset 0x2024
+	push hl	; offset 0x2025
+	; src_data blit 78
+	ld sp,screenStartAddr+888	; offset 0x2028
+	ld hl,44975	; offset 0x202b
+	push hl	; offset 0x202c
+	ld hl,44975	; offset 0x202f
+	push hl	; offset 0x2030
+	ld hl,44975	; offset 0x2033
+	push hl	; offset 0x2034
+	ld hl,44975	; offset 0x2037
+	push hl	; offset 0x2038
+	ld hl,44975	; offset 0x203b
+	push hl	; offset 0x203c
+	ld hl,44975	; offset 0x203f
+	push hl	; offset 0x2040
+	; src_data blit 79
+	ld sp,screenStartAddr+900	; offset 0x2043
+	ld hl,44975	; offset 0x2046
+	push hl	; offset 0x2047
+	ld hl,44975	; offset 0x204a
+	push hl	; offset 0x204b
+	ld hl,44975	; offset 0x204e
+	push hl	; offset 0x204f
+	ld hl,44975	; offset 0x2052
+	push hl	; offset 0x2053
+	ld hl,44975	; offset 0x2056
+	push hl	; offset 0x2057
+	ld hl,44975	; offset 0x205a
+	push hl	; offset 0x205b
+	; src_data blit 80
+	ld sp,screenStartAddr+1140	; offset 0x205e
+	ld hl,44975	; offset 0x2061
+	push hl	; offset 0x2062
+	ld hl,44975	; offset 0x2065
+	push hl	; offset 0x2066
+	ld hl,44975	; offset 0x2069
+	push hl	; offset 0x206a
+	ld hl,44975	; offset 0x206d
+	push hl	; offset 0x206e
+	ld hl,44975	; offset 0x2071
+	push hl	; offset 0x2072
+	ld hl,44975	; offset 0x2075
+	push hl	; offset 0x2076
+	; src_data blit 81
+	ld sp,screenStartAddr+1152	; offset 0x2079
+	ld hl,44975	; offset 0x207c
+	push hl	; offset 0x207d
+	ld hl,44975	; offset 0x2080
+	push hl	; offset 0x2081
+	ld hl,44975	; offset 0x2084
+	push hl	; offset 0x2085
+	ld hl,44975	; offset 0x2088
+	push hl	; offset 0x2089
+	ld hl,44975	; offset 0x208c
+	push hl	; offset 0x208d
+	ld hl,44975	; offset 0x2090
+	push hl	; offset 0x2091
+	; src_data blit 82
+	ld sp,screenStartAddr+1392	; offset 0x2094
+	ld hl,44975	; offset 0x2097
+	push hl	; offset 0x2098
+	ld hl,44975	; offset 0x209b
+	push hl	; offset 0x209c
+	ld hl,44975	; offset 0x209f
+	push hl	; offset 0x20a0
+	ld hl,44975	; offset 0x20a3
+	push hl	; offset 0x20a4
+	ld hl,44975	; offset 0x20a7
+	push hl	; offset 0x20a8
+	ld hl,44975	; offset 0x20ab
+	push hl	; offset 0x20ac
 
 	; attr draw 10
-	ld sp,0x8020
-	ld bc,10280
-	push bc
-	ld bc,10280
-	push bc
-	pop af
+	ld sp,attr8and16vals+4
+	pop af	; src 16
 	ex af,af'
-	pop af
+	pop af	; src 8
+	ld bc,10280	; src 18
+	ld de,10280	; src 20
+	ld hl,10280	; src 22
+	ld ix,10280	; src 4
+	ld iy,10280	; src 6
+	exx
+	ld bc,10280	; src 10
+	ld de,10280	; src 12
+	ld hl,10280	; src 0
+
 	ld sp,attrStartAddr+16+320
-	ld de,10280
-	ld hl,10280
-	ld ix,10280
-	ld iy,10280
-	exx
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	; start chasing raster here to update ATTR memory
 
-	; start chasing raster here
-
-	ld (attrStartAddr+320),hl
-	ld hl,10280
-	ld (attrStartAddr+2+320),hl
-	ld hl,10280
-	push hl
-	push de
-	push bc
-	push af
+	ld (attrStartAddr+320),hl	; dest 0
+	ld hl,10280	; src 2
+	ld (attrStartAddr+2+320),hl	; dest 2
+	ld hl,10280	; src 14
+	push hl	; dest 14
+	push de	; dest 12
+	push bc	; dest 10
+	push af	; dest 8
 	exx
 	ex af,af'
-	push iy
-	push ix
+	push iy	; dest 6
+	push ix	; dest 4
 	ld sp,attrStartAddr+24+320
-	push hl
-	push de
-	push bc
-	push af
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	push hl	; dest 22
+	push de	; dest 20
+	push bc	; dest 18
+	push af	; dest 16
+	ld bc,10280	; src 24
+	ld de,10280	; src 16
+	ld hl,10280	; src 28
 	ld sp,attrStartAddr+30+320
-	push hl
-	push de
-	push bc
-	ld hl,10280
-	ld (attrStartAddr+30+320),hl
-	; src_data filler blit 320
-	ld bc,52428	; offset 10648
-	ld de,52428	; offset 10651
-	exx    	; offset 10654
-	ld bc,52428	; offset 10655
-	ld de,52428	; offset 10658
-	ld sp,screenStartAddr+5860	; offset 10661
-	push de	; offset 10664
-	push bc	; offset 10665
-	exx    	; offset 10666
-	push de	; offset 10667
-	push bc	; offset 10668
-	nop
-	; end attr draw 10
-	; Clock offset: -1008
+	push hl	; dest 28
+	push de	; dest 26
+	push bc	; dest 24
+	ld hl,10280	; src 30
+	ld (attrStartAddr+30+320),hl;	 dest 30
+	; end attr draw 10, offset 0x2253
+	; Clock offset: -1152
 
-	; src_data blit 364
-	ld bc,52428	; offset 10670
-	ld de,52428	; offset 10673
-	ld hl,52428	; offset 10676
-	exx    	; offset 10679
-	ld bc,52428	; offset 10680
-	ld de,52428	; offset 10683
-	ld hl,52428	; offset 10686
-	ld sp,screenStartAddr+4140	; offset 10689
-	push hl	; offset 10692
-	push de	; offset 10693
-	push bc	; offset 10694
-	exx    	; offset 10695
-	push hl	; offset 10696
-	push de	; offset 10697
-	push bc	; offset 10698
-	; Clock offset: -864
-
-	; src_data blit 365
-	ld bc,52428	; offset 10699
-	ld de,52428	; offset 10702
-	ld hl,52428	; offset 10705
-	exx    	; offset 10708
-	ld bc,52428	; offset 10709
-	ld de,52428	; offset 10712
-	ld hl,52428	; offset 10715
-	ld sp,screenStartAddr+4152	; offset 10718
-	push hl	; offset 10721
-	push de	; offset 10722
-	push bc	; offset 10723
-	exx    	; offset 10724
-	push hl	; offset 10725
-	push de	; offset 10726
-	push bc	; offset 10727
-	; Clock offset: -720
-
-	; src_data blit 366
-	ld bc,52428	; offset 10728
-	ld de,52428	; offset 10731
-	ld hl,52428	; offset 10734
-	exx    	; offset 10737
-	ld bc,52428	; offset 10738
-	ld de,52428	; offset 10741
-	ld hl,52428	; offset 10744
-	ld sp,screenStartAddr+4164	; offset 10747
-	push hl	; offset 10750
-	push de	; offset 10751
-	push bc	; offset 10752
-	exx    	; offset 10753
-	push hl	; offset 10754
-	push de	; offset 10755
-	push bc	; offset 10756
-	; Clock offset: -576
-
-	; src_data blit 367
-	ld bc,52428	; offset 10757
-	ld de,52428	; offset 10760
-	ld hl,52428	; offset 10763
-	exx    	; offset 10766
-	ld bc,52428	; offset 10767
-	ld de,52428	; offset 10770
-	ld hl,52428	; offset 10773
-	ld sp,screenStartAddr+4404	; offset 10776
-	push hl	; offset 10779
-	push de	; offset 10780
-	push bc	; offset 10781
-	exx    	; offset 10782
-	push hl	; offset 10783
-	push de	; offset 10784
-	push bc	; offset 10785
-	; Clock offset: -432
-
-	; src_data blit 368
-	ld bc,52428	; offset 10786
-	ld de,52428	; offset 10789
-	ld hl,52428	; offset 10792
-	exx    	; offset 10795
-	ld bc,52428	; offset 10796
-	ld de,52428	; offset 10799
-	ld hl,52428	; offset 10802
-	ld sp,screenStartAddr+4416	; offset 10805
-	push hl	; offset 10808
-	push de	; offset 10809
-	push bc	; offset 10810
-	exx    	; offset 10811
-	push hl	; offset 10812
-	push de	; offset 10813
-	push bc	; offset 10814
-	; Clock offset: -288
-
-	; src_data blit 369
-	ld bc,52428	; offset 10815
-	ld de,52428	; offset 10818
-	ld hl,52428	; offset 10821
-	exx    	; offset 10824
-	ld bc,52428	; offset 10825
-	ld de,52428	; offset 10828
-	ld hl,52428	; offset 10831
-	ld sp,screenStartAddr+4656	; offset 10834
-	push hl	; offset 10837
-	push de	; offset 10838
-	push bc	; offset 10839
-	exx    	; offset 10840
-	push hl	; offset 10841
-	push de	; offset 10842
-	push bc	; offset 10843
-	; Clock offset: -144
-
-	; src_data blit 370
-	ld bc,52428	; offset 10844
-	ld de,52428	; offset 10847
-	ld hl,52428	; offset 10850
-	exx    	; offset 10853
-	ld bc,52428	; offset 10854
-	ld de,52428	; offset 10857
-	ld hl,52428	; offset 10860
-	ld sp,screenStartAddr+4668	; offset 10863
-	push hl	; offset 10866
-	push de	; offset 10867
-	push bc	; offset 10868
-	exx    	; offset 10869
-	push hl	; offset 10870
-	push de	; offset 10871
-	push bc	; offset 10872
-	; Clock offset: 0
+	; src_data blit 83
+	ld sp,screenStartAddr+1404	; offset 0x2256
+	ld hl,44975	; offset 0x2259
+	push hl	; offset 0x225a
+	ld hl,44975	; offset 0x225d
+	push hl	; offset 0x225e
+	ld hl,44975	; offset 0x2261
+	push hl	; offset 0x2262
+	ld hl,44975	; offset 0x2265
+	push hl	; offset 0x2266
+	ld hl,44975	; offset 0x2269
+	push hl	; offset 0x226a
+	ld hl,44975	; offset 0x226d
+	push hl	; offset 0x226e
+	; src_data blit 84
+	ld sp,screenStartAddr+1416	; offset 0x2271
+	ld hl,44975	; offset 0x2274
+	push hl	; offset 0x2275
+	ld hl,44975	; offset 0x2278
+	push hl	; offset 0x2279
+	ld hl,44975	; offset 0x227c
+	push hl	; offset 0x227d
+	ld hl,44975	; offset 0x2280
+	push hl	; offset 0x2281
+	ld hl,44975	; offset 0x2284
+	push hl	; offset 0x2285
+	ld hl,44975	; offset 0x2288
+	push hl	; offset 0x2289
+	; src_data blit 85
+	ld sp,screenStartAddr+1644	; offset 0x228c
+	ld hl,44975	; offset 0x228f
+	push hl	; offset 0x2290
+	ld hl,44975	; offset 0x2293
+	push hl	; offset 0x2294
+	ld hl,44975	; offset 0x2297
+	push hl	; offset 0x2298
+	ld hl,44975	; offset 0x229b
+	push hl	; offset 0x229c
+	ld hl,44975	; offset 0x229f
+	push hl	; offset 0x22a0
+	ld hl,44975	; offset 0x22a3
+	push hl	; offset 0x22a4
+	; src_data blit 86
+	ld sp,screenStartAddr+1656	; offset 0x22a7
+	ld hl,44975	; offset 0x22aa
+	push hl	; offset 0x22ab
+	ld hl,44975	; offset 0x22ae
+	push hl	; offset 0x22af
+	ld hl,44975	; offset 0x22b2
+	push hl	; offset 0x22b3
+	ld hl,44975	; offset 0x22b6
+	push hl	; offset 0x22b7
+	ld hl,44975	; offset 0x22ba
+	push hl	; offset 0x22bb
+	ld hl,44975	; offset 0x22be
+	push hl	; offset 0x22bf
+	; src_data blit 87
+	ld sp,screenStartAddr+1668	; offset 0x22c2
+	ld hl,44975	; offset 0x22c5
+	push hl	; offset 0x22c6
+	ld hl,44975	; offset 0x22c9
+	push hl	; offset 0x22ca
+	ld hl,44975	; offset 0x22cd
+	push hl	; offset 0x22ce
+	ld hl,44975	; offset 0x22d1
+	push hl	; offset 0x22d2
+	ld hl,44975	; offset 0x22d5
+	push hl	; offset 0x22d6
+	ld hl,44975	; offset 0x22d9
+	push hl	; offset 0x22da
+	; src_data blit 88
+	ld sp,screenStartAddr+1908	; offset 0x22dd
+	ld hl,44975	; offset 0x22e0
+	push hl	; offset 0x22e1
+	ld hl,44975	; offset 0x22e4
+	push hl	; offset 0x22e5
+	ld hl,44975	; offset 0x22e8
+	push hl	; offset 0x22e9
+	ld hl,44975	; offset 0x22ec
+	push hl	; offset 0x22ed
+	ld hl,44975	; offset 0x22f0
+	push hl	; offset 0x22f1
+	ld hl,44975	; offset 0x22f4
+	push hl	; offset 0x22f5
+	; src_data blit 89
+	ld sp,screenStartAddr+1920	; offset 0x22f8
+	ld hl,44975	; offset 0x22fb
+	push hl	; offset 0x22fc
+	ld hl,44975	; offset 0x22ff
+	push hl	; offset 0x2300
+	ld hl,44975	; offset 0x2303
+	push hl	; offset 0x2304
+	ld hl,44975	; offset 0x2307
+	push hl	; offset 0x2308
+	ld hl,44975	; offset 0x230b
+	push hl	; offset 0x230c
+	ld hl,44975	; offset 0x230f
+	push hl	; offset 0x2310
+	; src_data blit 90
+	ld sp,screenStartAddr+144	; offset 0x2313
+	ld hl,44975	; offset 0x2316
+	push hl	; offset 0x2317
+	ld hl,44975	; offset 0x231a
+	push hl	; offset 0x231b
+	ld hl,44975	; offset 0x231e
+	push hl	; offset 0x231f
+	ld hl,44975	; offset 0x2322
+	push hl	; offset 0x2323
+	ld hl,44975	; offset 0x2326
+	push hl	; offset 0x2327
+	ld hl,44975	; offset 0x232a
+	push hl	; offset 0x232b
 
 	; attr draw 11
-	ld sp,0x8020
-	ld bc,10280
-	push bc
-	ld bc,10280
-	push bc
-	pop af
+	ld sp,attr8and16vals+4
+	pop af	; src 16
 	ex af,af'
-	pop af
+	pop af	; src 8
+	ld bc,10280	; src 18
+	ld de,10280	; src 20
+	ld hl,10280	; src 22
+	ld ix,10280	; src 4
+	ld iy,10280	; src 6
+	exx
+	ld bc,10280	; src 10
+	ld de,10280	; src 12
+	ld hl,10280	; src 0
+
 	ld sp,attrStartAddr+16+352
-	ld de,10280
-	ld hl,10280
-	ld ix,10280
-	ld iy,10280
-	exx
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	; start chasing raster here to update ATTR memory
 
-	; start chasing raster here
-
-	ld (attrStartAddr+352),hl
-	ld hl,10280
-	ld (attrStartAddr+2+352),hl
-	ld hl,10280
-	push hl
-	push de
-	push bc
-	push af
+	ld (attrStartAddr+352),hl	; dest 0
+	ld hl,10280	; src 2
+	ld (attrStartAddr+2+352),hl	; dest 2
+	ld hl,10280	; src 14
+	push hl	; dest 14
+	push de	; dest 12
+	push bc	; dest 10
+	push af	; dest 8
 	exx
 	ex af,af'
-	push iy
-	push ix
+	push iy	; dest 6
+	push ix	; dest 4
 	ld sp,attrStartAddr+24+352
-	push hl
-	push de
-	push bc
-	push af
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	push hl	; dest 22
+	push de	; dest 20
+	push bc	; dest 18
+	push af	; dest 16
+	ld bc,10280	; src 24
+	ld de,10280	; src 16
+	ld hl,10280	; src 28
 	ld sp,attrStartAddr+30+352
-	push hl
-	push de
-	push bc
-	ld hl,10280
-	ld (attrStartAddr+30+352),hl
-	; src_data filler blit 352
-	ld bc,52428	; offset 11328
-	ld de,52428	; offset 11331
-	exx    	; offset 11334
-	ld bc,52428	; offset 11335
-	ld de,52428	; offset 11338
-	ld sp,screenStartAddr+5868	; offset 11341
-	push de	; offset 11344
-	push bc	; offset 11345
-	exx    	; offset 11346
-	push de	; offset 11347
-	push bc	; offset 11348
-	nop
-	; end attr draw 11
-	; Clock offset: -1008
+	push hl	; dest 28
+	push de	; dest 26
+	push bc	; dest 24
+	ld hl,10280	; src 30
+	ld (attrStartAddr+30+352),hl;	 dest 30
+	; end attr draw 11, offset 0x24d2
+	; Clock offset: -1152
 
-	; src_data blit 371
-	ld bc,52428	; offset 11350
-	ld de,52428	; offset 11353
-	ld hl,52428	; offset 11356
-	exx    	; offset 11359
-	ld bc,52428	; offset 11360
-	ld de,52428	; offset 11363
-	ld hl,52428	; offset 11366
-	ld sp,screenStartAddr+4680	; offset 11369
-	push hl	; offset 11372
-	push de	; offset 11373
-	push bc	; offset 11374
-	exx    	; offset 11375
-	push hl	; offset 11376
-	push de	; offset 11377
-	push bc	; offset 11378
-	; Clock offset: -864
-
-	; src_data blit 372
-	ld bc,52428	; offset 11379
-	ld de,52428	; offset 11382
-	ld hl,52428	; offset 11385
-	exx    	; offset 11388
-	ld bc,52428	; offset 11389
-	ld de,52428	; offset 11392
-	ld hl,52428	; offset 11395
-	ld sp,screenStartAddr+4908	; offset 11398
-	push hl	; offset 11401
-	push de	; offset 11402
-	push bc	; offset 11403
-	exx    	; offset 11404
-	push hl	; offset 11405
-	push de	; offset 11406
-	push bc	; offset 11407
-	; Clock offset: -720
-
-	; src_data blit 373
-	ld bc,52428	; offset 11408
-	ld de,52428	; offset 11411
-	ld hl,52428	; offset 11414
-	exx    	; offset 11417
-	ld bc,52428	; offset 11418
-	ld de,52428	; offset 11421
-	ld hl,52428	; offset 11424
-	ld sp,screenStartAddr+4920	; offset 11427
-	push hl	; offset 11430
-	push de	; offset 11431
-	push bc	; offset 11432
-	exx    	; offset 11433
-	push hl	; offset 11434
-	push de	; offset 11435
-	push bc	; offset 11436
-	; Clock offset: -576
-
-	; src_data blit 374
-	ld bc,52428	; offset 11437
-	ld de,52428	; offset 11440
-	ld hl,52428	; offset 11443
-	exx    	; offset 11446
-	ld bc,52428	; offset 11447
-	ld de,52428	; offset 11450
-	ld hl,52428	; offset 11453
-	ld sp,screenStartAddr+4932	; offset 11456
-	push hl	; offset 11459
-	push de	; offset 11460
-	push bc	; offset 11461
-	exx    	; offset 11462
-	push hl	; offset 11463
-	push de	; offset 11464
-	push bc	; offset 11465
-	; Clock offset: -432
-
-	; src_data blit 375
-	ld bc,52428	; offset 11466
-	ld de,52428	; offset 11469
-	ld hl,52428	; offset 11472
-	exx    	; offset 11475
-	ld bc,52428	; offset 11476
-	ld de,52428	; offset 11479
-	ld hl,52428	; offset 11482
-	ld sp,screenStartAddr+5172	; offset 11485
-	push hl	; offset 11488
-	push de	; offset 11489
-	push bc	; offset 11490
-	exx    	; offset 11491
-	push hl	; offset 11492
-	push de	; offset 11493
-	push bc	; offset 11494
-	; Clock offset: -288
-
-	; src_data blit 376
-	ld bc,52428	; offset 11495
-	ld de,52428	; offset 11498
-	ld hl,52428	; offset 11501
-	exx    	; offset 11504
-	ld bc,52428	; offset 11505
-	ld de,52428	; offset 11508
-	ld hl,52428	; offset 11511
-	ld sp,screenStartAddr+5184	; offset 11514
-	push hl	; offset 11517
-	push de	; offset 11518
-	push bc	; offset 11519
-	exx    	; offset 11520
-	push hl	; offset 11521
-	push de	; offset 11522
-	push bc	; offset 11523
-	; Clock offset: -144
-
-	; src_data blit 377
-	ld bc,52428	; offset 11524
-	ld de,52428	; offset 11527
-	ld hl,52428	; offset 11530
-	exx    	; offset 11533
-	ld bc,52428	; offset 11534
-	ld de,52428	; offset 11537
-	ld hl,52428	; offset 11540
-	ld sp,screenStartAddr+5424	; offset 11543
-	push hl	; offset 11546
-	push de	; offset 11547
-	push bc	; offset 11548
-	exx    	; offset 11549
-	push hl	; offset 11550
-	push de	; offset 11551
-	push bc	; offset 11552
-	; Clock offset: 0
+	; src_data blit 91
+	ld sp,screenStartAddr+156	; offset 0x24d5
+	ld hl,44975	; offset 0x24d8
+	push hl	; offset 0x24d9
+	ld hl,44975	; offset 0x24dc
+	push hl	; offset 0x24dd
+	ld hl,44975	; offset 0x24e0
+	push hl	; offset 0x24e1
+	ld hl,44975	; offset 0x24e4
+	push hl	; offset 0x24e5
+	ld hl,44975	; offset 0x24e8
+	push hl	; offset 0x24e9
+	ld hl,44975	; offset 0x24ec
+	push hl	; offset 0x24ed
+	; src_data blit 92
+	ld sp,screenStartAddr+168	; offset 0x24f0
+	ld hl,44975	; offset 0x24f3
+	push hl	; offset 0x24f4
+	ld hl,44975	; offset 0x24f7
+	push hl	; offset 0x24f8
+	ld hl,44975	; offset 0x24fb
+	push hl	; offset 0x24fc
+	ld hl,44975	; offset 0x24ff
+	push hl	; offset 0x2500
+	ld hl,44975	; offset 0x2503
+	push hl	; offset 0x2504
+	ld hl,44975	; offset 0x2507
+	push hl	; offset 0x2508
+	; src_data blit 93
+	ld sp,screenStartAddr+396	; offset 0x250b
+	ld hl,44975	; offset 0x250e
+	push hl	; offset 0x250f
+	ld hl,44975	; offset 0x2512
+	push hl	; offset 0x2513
+	ld hl,44975	; offset 0x2516
+	push hl	; offset 0x2517
+	ld hl,44975	; offset 0x251a
+	push hl	; offset 0x251b
+	ld hl,44975	; offset 0x251e
+	push hl	; offset 0x251f
+	ld hl,44975	; offset 0x2522
+	push hl	; offset 0x2523
+	; src_data blit 94
+	ld sp,screenStartAddr+408	; offset 0x2526
+	ld hl,44975	; offset 0x2529
+	push hl	; offset 0x252a
+	ld hl,44975	; offset 0x252d
+	push hl	; offset 0x252e
+	ld hl,44975	; offset 0x2531
+	push hl	; offset 0x2532
+	ld hl,44975	; offset 0x2535
+	push hl	; offset 0x2536
+	ld hl,44975	; offset 0x2539
+	push hl	; offset 0x253a
+	ld hl,44975	; offset 0x253d
+	push hl	; offset 0x253e
+	; src_data blit 95
+	ld sp,screenStartAddr+420	; offset 0x2541
+	ld hl,44975	; offset 0x2544
+	push hl	; offset 0x2545
+	ld hl,44975	; offset 0x2548
+	push hl	; offset 0x2549
+	ld hl,44975	; offset 0x254c
+	push hl	; offset 0x254d
+	ld hl,44975	; offset 0x2550
+	push hl	; offset 0x2551
+	ld hl,44975	; offset 0x2554
+	push hl	; offset 0x2555
+	ld hl,44975	; offset 0x2558
+	push hl	; offset 0x2559
+	; src_data blit 96
+	ld sp,screenStartAddr+660	; offset 0x255c
+	ld hl,44975	; offset 0x255f
+	push hl	; offset 0x2560
+	ld hl,44975	; offset 0x2563
+	push hl	; offset 0x2564
+	ld hl,44975	; offset 0x2567
+	push hl	; offset 0x2568
+	ld hl,44975	; offset 0x256b
+	push hl	; offset 0x256c
+	ld hl,44975	; offset 0x256f
+	push hl	; offset 0x2570
+	ld hl,44975	; offset 0x2573
+	push hl	; offset 0x2574
+	; src_data blit 97
+	ld sp,screenStartAddr+672	; offset 0x2577
+	ld hl,44975	; offset 0x257a
+	push hl	; offset 0x257b
+	ld hl,44975	; offset 0x257e
+	push hl	; offset 0x257f
+	ld hl,44975	; offset 0x2582
+	push hl	; offset 0x2583
+	ld hl,44975	; offset 0x2586
+	push hl	; offset 0x2587
+	ld hl,44975	; offset 0x258a
+	push hl	; offset 0x258b
+	ld hl,44975	; offset 0x258e
+	push hl	; offset 0x258f
+	; src_data blit 98
+	ld sp,screenStartAddr+912	; offset 0x2592
+	ld hl,44975	; offset 0x2595
+	push hl	; offset 0x2596
+	ld hl,44975	; offset 0x2599
+	push hl	; offset 0x259a
+	ld hl,44975	; offset 0x259d
+	push hl	; offset 0x259e
+	ld hl,44975	; offset 0x25a1
+	push hl	; offset 0x25a2
+	ld hl,44975	; offset 0x25a5
+	push hl	; offset 0x25a6
+	ld hl,44975	; offset 0x25a9
+	push hl	; offset 0x25aa
 
 	; attr draw 12
-	ld sp,0x8020
-	ld bc,10280
-	push bc
-	ld bc,10280
-	push bc
-	pop af
+	ld sp,attr8and16vals+4
+	pop af	; src 16
 	ex af,af'
-	pop af
+	pop af	; src 8
+	ld bc,10280	; src 18
+	ld de,10280	; src 20
+	ld hl,10280	; src 22
+	ld ix,10280	; src 4
+	ld iy,10280	; src 6
+	exx
+	ld bc,10280	; src 10
+	ld de,10280	; src 12
+	ld hl,10280	; src 0
+
 	ld sp,attrStartAddr+16+384
-	ld de,10280
-	ld hl,10280
-	ld ix,10280
-	ld iy,10280
-	exx
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	; start chasing raster here to update ATTR memory
 
-	; start chasing raster here
-
-	ld (attrStartAddr+384),hl
-	ld hl,10280
-	ld (attrStartAddr+2+384),hl
-	ld hl,10280
-	push hl
-	push de
-	push bc
-	push af
+	ld (attrStartAddr+384),hl	; dest 0
+	ld hl,10280	; src 2
+	ld (attrStartAddr+2+384),hl	; dest 2
+	ld hl,10280	; src 14
+	push hl	; dest 14
+	push de	; dest 12
+	push bc	; dest 10
+	push af	; dest 8
 	exx
 	ex af,af'
-	push iy
-	push ix
+	push iy	; dest 6
+	push ix	; dest 4
 	ld sp,attrStartAddr+24+384
-	push hl
-	push de
-	push bc
-	push af
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	push hl	; dest 22
+	push de	; dest 20
+	push bc	; dest 18
+	push af	; dest 16
+	ld bc,10280	; src 24
+	ld de,10280	; src 16
+	ld hl,10280	; src 28
 	ld sp,attrStartAddr+30+384
-	push hl
-	push de
-	push bc
-	ld hl,10280
-	ld (attrStartAddr+30+384),hl
-	; src_data filler blit 384
-	ld bc,52428	; offset 12008
-	ld de,52428	; offset 12011
-	exx    	; offset 12014
-	ld bc,52428	; offset 12015
-	ld de,52428	; offset 12018
-	ld sp,screenStartAddr+5876	; offset 12021
-	push de	; offset 12024
-	push bc	; offset 12025
-	exx    	; offset 12026
-	push de	; offset 12027
-	push bc	; offset 12028
-	nop
-	; end attr draw 12
-	; Clock offset: -1008
+	push hl	; dest 28
+	push de	; dest 26
+	push bc	; dest 24
+	ld hl,10280	; src 30
+	ld (attrStartAddr+30+384),hl;	 dest 30
+	; end attr draw 12, offset 0x2751
+	; Clock offset: -1152
 
-	; src_data blit 378
-	ld bc,52428	; offset 12030
-	ld de,52428	; offset 12033
-	ld hl,52428	; offset 12036
-	exx    	; offset 12039
-	ld bc,52428	; offset 12040
-	ld de,52428	; offset 12043
-	ld hl,52428	; offset 12046
-	ld sp,screenStartAddr+5436	; offset 12049
-	push hl	; offset 12052
-	push de	; offset 12053
-	push bc	; offset 12054
-	exx    	; offset 12055
-	push hl	; offset 12056
-	push de	; offset 12057
-	push bc	; offset 12058
-	; Clock offset: -864
-
-	; src_data blit 379
-	ld bc,52428	; offset 12059
-	ld de,52428	; offset 12062
-	ld hl,52428	; offset 12065
-	exx    	; offset 12068
-	ld bc,52428	; offset 12069
-	ld de,52428	; offset 12072
-	ld hl,52428	; offset 12075
-	ld sp,screenStartAddr+5448	; offset 12078
-	push hl	; offset 12081
-	push de	; offset 12082
-	push bc	; offset 12083
-	exx    	; offset 12084
-	push hl	; offset 12085
-	push de	; offset 12086
-	push bc	; offset 12087
-	; Clock offset: -720
-
-	; src_data blit 380
-	ld bc,52428	; offset 12088
-	ld de,52428	; offset 12091
-	ld hl,52428	; offset 12094
-	exx    	; offset 12097
-	ld bc,52428	; offset 12098
-	ld de,52428	; offset 12101
-	ld hl,52428	; offset 12104
-	ld sp,screenStartAddr+5676	; offset 12107
-	push hl	; offset 12110
-	push de	; offset 12111
-	push bc	; offset 12112
-	exx    	; offset 12113
-	push hl	; offset 12114
-	push de	; offset 12115
-	push bc	; offset 12116
-	; Clock offset: -576
-
-	; src_data blit 381
-	ld bc,52428	; offset 12117
-	ld de,52428	; offset 12120
-	ld hl,52428	; offset 12123
-	exx    	; offset 12126
-	ld bc,52428	; offset 12127
-	ld de,52428	; offset 12130
-	ld hl,52428	; offset 12133
-	ld sp,screenStartAddr+5688	; offset 12136
-	push hl	; offset 12139
-	push de	; offset 12140
-	push bc	; offset 12141
-	exx    	; offset 12142
-	push hl	; offset 12143
-	push de	; offset 12144
-	push bc	; offset 12145
-	; Clock offset: -432
-
-	; src_data blit 382
-	ld bc,52428	; offset 12146
-	ld de,52428	; offset 12149
-	ld hl,52428	; offset 12152
-	exx    	; offset 12155
-	ld bc,52428	; offset 12156
-	ld de,52428	; offset 12159
-	ld hl,52428	; offset 12162
-	ld sp,screenStartAddr+5700	; offset 12165
-	push hl	; offset 12168
-	push de	; offset 12169
-	push bc	; offset 12170
-	exx    	; offset 12171
-	push hl	; offset 12172
-	push de	; offset 12173
-	push bc	; offset 12174
-	; Clock offset: -288
-
-	; src_data blit 383
-	ld bc,52428	; offset 12175
-	ld de,52428	; offset 12178
-	ld hl,52428	; offset 12181
-	exx    	; offset 12184
-	ld bc,52428	; offset 12185
-	ld de,52428	; offset 12188
-	ld hl,52428	; offset 12191
-	ld sp,screenStartAddr+4176	; offset 12194
-	push hl	; offset 12197
-	push de	; offset 12198
-	push bc	; offset 12199
-	exx    	; offset 12200
-	push hl	; offset 12201
-	push de	; offset 12202
-	push bc	; offset 12203
-	; Clock offset: -144
-
-	; src_data blit 384
-	ld bc,52428	; offset 12204
-	ld de,52428	; offset 12207
-	ld hl,52428	; offset 12210
-	exx    	; offset 12213
-	ld bc,52428	; offset 12214
-	ld de,52428	; offset 12217
-	ld hl,52428	; offset 12220
-	ld sp,screenStartAddr+4188	; offset 12223
-	push hl	; offset 12226
-	push de	; offset 12227
-	push bc	; offset 12228
-	exx    	; offset 12229
-	push hl	; offset 12230
-	push de	; offset 12231
-	push bc	; offset 12232
-	; Clock offset: 0
+	; src_data blit 99
+	ld sp,screenStartAddr+924	; offset 0x2754
+	ld hl,44975	; offset 0x2757
+	push hl	; offset 0x2758
+	ld hl,44975	; offset 0x275b
+	push hl	; offset 0x275c
+	ld hl,44975	; offset 0x275f
+	push hl	; offset 0x2760
+	ld hl,44975	; offset 0x2763
+	push hl	; offset 0x2764
+	ld hl,44975	; offset 0x2767
+	push hl	; offset 0x2768
+	ld hl,44975	; offset 0x276b
+	push hl	; offset 0x276c
+	; src_data blit 100
+	ld sp,screenStartAddr+936	; offset 0x276f
+	ld hl,44975	; offset 0x2772
+	push hl	; offset 0x2773
+	ld hl,44975	; offset 0x2776
+	push hl	; offset 0x2777
+	ld hl,44975	; offset 0x277a
+	push hl	; offset 0x277b
+	ld hl,44975	; offset 0x277e
+	push hl	; offset 0x277f
+	ld hl,44975	; offset 0x2782
+	push hl	; offset 0x2783
+	ld hl,44975	; offset 0x2786
+	push hl	; offset 0x2787
+	; src_data blit 101
+	ld sp,screenStartAddr+1164	; offset 0x278a
+	ld hl,44975	; offset 0x278d
+	push hl	; offset 0x278e
+	ld hl,44975	; offset 0x2791
+	push hl	; offset 0x2792
+	ld hl,44975	; offset 0x2795
+	push hl	; offset 0x2796
+	ld hl,44975	; offset 0x2799
+	push hl	; offset 0x279a
+	ld hl,44975	; offset 0x279d
+	push hl	; offset 0x279e
+	ld hl,44975	; offset 0x27a1
+	push hl	; offset 0x27a2
+	; src_data blit 102
+	ld sp,screenStartAddr+1176	; offset 0x27a5
+	ld hl,44975	; offset 0x27a8
+	push hl	; offset 0x27a9
+	ld hl,44975	; offset 0x27ac
+	push hl	; offset 0x27ad
+	ld hl,44975	; offset 0x27b0
+	push hl	; offset 0x27b1
+	ld hl,44975	; offset 0x27b4
+	push hl	; offset 0x27b5
+	ld hl,44975	; offset 0x27b8
+	push hl	; offset 0x27b9
+	ld hl,44975	; offset 0x27bc
+	push hl	; offset 0x27bd
+	; src_data blit 103
+	ld sp,screenStartAddr+1188	; offset 0x27c0
+	ld hl,44975	; offset 0x27c3
+	push hl	; offset 0x27c4
+	ld hl,44975	; offset 0x27c7
+	push hl	; offset 0x27c8
+	ld hl,44975	; offset 0x27cb
+	push hl	; offset 0x27cc
+	ld hl,44975	; offset 0x27cf
+	push hl	; offset 0x27d0
+	ld hl,44975	; offset 0x27d3
+	push hl	; offset 0x27d4
+	ld hl,44975	; offset 0x27d7
+	push hl	; offset 0x27d8
+	; src_data blit 104
+	ld sp,screenStartAddr+1428	; offset 0x27db
+	ld hl,44975	; offset 0x27de
+	push hl	; offset 0x27df
+	ld hl,44975	; offset 0x27e2
+	push hl	; offset 0x27e3
+	ld hl,44975	; offset 0x27e6
+	push hl	; offset 0x27e7
+	ld hl,44975	; offset 0x27ea
+	push hl	; offset 0x27eb
+	ld hl,44975	; offset 0x27ee
+	push hl	; offset 0x27ef
+	ld hl,44975	; offset 0x27f2
+	push hl	; offset 0x27f3
+	; src_data blit 105
+	ld sp,screenStartAddr+1440	; offset 0x27f6
+	ld hl,44975	; offset 0x27f9
+	push hl	; offset 0x27fa
+	ld hl,44975	; offset 0x27fd
+	push hl	; offset 0x27fe
+	ld hl,44975	; offset 0x2801
+	push hl	; offset 0x2802
+	ld hl,44975	; offset 0x2805
+	push hl	; offset 0x2806
+	ld hl,44975	; offset 0x2809
+	push hl	; offset 0x280a
+	ld hl,44975	; offset 0x280d
+	push hl	; offset 0x280e
+	; src_data blit 106
+	ld sp,screenStartAddr+1680	; offset 0x2811
+	ld hl,44975	; offset 0x2814
+	push hl	; offset 0x2815
+	ld hl,44975	; offset 0x2818
+	push hl	; offset 0x2819
+	ld hl,44975	; offset 0x281c
+	push hl	; offset 0x281d
+	ld hl,44975	; offset 0x2820
+	push hl	; offset 0x2821
+	ld hl,44975	; offset 0x2824
+	push hl	; offset 0x2825
+	ld hl,44975	; offset 0x2828
+	push hl	; offset 0x2829
 
 	; attr draw 13
-	ld sp,0x8020
-	ld bc,10280
-	push bc
-	ld bc,10280
-	push bc
-	pop af
+	ld sp,attr8and16vals+4
+	pop af	; src 16
 	ex af,af'
-	pop af
+	pop af	; src 8
+	ld bc,10280	; src 18
+	ld de,10280	; src 20
+	ld hl,10280	; src 22
+	ld ix,10280	; src 4
+	ld iy,10280	; src 6
+	exx
+	ld bc,10280	; src 10
+	ld de,10280	; src 12
+	ld hl,10280	; src 0
+
 	ld sp,attrStartAddr+16+416
-	ld de,10280
-	ld hl,10280
-	ld ix,10280
-	ld iy,10280
-	exx
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	; start chasing raster here to update ATTR memory
 
-	; start chasing raster here
-
-	ld (attrStartAddr+416),hl
-	ld hl,10280
-	ld (attrStartAddr+2+416),hl
-	ld hl,10280
-	push hl
-	push de
-	push bc
-	push af
+	ld (attrStartAddr+416),hl	; dest 0
+	ld hl,10280	; src 2
+	ld (attrStartAddr+2+416),hl	; dest 2
+	ld hl,10280	; src 14
+	push hl	; dest 14
+	push de	; dest 12
+	push bc	; dest 10
+	push af	; dest 8
 	exx
 	ex af,af'
-	push iy
-	push ix
+	push iy	; dest 6
+	push ix	; dest 4
 	ld sp,attrStartAddr+24+416
-	push hl
-	push de
-	push bc
-	push af
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	push hl	; dest 22
+	push de	; dest 20
+	push bc	; dest 18
+	push af	; dest 16
+	ld bc,10280	; src 24
+	ld de,10280	; src 16
+	ld hl,10280	; src 28
 	ld sp,attrStartAddr+30+416
-	push hl
-	push de
-	push bc
-	ld hl,10280
-	ld (attrStartAddr+30+416),hl
-	; src_data filler blit 416
-	ld bc,52428	; offset 12688
-	ld de,52428	; offset 12691
-	exx    	; offset 12694
-	ld bc,52428	; offset 12695
-	ld de,52428	; offset 12698
-	ld sp,screenStartAddr+5884	; offset 12701
-	push de	; offset 12704
-	push bc	; offset 12705
-	exx    	; offset 12706
-	push de	; offset 12707
-	push bc	; offset 12708
-	nop
-	; end attr draw 13
-	; Clock offset: -1008
+	push hl	; dest 28
+	push de	; dest 26
+	push bc	; dest 24
+	ld hl,10280	; src 30
+	ld (attrStartAddr+30+416),hl;	 dest 30
+	; end attr draw 13, offset 0x29d0
+	; Clock offset: -1152
 
-	; src_data blit 385
-	ld bc,52428	; offset 12710
-	ld de,52428	; offset 12713
-	ld hl,52428	; offset 12716
-	exx    	; offset 12719
-	ld bc,52428	; offset 12720
-	ld de,52428	; offset 12723
-	ld hl,52428	; offset 12726
-	ld sp,screenStartAddr+4200	; offset 12729
-	push hl	; offset 12732
-	push de	; offset 12733
-	push bc	; offset 12734
-	exx    	; offset 12735
-	push hl	; offset 12736
-	push de	; offset 12737
-	push bc	; offset 12738
-	; Clock offset: -864
-
-	; src_data blit 386
-	ld bc,52428	; offset 12739
-	ld de,52428	; offset 12742
-	ld hl,52428	; offset 12745
-	exx    	; offset 12748
-	ld bc,52428	; offset 12749
-	ld de,52428	; offset 12752
-	ld hl,52428	; offset 12755
-	ld sp,screenStartAddr+4428	; offset 12758
-	push hl	; offset 12761
-	push de	; offset 12762
-	push bc	; offset 12763
-	exx    	; offset 12764
-	push hl	; offset 12765
-	push de	; offset 12766
-	push bc	; offset 12767
-	; Clock offset: -720
-
-	; src_data blit 387
-	ld bc,52428	; offset 12768
-	ld de,52428	; offset 12771
-	ld hl,52428	; offset 12774
-	exx    	; offset 12777
-	ld bc,52428	; offset 12778
-	ld de,52428	; offset 12781
-	ld hl,52428	; offset 12784
-	ld sp,screenStartAddr+4440	; offset 12787
-	push hl	; offset 12790
-	push de	; offset 12791
-	push bc	; offset 12792
-	exx    	; offset 12793
-	push hl	; offset 12794
-	push de	; offset 12795
-	push bc	; offset 12796
-	; Clock offset: -576
-
-	; src_data blit 388
-	ld bc,52428	; offset 12797
-	ld de,52428	; offset 12800
-	ld hl,52428	; offset 12803
-	exx    	; offset 12806
-	ld bc,52428	; offset 12807
-	ld de,52428	; offset 12810
-	ld hl,52428	; offset 12813
-	ld sp,screenStartAddr+4452	; offset 12816
-	push hl	; offset 12819
-	push de	; offset 12820
-	push bc	; offset 12821
-	exx    	; offset 12822
-	push hl	; offset 12823
-	push de	; offset 12824
-	push bc	; offset 12825
-	; Clock offset: -432
-
-	; src_data blit 389
-	ld bc,52428	; offset 12826
-	ld de,52428	; offset 12829
-	ld hl,52428	; offset 12832
-	exx    	; offset 12835
-	ld bc,52428	; offset 12836
-	ld de,52428	; offset 12839
-	ld hl,52428	; offset 12842
-	ld sp,screenStartAddr+4692	; offset 12845
-	push hl	; offset 12848
-	push de	; offset 12849
-	push bc	; offset 12850
-	exx    	; offset 12851
-	push hl	; offset 12852
-	push de	; offset 12853
-	push bc	; offset 12854
-	; Clock offset: -288
-
-	; src_data blit 390
-	ld bc,52428	; offset 12855
-	ld de,52428	; offset 12858
-	ld hl,52428	; offset 12861
-	exx    	; offset 12864
-	ld bc,52428	; offset 12865
-	ld de,52428	; offset 12868
-	ld hl,52428	; offset 12871
-	ld sp,screenStartAddr+4704	; offset 12874
-	push hl	; offset 12877
-	push de	; offset 12878
-	push bc	; offset 12879
-	exx    	; offset 12880
-	push hl	; offset 12881
-	push de	; offset 12882
-	push bc	; offset 12883
-	; Clock offset: -144
-
-	; src_data blit 391
-	ld bc,52428	; offset 12884
-	ld de,52428	; offset 12887
-	ld hl,52428	; offset 12890
-	exx    	; offset 12893
-	ld bc,52428	; offset 12894
-	ld de,52428	; offset 12897
-	ld hl,52428	; offset 12900
-	ld sp,screenStartAddr+4944	; offset 12903
-	push hl	; offset 12906
-	push de	; offset 12907
-	push bc	; offset 12908
-	exx    	; offset 12909
-	push hl	; offset 12910
-	push de	; offset 12911
-	push bc	; offset 12912
-	; Clock offset: 0
+	; src_data blit 107
+	ld sp,screenStartAddr+1692	; offset 0x29d3
+	ld hl,44975	; offset 0x29d6
+	push hl	; offset 0x29d7
+	ld hl,44975	; offset 0x29da
+	push hl	; offset 0x29db
+	ld hl,44975	; offset 0x29de
+	push hl	; offset 0x29df
+	ld hl,44975	; offset 0x29e2
+	push hl	; offset 0x29e3
+	ld hl,44975	; offset 0x29e6
+	push hl	; offset 0x29e7
+	ld hl,44975	; offset 0x29ea
+	push hl	; offset 0x29eb
+	; src_data blit 108
+	ld sp,screenStartAddr+1704	; offset 0x29ee
+	ld hl,44975	; offset 0x29f1
+	push hl	; offset 0x29f2
+	ld hl,44975	; offset 0x29f5
+	push hl	; offset 0x29f6
+	ld hl,44975	; offset 0x29f9
+	push hl	; offset 0x29fa
+	ld hl,44975	; offset 0x29fd
+	push hl	; offset 0x29fe
+	ld hl,44975	; offset 0x2a01
+	push hl	; offset 0x2a02
+	ld hl,44975	; offset 0x2a05
+	push hl	; offset 0x2a06
+	; src_data blit 109
+	ld sp,screenStartAddr+1932	; offset 0x2a09
+	ld hl,44975	; offset 0x2a0c
+	push hl	; offset 0x2a0d
+	ld hl,44975	; offset 0x2a10
+	push hl	; offset 0x2a11
+	ld hl,44975	; offset 0x2a14
+	push hl	; offset 0x2a15
+	ld hl,44975	; offset 0x2a18
+	push hl	; offset 0x2a19
+	ld hl,44975	; offset 0x2a1c
+	push hl	; offset 0x2a1d
+	ld hl,44975	; offset 0x2a20
+	push hl	; offset 0x2a21
+	; src_data blit 110
+	ld sp,screenStartAddr+1944	; offset 0x2a24
+	ld hl,44975	; offset 0x2a27
+	push hl	; offset 0x2a28
+	ld hl,44975	; offset 0x2a2b
+	push hl	; offset 0x2a2c
+	ld hl,44975	; offset 0x2a2f
+	push hl	; offset 0x2a30
+	ld hl,44975	; offset 0x2a33
+	push hl	; offset 0x2a34
+	ld hl,44975	; offset 0x2a37
+	push hl	; offset 0x2a38
+	ld hl,44975	; offset 0x2a3b
+	push hl	; offset 0x2a3c
+	; src_data blit 111
+	ld sp,screenStartAddr+1956	; offset 0x2a3f
+	ld hl,44975	; offset 0x2a42
+	push hl	; offset 0x2a43
+	ld hl,44975	; offset 0x2a46
+	push hl	; offset 0x2a47
+	ld hl,44975	; offset 0x2a4a
+	push hl	; offset 0x2a4b
+	ld hl,44975	; offset 0x2a4e
+	push hl	; offset 0x2a4f
+	ld hl,44975	; offset 0x2a52
+	push hl	; offset 0x2a53
+	ld hl,44975	; offset 0x2a56
+	push hl	; offset 0x2a57
+	; src_data blit 112
+	ld sp,screenStartAddr+180	; offset 0x2a5a
+	ld hl,44975	; offset 0x2a5d
+	push hl	; offset 0x2a5e
+	ld hl,44975	; offset 0x2a61
+	push hl	; offset 0x2a62
+	ld hl,44975	; offset 0x2a65
+	push hl	; offset 0x2a66
+	ld hl,44975	; offset 0x2a69
+	push hl	; offset 0x2a6a
+	ld hl,44975	; offset 0x2a6d
+	push hl	; offset 0x2a6e
+	ld hl,44975	; offset 0x2a71
+	push hl	; offset 0x2a72
+	; src_data blit 113
+	ld sp,screenStartAddr+192	; offset 0x2a75
+	ld hl,44975	; offset 0x2a78
+	push hl	; offset 0x2a79
+	ld hl,44975	; offset 0x2a7c
+	push hl	; offset 0x2a7d
+	ld hl,44975	; offset 0x2a80
+	push hl	; offset 0x2a81
+	ld hl,44975	; offset 0x2a84
+	push hl	; offset 0x2a85
+	ld hl,44975	; offset 0x2a88
+	push hl	; offset 0x2a89
+	ld hl,44975	; offset 0x2a8c
+	push hl	; offset 0x2a8d
+	; src_data blit 114
+	ld sp,screenStartAddr+432	; offset 0x2a90
+	ld hl,44975	; offset 0x2a93
+	push hl	; offset 0x2a94
+	ld hl,44975	; offset 0x2a97
+	push hl	; offset 0x2a98
+	ld hl,44975	; offset 0x2a9b
+	push hl	; offset 0x2a9c
+	ld hl,44975	; offset 0x2a9f
+	push hl	; offset 0x2aa0
+	ld hl,44975	; offset 0x2aa3
+	push hl	; offset 0x2aa4
+	ld hl,44975	; offset 0x2aa7
+	push hl	; offset 0x2aa8
 
 	; attr draw 14
-	ld sp,0x8020
-	ld bc,10280
-	push bc
-	ld bc,10280
-	push bc
-	pop af
+	ld sp,attr8and16vals+4
+	pop af	; src 16
 	ex af,af'
-	pop af
+	pop af	; src 8
+	ld bc,10280	; src 18
+	ld de,10280	; src 20
+	ld hl,10280	; src 22
+	ld ix,10280	; src 4
+	ld iy,10280	; src 6
+	exx
+	ld bc,10280	; src 10
+	ld de,10280	; src 12
+	ld hl,10280	; src 0
+
 	ld sp,attrStartAddr+16+448
-	ld de,10280
-	ld hl,10280
-	ld ix,10280
-	ld iy,10280
-	exx
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	; start chasing raster here to update ATTR memory
 
-	; start chasing raster here
-
-	ld (attrStartAddr+448),hl
-	ld hl,10280
-	ld (attrStartAddr+2+448),hl
-	ld hl,10280
-	push hl
-	push de
-	push bc
-	push af
+	ld (attrStartAddr+448),hl	; dest 0
+	ld hl,10280	; src 2
+	ld (attrStartAddr+2+448),hl	; dest 2
+	ld hl,10280	; src 14
+	push hl	; dest 14
+	push de	; dest 12
+	push bc	; dest 10
+	push af	; dest 8
 	exx
 	ex af,af'
-	push iy
-	push ix
+	push iy	; dest 6
+	push ix	; dest 4
 	ld sp,attrStartAddr+24+448
-	push hl
-	push de
-	push bc
-	push af
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	push hl	; dest 22
+	push de	; dest 20
+	push bc	; dest 18
+	push af	; dest 16
+	ld bc,10280	; src 24
+	ld de,10280	; src 16
+	ld hl,10280	; src 28
 	ld sp,attrStartAddr+30+448
-	push hl
-	push de
-	push bc
-	ld hl,10280
-	ld (attrStartAddr+30+448),hl
-	; src_data filler blit 448
-	ld bc,52428	; offset 13368
-	ld de,52428	; offset 13371
-	exx    	; offset 13374
-	ld bc,52428	; offset 13375
-	ld de,52428	; offset 13378
-	ld sp,screenStartAddr+5892	; offset 13381
-	push de	; offset 13384
-	push bc	; offset 13385
-	exx    	; offset 13386
-	push de	; offset 13387
-	push bc	; offset 13388
-	nop
-	; end attr draw 14
-	; Clock offset: -1008
+	push hl	; dest 28
+	push de	; dest 26
+	push bc	; dest 24
+	ld hl,10280	; src 30
+	ld (attrStartAddr+30+448),hl;	 dest 30
+	; end attr draw 14, offset 0x2c4f
+	; Clock offset: -1152
 
-	; src_data blit 392
-	ld bc,52428	; offset 13390
-	ld de,52428	; offset 13393
-	ld hl,52428	; offset 13396
-	exx    	; offset 13399
-	ld bc,52428	; offset 13400
-	ld de,52428	; offset 13403
-	ld hl,52428	; offset 13406
-	ld sp,screenStartAddr+4956	; offset 13409
-	push hl	; offset 13412
-	push de	; offset 13413
-	push bc	; offset 13414
-	exx    	; offset 13415
-	push hl	; offset 13416
-	push de	; offset 13417
-	push bc	; offset 13418
-	; Clock offset: -864
-
-	; src_data blit 393
-	ld bc,52428	; offset 13419
-	ld de,52428	; offset 13422
-	ld hl,52428	; offset 13425
-	exx    	; offset 13428
-	ld bc,52428	; offset 13429
-	ld de,52428	; offset 13432
-	ld hl,52428	; offset 13435
-	ld sp,screenStartAddr+4968	; offset 13438
-	push hl	; offset 13441
-	push de	; offset 13442
-	push bc	; offset 13443
-	exx    	; offset 13444
-	push hl	; offset 13445
-	push de	; offset 13446
-	push bc	; offset 13447
-	; Clock offset: -720
-
-	; src_data blit 394
-	ld bc,52428	; offset 13448
-	ld de,52428	; offset 13451
-	ld hl,52428	; offset 13454
-	exx    	; offset 13457
-	ld bc,52428	; offset 13458
-	ld de,52428	; offset 13461
-	ld hl,52428	; offset 13464
-	ld sp,screenStartAddr+5196	; offset 13467
-	push hl	; offset 13470
-	push de	; offset 13471
-	push bc	; offset 13472
-	exx    	; offset 13473
-	push hl	; offset 13474
-	push de	; offset 13475
-	push bc	; offset 13476
-	; Clock offset: -576
-
-	; src_data blit 395
-	ld bc,52428	; offset 13477
-	ld de,52428	; offset 13480
-	ld hl,52428	; offset 13483
-	exx    	; offset 13486
-	ld bc,52428	; offset 13487
-	ld de,52428	; offset 13490
-	ld hl,52428	; offset 13493
-	ld sp,screenStartAddr+5208	; offset 13496
-	push hl	; offset 13499
-	push de	; offset 13500
-	push bc	; offset 13501
-	exx    	; offset 13502
-	push hl	; offset 13503
-	push de	; offset 13504
-	push bc	; offset 13505
-	; Clock offset: -432
-
-	; src_data blit 396
-	ld bc,52428	; offset 13506
-	ld de,52428	; offset 13509
-	ld hl,52428	; offset 13512
-	exx    	; offset 13515
-	ld bc,52428	; offset 13516
-	ld de,52428	; offset 13519
-	ld hl,52428	; offset 13522
-	ld sp,screenStartAddr+5220	; offset 13525
-	push hl	; offset 13528
-	push de	; offset 13529
-	push bc	; offset 13530
-	exx    	; offset 13531
-	push hl	; offset 13532
-	push de	; offset 13533
-	push bc	; offset 13534
-	; Clock offset: -288
-
-	; src_data blit 397
-	ld bc,52428	; offset 13535
-	ld de,52428	; offset 13538
-	ld hl,52428	; offset 13541
-	exx    	; offset 13544
-	ld bc,52428	; offset 13545
-	ld de,52428	; offset 13548
-	ld hl,52428	; offset 13551
-	ld sp,screenStartAddr+5460	; offset 13554
-	push hl	; offset 13557
-	push de	; offset 13558
-	push bc	; offset 13559
-	exx    	; offset 13560
-	push hl	; offset 13561
-	push de	; offset 13562
-	push bc	; offset 13563
-	; Clock offset: -144
-
-	; src_data blit 398
-	ld bc,52428	; offset 13564
-	ld de,52428	; offset 13567
-	ld hl,52428	; offset 13570
-	exx    	; offset 13573
-	ld bc,52428	; offset 13574
-	ld de,52428	; offset 13577
-	ld hl,52428	; offset 13580
-	ld sp,screenStartAddr+5472	; offset 13583
-	push hl	; offset 13586
-	push de	; offset 13587
-	push bc	; offset 13588
-	exx    	; offset 13589
-	push hl	; offset 13590
-	push de	; offset 13591
-	push bc	; offset 13592
-	; Clock offset: 0
+	; src_data blit 115
+	ld sp,screenStartAddr+444	; offset 0x2c52
+	ld hl,44975	; offset 0x2c55
+	push hl	; offset 0x2c56
+	ld hl,44975	; offset 0x2c59
+	push hl	; offset 0x2c5a
+	ld hl,44975	; offset 0x2c5d
+	push hl	; offset 0x2c5e
+	ld hl,44975	; offset 0x2c61
+	push hl	; offset 0x2c62
+	ld hl,44975	; offset 0x2c65
+	push hl	; offset 0x2c66
+	ld hl,44975	; offset 0x2c69
+	push hl	; offset 0x2c6a
+	; src_data blit 116
+	ld sp,screenStartAddr+456	; offset 0x2c6d
+	ld hl,44975	; offset 0x2c70
+	push hl	; offset 0x2c71
+	ld hl,44975	; offset 0x2c74
+	push hl	; offset 0x2c75
+	ld hl,44975	; offset 0x2c78
+	push hl	; offset 0x2c79
+	ld hl,44975	; offset 0x2c7c
+	push hl	; offset 0x2c7d
+	ld hl,44975	; offset 0x2c80
+	push hl	; offset 0x2c81
+	ld hl,44975	; offset 0x2c84
+	push hl	; offset 0x2c85
+	; src_data blit 117
+	ld sp,screenStartAddr+684	; offset 0x2c88
+	ld hl,44975	; offset 0x2c8b
+	push hl	; offset 0x2c8c
+	ld hl,44975	; offset 0x2c8f
+	push hl	; offset 0x2c90
+	ld hl,44975	; offset 0x2c93
+	push hl	; offset 0x2c94
+	ld hl,44975	; offset 0x2c97
+	push hl	; offset 0x2c98
+	ld hl,44975	; offset 0x2c9b
+	push hl	; offset 0x2c9c
+	ld hl,44975	; offset 0x2c9f
+	push hl	; offset 0x2ca0
+	; src_data blit 118
+	ld sp,screenStartAddr+696	; offset 0x2ca3
+	ld hl,44975	; offset 0x2ca6
+	push hl	; offset 0x2ca7
+	ld hl,44975	; offset 0x2caa
+	push hl	; offset 0x2cab
+	ld hl,44975	; offset 0x2cae
+	push hl	; offset 0x2caf
+	ld hl,44975	; offset 0x2cb2
+	push hl	; offset 0x2cb3
+	ld hl,44975	; offset 0x2cb6
+	push hl	; offset 0x2cb7
+	ld hl,44975	; offset 0x2cba
+	push hl	; offset 0x2cbb
+	; src_data blit 119
+	ld sp,screenStartAddr+708	; offset 0x2cbe
+	ld hl,44975	; offset 0x2cc1
+	push hl	; offset 0x2cc2
+	ld hl,44975	; offset 0x2cc5
+	push hl	; offset 0x2cc6
+	ld hl,44975	; offset 0x2cc9
+	push hl	; offset 0x2cca
+	ld hl,44975	; offset 0x2ccd
+	push hl	; offset 0x2cce
+	ld hl,44975	; offset 0x2cd1
+	push hl	; offset 0x2cd2
+	ld hl,44975	; offset 0x2cd5
+	push hl	; offset 0x2cd6
+	; src_data blit 120
+	ld sp,screenStartAddr+948	; offset 0x2cd9
+	ld hl,44975	; offset 0x2cdc
+	push hl	; offset 0x2cdd
+	ld hl,44975	; offset 0x2ce0
+	push hl	; offset 0x2ce1
+	ld hl,44975	; offset 0x2ce4
+	push hl	; offset 0x2ce5
+	ld hl,44975	; offset 0x2ce8
+	push hl	; offset 0x2ce9
+	ld hl,44975	; offset 0x2cec
+	push hl	; offset 0x2ced
+	ld hl,44975	; offset 0x2cf0
+	push hl	; offset 0x2cf1
+	; src_data blit 121
+	ld sp,screenStartAddr+960	; offset 0x2cf4
+	ld hl,44975	; offset 0x2cf7
+	push hl	; offset 0x2cf8
+	ld hl,44975	; offset 0x2cfb
+	push hl	; offset 0x2cfc
+	ld hl,44975	; offset 0x2cff
+	push hl	; offset 0x2d00
+	ld hl,44975	; offset 0x2d03
+	push hl	; offset 0x2d04
+	ld hl,44975	; offset 0x2d07
+	push hl	; offset 0x2d08
+	ld hl,44975	; offset 0x2d0b
+	push hl	; offset 0x2d0c
+	; src_data blit 122
+	ld sp,screenStartAddr+1200	; offset 0x2d0f
+	ld hl,44975	; offset 0x2d12
+	push hl	; offset 0x2d13
+	ld hl,44975	; offset 0x2d16
+	push hl	; offset 0x2d17
+	ld hl,44975	; offset 0x2d1a
+	push hl	; offset 0x2d1b
+	ld hl,44975	; offset 0x2d1e
+	push hl	; offset 0x2d1f
+	ld hl,44975	; offset 0x2d22
+	push hl	; offset 0x2d23
+	ld hl,44975	; offset 0x2d26
+	push hl	; offset 0x2d27
 
 	; attr draw 15
-	ld sp,0x8020
-	ld bc,10280
-	push bc
-	ld bc,10280
-	push bc
-	pop af
+	ld sp,attr8and16vals+4
+	pop af	; src 16
 	ex af,af'
-	pop af
+	pop af	; src 8
+	ld bc,10280	; src 18
+	ld de,10280	; src 20
+	ld hl,10280	; src 22
+	ld ix,10280	; src 4
+	ld iy,10280	; src 6
+	exx
+	ld bc,10280	; src 10
+	ld de,10280	; src 12
+	ld hl,10280	; src 0
+
 	ld sp,attrStartAddr+16+480
-	ld de,10280
-	ld hl,10280
-	ld ix,10280
-	ld iy,10280
-	exx
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	; start chasing raster here to update ATTR memory
 
-	; start chasing raster here
-
-	ld (attrStartAddr+480),hl
-	ld hl,10280
-	ld (attrStartAddr+2+480),hl
-	ld hl,10280
-	push hl
-	push de
-	push bc
-	push af
+	ld (attrStartAddr+480),hl	; dest 0
+	ld hl,10280	; src 2
+	ld (attrStartAddr+2+480),hl	; dest 2
+	ld hl,10280	; src 14
+	push hl	; dest 14
+	push de	; dest 12
+	push bc	; dest 10
+	push af	; dest 8
 	exx
 	ex af,af'
-	push iy
-	push ix
+	push iy	; dest 6
+	push ix	; dest 4
 	ld sp,attrStartAddr+24+480
-	push hl
-	push de
-	push bc
-	push af
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	push hl	; dest 22
+	push de	; dest 20
+	push bc	; dest 18
+	push af	; dest 16
+	ld bc,10280	; src 24
+	ld de,10280	; src 16
+	ld hl,10280	; src 28
 	ld sp,attrStartAddr+30+480
-	push hl
-	push de
-	push bc
-	ld hl,10280
-	ld (attrStartAddr+30+480),hl
-	; src_data filler blit 480
-	ld bc,52428	; offset 14048
-	ld de,52428	; offset 14051
-	exx    	; offset 14054
-	ld bc,52428	; offset 14055
-	ld de,52428	; offset 14058
-	ld sp,screenStartAddr+5900	; offset 14061
-	push de	; offset 14064
-	push bc	; offset 14065
-	exx    	; offset 14066
-	push de	; offset 14067
-	push bc	; offset 14068
-	nop
-	; end attr draw 15
-	; Clock offset: -1008
+	push hl	; dest 28
+	push de	; dest 26
+	push bc	; dest 24
+	ld hl,10280	; src 30
+	ld (attrStartAddr+30+480),hl;	 dest 30
+	; end attr draw 15, offset 0x2ece
+	; Clock offset: -1152
 
-	; src_data blit 399
-	ld bc,52428	; offset 14070
-	ld de,52428	; offset 14073
-	ld hl,52428	; offset 14076
-	exx    	; offset 14079
-	ld bc,52428	; offset 14080
-	ld de,52428	; offset 14083
-	ld hl,52428	; offset 14086
-	ld sp,screenStartAddr+5712	; offset 14089
-	push hl	; offset 14092
-	push de	; offset 14093
-	push bc	; offset 14094
-	exx    	; offset 14095
-	push hl	; offset 14096
-	push de	; offset 14097
-	push bc	; offset 14098
-	; Clock offset: -864
-
-	; src_data blit 400
-	ld bc,52428	; offset 14099
-	ld de,52428	; offset 14102
-	ld hl,52428	; offset 14105
-	exx    	; offset 14108
-	ld bc,52428	; offset 14109
-	ld de,52428	; offset 14112
-	ld hl,52428	; offset 14115
-	ld sp,screenStartAddr+5724	; offset 14118
-	push hl	; offset 14121
-	push de	; offset 14122
-	push bc	; offset 14123
-	exx    	; offset 14124
-	push hl	; offset 14125
-	push de	; offset 14126
-	push bc	; offset 14127
-	; Clock offset: -720
-
-	; src_data blit 401
-	ld bc,52428	; offset 14128
-	ld de,52428	; offset 14131
-	ld hl,52428	; offset 14134
-	exx    	; offset 14137
-	ld bc,52428	; offset 14138
-	ld de,52428	; offset 14141
-	ld hl,52428	; offset 14144
-	ld sp,screenStartAddr+5736	; offset 14147
-	push hl	; offset 14150
-	push de	; offset 14151
-	push bc	; offset 14152
-	exx    	; offset 14153
-	push hl	; offset 14154
-	push de	; offset 14155
-	push bc	; offset 14156
-	; Clock offset: -576
-
-	; src_data blit 402
-	ld bc,52428	; offset 14157
-	ld de,52428	; offset 14160
-	ld hl,52428	; offset 14163
-	exx    	; offset 14166
-	ld bc,52428	; offset 14167
-	ld de,52428	; offset 14170
-	ld hl,52428	; offset 14173
-	ld sp,screenStartAddr+4212	; offset 14176
-	push hl	; offset 14179
-	push de	; offset 14180
-	push bc	; offset 14181
-	exx    	; offset 14182
-	push hl	; offset 14183
-	push de	; offset 14184
-	push bc	; offset 14185
-	; Clock offset: -432
-
-	; src_data blit 403
-	ld bc,52428	; offset 14186
-	ld de,52428	; offset 14189
-	ld hl,52428	; offset 14192
-	exx    	; offset 14195
-	ld bc,52428	; offset 14196
-	ld de,52428	; offset 14199
-	ld hl,52428	; offset 14202
-	ld sp,screenStartAddr+4224	; offset 14205
-	push hl	; offset 14208
-	push de	; offset 14209
-	push bc	; offset 14210
-	exx    	; offset 14211
-	push hl	; offset 14212
-	push de	; offset 14213
-	push bc	; offset 14214
-	; Clock offset: -288
-
-	; src_data blit 404
-	ld bc,52428	; offset 14215
-	ld de,52428	; offset 14218
-	ld hl,52428	; offset 14221
-	exx    	; offset 14224
-	ld bc,52428	; offset 14225
-	ld de,52428	; offset 14228
-	ld hl,52428	; offset 14231
-	ld sp,screenStartAddr+4464	; offset 14234
-	push hl	; offset 14237
-	push de	; offset 14238
-	push bc	; offset 14239
-	exx    	; offset 14240
-	push hl	; offset 14241
-	push de	; offset 14242
-	push bc	; offset 14243
-	; Clock offset: -144
-
-	; src_data blit 405
-	ld bc,52428	; offset 14244
-	ld de,52428	; offset 14247
-	ld hl,52428	; offset 14250
-	exx    	; offset 14253
-	ld bc,52428	; offset 14254
-	ld de,52428	; offset 14257
-	ld hl,52428	; offset 14260
-	ld sp,screenStartAddr+4476	; offset 14263
-	push hl	; offset 14266
-	push de	; offset 14267
-	push bc	; offset 14268
-	exx    	; offset 14269
-	push hl	; offset 14270
-	push de	; offset 14271
-	push bc	; offset 14272
-	; Clock offset: 0
+	; src_data blit 123
+	ld sp,screenStartAddr+1212	; offset 0x2ed1
+	ld hl,44975	; offset 0x2ed4
+	push hl	; offset 0x2ed5
+	ld hl,44975	; offset 0x2ed8
+	push hl	; offset 0x2ed9
+	ld hl,44975	; offset 0x2edc
+	push hl	; offset 0x2edd
+	ld hl,44975	; offset 0x2ee0
+	push hl	; offset 0x2ee1
+	ld hl,44975	; offset 0x2ee4
+	push hl	; offset 0x2ee5
+	ld hl,44975	; offset 0x2ee8
+	push hl	; offset 0x2ee9
+	; src_data blit 124
+	ld sp,screenStartAddr+1224	; offset 0x2eec
+	ld hl,44975	; offset 0x2eef
+	push hl	; offset 0x2ef0
+	ld hl,44975	; offset 0x2ef3
+	push hl	; offset 0x2ef4
+	ld hl,44975	; offset 0x2ef7
+	push hl	; offset 0x2ef8
+	ld hl,44975	; offset 0x2efb
+	push hl	; offset 0x2efc
+	ld hl,44975	; offset 0x2eff
+	push hl	; offset 0x2f00
+	ld hl,44975	; offset 0x2f03
+	push hl	; offset 0x2f04
+	; src_data blit 125
+	ld sp,screenStartAddr+1452	; offset 0x2f07
+	ld hl,44975	; offset 0x2f0a
+	push hl	; offset 0x2f0b
+	ld hl,44975	; offset 0x2f0e
+	push hl	; offset 0x2f0f
+	ld hl,44975	; offset 0x2f12
+	push hl	; offset 0x2f13
+	ld hl,44975	; offset 0x2f16
+	push hl	; offset 0x2f17
+	ld hl,44975	; offset 0x2f1a
+	push hl	; offset 0x2f1b
+	ld hl,44975	; offset 0x2f1e
+	push hl	; offset 0x2f1f
+	; src_data blit 126
+	ld sp,screenStartAddr+1464	; offset 0x2f22
+	ld hl,44975	; offset 0x2f25
+	push hl	; offset 0x2f26
+	ld hl,44975	; offset 0x2f29
+	push hl	; offset 0x2f2a
+	ld hl,44975	; offset 0x2f2d
+	push hl	; offset 0x2f2e
+	ld hl,44975	; offset 0x2f31
+	push hl	; offset 0x2f32
+	ld hl,44975	; offset 0x2f35
+	push hl	; offset 0x2f36
+	ld hl,44975	; offset 0x2f39
+	push hl	; offset 0x2f3a
+	; src_data blit 127
+	ld sp,screenStartAddr+1476	; offset 0x2f3d
+	ld hl,44975	; offset 0x2f40
+	push hl	; offset 0x2f41
+	ld hl,44975	; offset 0x2f44
+	push hl	; offset 0x2f45
+	ld hl,44975	; offset 0x2f48
+	push hl	; offset 0x2f49
+	ld hl,44975	; offset 0x2f4c
+	push hl	; offset 0x2f4d
+	ld hl,44975	; offset 0x2f50
+	push hl	; offset 0x2f51
+	ld hl,44975	; offset 0x2f54
+	push hl	; offset 0x2f55
+	; src_data blit 128
+	ld sp,screenStartAddr+1716	; offset 0x2f58
+	ld hl,44975	; offset 0x2f5b
+	push hl	; offset 0x2f5c
+	ld hl,44975	; offset 0x2f5f
+	push hl	; offset 0x2f60
+	ld hl,44975	; offset 0x2f63
+	push hl	; offset 0x2f64
+	ld hl,44975	; offset 0x2f67
+	push hl	; offset 0x2f68
+	ld hl,44975	; offset 0x2f6b
+	push hl	; offset 0x2f6c
+	ld hl,44975	; offset 0x2f6f
+	push hl	; offset 0x2f70
+	; src_data blit 129
+	ld sp,screenStartAddr+1728	; offset 0x2f73
+	ld hl,44975	; offset 0x2f76
+	push hl	; offset 0x2f77
+	ld hl,44975	; offset 0x2f7a
+	push hl	; offset 0x2f7b
+	ld hl,44975	; offset 0x2f7e
+	push hl	; offset 0x2f7f
+	ld hl,44975	; offset 0x2f82
+	push hl	; offset 0x2f83
+	ld hl,44975	; offset 0x2f86
+	push hl	; offset 0x2f87
+	ld hl,44975	; offset 0x2f8a
+	push hl	; offset 0x2f8b
+	; src_data blit 130
+	ld sp,screenStartAddr+1968	; offset 0x2f8e
+	ld hl,44975	; offset 0x2f91
+	push hl	; offset 0x2f92
+	ld hl,44975	; offset 0x2f95
+	push hl	; offset 0x2f96
+	ld hl,44975	; offset 0x2f99
+	push hl	; offset 0x2f9a
+	ld hl,44975	; offset 0x2f9d
+	push hl	; offset 0x2f9e
+	ld hl,44975	; offset 0x2fa1
+	push hl	; offset 0x2fa2
+	ld hl,44975	; offset 0x2fa5
+	push hl	; offset 0x2fa6
 
 	; attr draw 16
-	ld sp,0x8020
-	ld bc,10280
-	push bc
-	ld bc,10280
-	push bc
-	pop af
+	ld sp,attr8and16vals+4
+	pop af	; src 16
 	ex af,af'
-	pop af
+	pop af	; src 8
+	ld bc,10280	; src 18
+	ld de,10280	; src 20
+	ld hl,10280	; src 22
+	ld ix,10280	; src 4
+	ld iy,10280	; src 6
+	exx
+	ld bc,10280	; src 10
+	ld de,10280	; src 12
+	ld hl,10280	; src 0
+
 	ld sp,attrStartAddr+16+512
-	ld de,10280
-	ld hl,10280
-	ld ix,10280
-	ld iy,10280
-	exx
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	; start chasing raster here to update ATTR memory
 
-	; start chasing raster here
-
-	ld (attrStartAddr+512),hl
-	ld hl,10280
-	ld (attrStartAddr+2+512),hl
-	ld hl,10280
-	push hl
-	push de
-	push bc
-	push af
+	ld (attrStartAddr+512),hl	; dest 0
+	ld hl,10280	; src 2
+	ld (attrStartAddr+2+512),hl	; dest 2
+	ld hl,10280	; src 14
+	push hl	; dest 14
+	push de	; dest 12
+	push bc	; dest 10
+	push af	; dest 8
 	exx
 	ex af,af'
-	push iy
-	push ix
+	push iy	; dest 6
+	push ix	; dest 4
 	ld sp,attrStartAddr+24+512
-	push hl
-	push de
-	push bc
-	push af
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	push hl	; dest 22
+	push de	; dest 20
+	push bc	; dest 18
+	push af	; dest 16
+	ld bc,10280	; src 24
+	ld de,10280	; src 16
+	ld hl,10280	; src 28
 	ld sp,attrStartAddr+30+512
-	push hl
-	push de
-	push bc
-	ld hl,10280
-	ld (attrStartAddr+30+512),hl
-	; src_data filler blit 512
-	ld bc,52428	; offset 14728
-	ld de,52428	; offset 14731
-	exx    	; offset 14734
-	ld bc,52428	; offset 14735
-	ld de,52428	; offset 14738
-	ld sp,screenStartAddr+5908	; offset 14741
-	push de	; offset 14744
-	push bc	; offset 14745
-	exx    	; offset 14746
-	push de	; offset 14747
-	push bc	; offset 14748
-	nop
-	; end attr draw 16
-	; Clock offset: -1008
+	push hl	; dest 28
+	push de	; dest 26
+	push bc	; dest 24
+	ld hl,10280	; src 30
+	ld (attrStartAddr+30+512),hl;	 dest 30
+	; end attr draw 16, offset 0x314d
+	; Clock offset: -1152
 
-	; src_data blit 406
-	ld bc,52428	; offset 14750
-	ld de,52428	; offset 14753
-	ld hl,52428	; offset 14756
-	exx    	; offset 14759
-	ld bc,52428	; offset 14760
-	ld de,52428	; offset 14763
-	ld hl,52428	; offset 14766
-	ld sp,screenStartAddr+4488	; offset 14769
-	push hl	; offset 14772
-	push de	; offset 14773
-	push bc	; offset 14774
-	exx    	; offset 14775
-	push hl	; offset 14776
-	push de	; offset 14777
-	push bc	; offset 14778
-	; Clock offset: -864
-
-	; src_data blit 407
-	ld bc,52428	; offset 14779
-	ld de,52428	; offset 14782
-	ld hl,52428	; offset 14785
-	exx    	; offset 14788
-	ld bc,52428	; offset 14789
-	ld de,52428	; offset 14792
-	ld hl,52428	; offset 14795
-	ld sp,screenStartAddr+4716	; offset 14798
-	push hl	; offset 14801
-	push de	; offset 14802
-	push bc	; offset 14803
-	exx    	; offset 14804
-	push hl	; offset 14805
-	push de	; offset 14806
-	push bc	; offset 14807
-	; Clock offset: -720
-
-	; src_data blit 408
-	ld bc,52428	; offset 14808
-	ld de,52428	; offset 14811
-	ld hl,52428	; offset 14814
-	exx    	; offset 14817
-	ld bc,52428	; offset 14818
-	ld de,52428	; offset 14821
-	ld hl,52428	; offset 14824
-	ld sp,screenStartAddr+4728	; offset 14827
-	push hl	; offset 14830
-	push de	; offset 14831
-	push bc	; offset 14832
-	exx    	; offset 14833
-	push hl	; offset 14834
-	push de	; offset 14835
-	push bc	; offset 14836
-	; Clock offset: -576
-
-	; src_data blit 409
-	ld bc,52428	; offset 14837
-	ld de,52428	; offset 14840
-	ld hl,52428	; offset 14843
-	exx    	; offset 14846
-	ld bc,52428	; offset 14847
-	ld de,52428	; offset 14850
-	ld hl,52428	; offset 14853
-	ld sp,screenStartAddr+4740	; offset 14856
-	push hl	; offset 14859
-	push de	; offset 14860
-	push bc	; offset 14861
-	exx    	; offset 14862
-	push hl	; offset 14863
-	push de	; offset 14864
-	push bc	; offset 14865
-	; Clock offset: -432
-
-	; src_data blit 410
-	ld bc,52428	; offset 14866
-	ld de,52428	; offset 14869
-	ld hl,52428	; offset 14872
-	exx    	; offset 14875
-	ld bc,52428	; offset 14876
-	ld de,52428	; offset 14879
-	ld hl,52428	; offset 14882
-	ld sp,screenStartAddr+4980	; offset 14885
-	push hl	; offset 14888
-	push de	; offset 14889
-	push bc	; offset 14890
-	exx    	; offset 14891
-	push hl	; offset 14892
-	push de	; offset 14893
-	push bc	; offset 14894
-	; Clock offset: -288
-
-	; src_data blit 411
-	ld bc,52428	; offset 14895
-	ld de,52428	; offset 14898
-	ld hl,52428	; offset 14901
-	exx    	; offset 14904
-	ld bc,52428	; offset 14905
-	ld de,52428	; offset 14908
-	ld hl,52428	; offset 14911
-	ld sp,screenStartAddr+4992	; offset 14914
-	push hl	; offset 14917
-	push de	; offset 14918
-	push bc	; offset 14919
-	exx    	; offset 14920
-	push hl	; offset 14921
-	push de	; offset 14922
-	push bc	; offset 14923
-	; Clock offset: -144
-
-	; src_data blit 412
-	ld bc,52428	; offset 14924
-	ld de,52428	; offset 14927
-	ld hl,52428	; offset 14930
-	exx    	; offset 14933
-	ld bc,52428	; offset 14934
-	ld de,52428	; offset 14937
-	ld hl,52428	; offset 14940
-	ld sp,screenStartAddr+5232	; offset 14943
-	push hl	; offset 14946
-	push de	; offset 14947
-	push bc	; offset 14948
-	exx    	; offset 14949
-	push hl	; offset 14950
-	push de	; offset 14951
-	push bc	; offset 14952
-	; Clock offset: 0
+	; src_data blit 131
+	ld sp,screenStartAddr+1980	; offset 0x3150
+	ld hl,44975	; offset 0x3153
+	push hl	; offset 0x3154
+	ld hl,44975	; offset 0x3157
+	push hl	; offset 0x3158
+	ld hl,44975	; offset 0x315b
+	push hl	; offset 0x315c
+	ld hl,44975	; offset 0x315f
+	push hl	; offset 0x3160
+	ld hl,44975	; offset 0x3163
+	push hl	; offset 0x3164
+	ld hl,44975	; offset 0x3167
+	push hl	; offset 0x3168
+	; src_data blit 132
+	ld sp,screenStartAddr+1992	; offset 0x316b
+	ld hl,44975	; offset 0x316e
+	push hl	; offset 0x316f
+	ld hl,44975	; offset 0x3172
+	push hl	; offset 0x3173
+	ld hl,44975	; offset 0x3176
+	push hl	; offset 0x3177
+	ld hl,44975	; offset 0x317a
+	push hl	; offset 0x317b
+	ld hl,44975	; offset 0x317e
+	push hl	; offset 0x317f
+	ld hl,44975	; offset 0x3182
+	push hl	; offset 0x3183
+	; src_data blit 133
+	ld sp,screenStartAddr+204	; offset 0x3186
+	ld hl,44975	; offset 0x3189
+	push hl	; offset 0x318a
+	ld hl,44975	; offset 0x318d
+	push hl	; offset 0x318e
+	ld hl,44975	; offset 0x3191
+	push hl	; offset 0x3192
+	ld hl,44975	; offset 0x3195
+	push hl	; offset 0x3196
+	ld hl,44975	; offset 0x3199
+	push hl	; offset 0x319a
+	ld hl,44975	; offset 0x319d
+	push hl	; offset 0x319e
+	; src_data blit 134
+	ld sp,screenStartAddr+216	; offset 0x31a1
+	ld hl,44975	; offset 0x31a4
+	push hl	; offset 0x31a5
+	ld hl,44975	; offset 0x31a8
+	push hl	; offset 0x31a9
+	ld hl,44975	; offset 0x31ac
+	push hl	; offset 0x31ad
+	ld hl,44975	; offset 0x31b0
+	push hl	; offset 0x31b1
+	ld hl,44975	; offset 0x31b4
+	push hl	; offset 0x31b5
+	ld hl,44975	; offset 0x31b8
+	push hl	; offset 0x31b9
+	; src_data blit 135
+	ld sp,screenStartAddr+228	; offset 0x31bc
+	ld hl,44975	; offset 0x31bf
+	push hl	; offset 0x31c0
+	ld hl,44975	; offset 0x31c3
+	push hl	; offset 0x31c4
+	ld hl,44975	; offset 0x31c7
+	push hl	; offset 0x31c8
+	ld hl,44975	; offset 0x31cb
+	push hl	; offset 0x31cc
+	ld hl,44975	; offset 0x31cf
+	push hl	; offset 0x31d0
+	ld hl,44975	; offset 0x31d3
+	push hl	; offset 0x31d4
+	; src_data blit 136
+	ld sp,screenStartAddr+468	; offset 0x31d7
+	ld hl,44975	; offset 0x31da
+	push hl	; offset 0x31db
+	ld hl,44975	; offset 0x31de
+	push hl	; offset 0x31df
+	ld hl,44975	; offset 0x31e2
+	push hl	; offset 0x31e3
+	ld hl,44975	; offset 0x31e6
+	push hl	; offset 0x31e7
+	ld hl,44975	; offset 0x31ea
+	push hl	; offset 0x31eb
+	ld hl,44975	; offset 0x31ee
+	push hl	; offset 0x31ef
+	; src_data blit 137
+	ld sp,screenStartAddr+480	; offset 0x31f2
+	ld hl,44975	; offset 0x31f5
+	push hl	; offset 0x31f6
+	ld hl,44975	; offset 0x31f9
+	push hl	; offset 0x31fa
+	ld hl,44975	; offset 0x31fd
+	push hl	; offset 0x31fe
+	ld hl,44975	; offset 0x3201
+	push hl	; offset 0x3202
+	ld hl,44975	; offset 0x3205
+	push hl	; offset 0x3206
+	ld hl,44975	; offset 0x3209
+	push hl	; offset 0x320a
+	; src_data blit 138
+	ld sp,screenStartAddr+720	; offset 0x320d
+	ld hl,44975	; offset 0x3210
+	push hl	; offset 0x3211
+	ld hl,44975	; offset 0x3214
+	push hl	; offset 0x3215
+	ld hl,44975	; offset 0x3218
+	push hl	; offset 0x3219
+	ld hl,44975	; offset 0x321c
+	push hl	; offset 0x321d
+	ld hl,44975	; offset 0x3220
+	push hl	; offset 0x3221
+	ld hl,44975	; offset 0x3224
+	push hl	; offset 0x3225
 
 	; attr draw 17
-	ld sp,0x8020
-	ld bc,10280
-	push bc
-	ld bc,10280
-	push bc
-	pop af
+	ld sp,attr8and16vals+4
+	pop af	; src 16
 	ex af,af'
-	pop af
+	pop af	; src 8
+	ld bc,10280	; src 18
+	ld de,10280	; src 20
+	ld hl,10280	; src 22
+	ld ix,10280	; src 4
+	ld iy,10280	; src 6
+	exx
+	ld bc,10280	; src 10
+	ld de,10280	; src 12
+	ld hl,10280	; src 0
+
 	ld sp,attrStartAddr+16+544
-	ld de,10280
-	ld hl,10280
-	ld ix,10280
-	ld iy,10280
-	exx
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	; start chasing raster here to update ATTR memory
 
-	; start chasing raster here
-
-	ld (attrStartAddr+544),hl
-	ld hl,10280
-	ld (attrStartAddr+2+544),hl
-	ld hl,10280
-	push hl
-	push de
-	push bc
-	push af
+	ld (attrStartAddr+544),hl	; dest 0
+	ld hl,10280	; src 2
+	ld (attrStartAddr+2+544),hl	; dest 2
+	ld hl,10280	; src 14
+	push hl	; dest 14
+	push de	; dest 12
+	push bc	; dest 10
+	push af	; dest 8
 	exx
 	ex af,af'
-	push iy
-	push ix
+	push iy	; dest 6
+	push ix	; dest 4
 	ld sp,attrStartAddr+24+544
-	push hl
-	push de
-	push bc
-	push af
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	push hl	; dest 22
+	push de	; dest 20
+	push bc	; dest 18
+	push af	; dest 16
+	ld bc,10280	; src 24
+	ld de,10280	; src 16
+	ld hl,10280	; src 28
 	ld sp,attrStartAddr+30+544
-	push hl
-	push de
-	push bc
-	ld hl,10280
-	ld (attrStartAddr+30+544),hl
-	; src_data filler blit 544
-	ld bc,52428	; offset 15408
-	ld de,52428	; offset 15411
-	exx    	; offset 15414
-	ld bc,52428	; offset 15415
-	ld de,52428	; offset 15418
-	ld sp,screenStartAddr+5916	; offset 15421
-	push de	; offset 15424
-	push bc	; offset 15425
-	exx    	; offset 15426
-	push de	; offset 15427
-	push bc	; offset 15428
-	nop
-	; end attr draw 17
-	; Clock offset: -1008
+	push hl	; dest 28
+	push de	; dest 26
+	push bc	; dest 24
+	ld hl,10280	; src 30
+	ld (attrStartAddr+30+544),hl;	 dest 30
+	; end attr draw 17, offset 0x33cc
+	; Clock offset: -1152
 
-	; src_data blit 413
-	ld bc,52428	; offset 15430
-	ld de,52428	; offset 15433
-	ld hl,52428	; offset 15436
-	exx    	; offset 15439
-	ld bc,52428	; offset 15440
-	ld de,52428	; offset 15443
-	ld hl,52428	; offset 15446
-	ld sp,screenStartAddr+5244	; offset 15449
-	push hl	; offset 15452
-	push de	; offset 15453
-	push bc	; offset 15454
-	exx    	; offset 15455
-	push hl	; offset 15456
-	push de	; offset 15457
-	push bc	; offset 15458
-	; Clock offset: -864
-
-	; src_data blit 414
-	ld bc,52428	; offset 15459
-	ld de,52428	; offset 15462
-	ld hl,52428	; offset 15465
-	exx    	; offset 15468
-	ld bc,52428	; offset 15469
-	ld de,52428	; offset 15472
-	ld hl,52428	; offset 15475
-	ld sp,screenStartAddr+5256	; offset 15478
-	push hl	; offset 15481
-	push de	; offset 15482
-	push bc	; offset 15483
-	exx    	; offset 15484
-	push hl	; offset 15485
-	push de	; offset 15486
-	push bc	; offset 15487
-	; Clock offset: -720
-
-	; src_data blit 415
-	ld bc,52428	; offset 15488
-	ld de,52428	; offset 15491
-	ld hl,52428	; offset 15494
-	exx    	; offset 15497
-	ld bc,52428	; offset 15498
-	ld de,52428	; offset 15501
-	ld hl,52428	; offset 15504
-	ld sp,screenStartAddr+5484	; offset 15507
-	push hl	; offset 15510
-	push de	; offset 15511
-	push bc	; offset 15512
-	exx    	; offset 15513
-	push hl	; offset 15514
-	push de	; offset 15515
-	push bc	; offset 15516
-	; Clock offset: -576
-
-	; src_data blit 416
-	ld bc,52428	; offset 15517
-	ld de,52428	; offset 15520
-	ld hl,52428	; offset 15523
-	exx    	; offset 15526
-	ld bc,52428	; offset 15527
-	ld de,52428	; offset 15530
-	ld hl,52428	; offset 15533
-	ld sp,screenStartAddr+5496	; offset 15536
-	push hl	; offset 15539
-	push de	; offset 15540
-	push bc	; offset 15541
-	exx    	; offset 15542
-	push hl	; offset 15543
-	push de	; offset 15544
-	push bc	; offset 15545
-	; Clock offset: -432
-
-	; src_data blit 417
-	ld bc,52428	; offset 15546
-	ld de,52428	; offset 15549
-	ld hl,52428	; offset 15552
-	exx    	; offset 15555
-	ld bc,52428	; offset 15556
-	ld de,52428	; offset 15559
-	ld hl,52428	; offset 15562
-	ld sp,screenStartAddr+5508	; offset 15565
-	push hl	; offset 15568
-	push de	; offset 15569
-	push bc	; offset 15570
-	exx    	; offset 15571
-	push hl	; offset 15572
-	push de	; offset 15573
-	push bc	; offset 15574
-	; Clock offset: -288
-
-	; src_data blit 418
-	ld bc,52428	; offset 15575
-	ld de,52428	; offset 15578
-	ld hl,52428	; offset 15581
-	exx    	; offset 15584
-	ld bc,52428	; offset 15585
-	ld de,52428	; offset 15588
-	ld hl,52428	; offset 15591
-	ld sp,screenStartAddr+5748	; offset 15594
-	push hl	; offset 15597
-	push de	; offset 15598
-	push bc	; offset 15599
-	exx    	; offset 15600
-	push hl	; offset 15601
-	push de	; offset 15602
-	push bc	; offset 15603
-	; Clock offset: -144
-
-	; src_data blit 419
-	ld bc,52428	; offset 15604
-	ld de,52428	; offset 15607
-	ld hl,52428	; offset 15610
-	exx    	; offset 15613
-	ld bc,52428	; offset 15614
-	ld de,52428	; offset 15617
-	ld hl,52428	; offset 15620
-	ld sp,screenStartAddr+5760	; offset 15623
-	push hl	; offset 15626
-	push de	; offset 15627
-	push bc	; offset 15628
-	exx    	; offset 15629
-	push hl	; offset 15630
-	push de	; offset 15631
-	push bc	; offset 15632
-	; Clock offset: 0
+	; src_data blit 139
+	ld sp,screenStartAddr+732	; offset 0x33cf
+	ld hl,44975	; offset 0x33d2
+	push hl	; offset 0x33d3
+	ld hl,44975	; offset 0x33d6
+	push hl	; offset 0x33d7
+	ld hl,44975	; offset 0x33da
+	push hl	; offset 0x33db
+	ld hl,44975	; offset 0x33de
+	push hl	; offset 0x33df
+	ld hl,44975	; offset 0x33e2
+	push hl	; offset 0x33e3
+	ld hl,44975	; offset 0x33e6
+	push hl	; offset 0x33e7
+	; src_data blit 140
+	ld sp,screenStartAddr+744	; offset 0x33ea
+	ld hl,44975	; offset 0x33ed
+	push hl	; offset 0x33ee
+	ld hl,44975	; offset 0x33f1
+	push hl	; offset 0x33f2
+	ld hl,44975	; offset 0x33f5
+	push hl	; offset 0x33f6
+	ld hl,44975	; offset 0x33f9
+	push hl	; offset 0x33fa
+	ld hl,44975	; offset 0x33fd
+	push hl	; offset 0x33fe
+	ld hl,44975	; offset 0x3401
+	push hl	; offset 0x3402
+	; src_data blit 141
+	ld sp,screenStartAddr+972	; offset 0x3405
+	ld hl,44975	; offset 0x3408
+	push hl	; offset 0x3409
+	ld hl,44975	; offset 0x340c
+	push hl	; offset 0x340d
+	ld hl,44975	; offset 0x3410
+	push hl	; offset 0x3411
+	ld hl,44975	; offset 0x3414
+	push hl	; offset 0x3415
+	ld hl,44975	; offset 0x3418
+	push hl	; offset 0x3419
+	ld hl,44975	; offset 0x341c
+	push hl	; offset 0x341d
+	; src_data blit 142
+	ld sp,screenStartAddr+984	; offset 0x3420
+	ld hl,44975	; offset 0x3423
+	push hl	; offset 0x3424
+	ld hl,44975	; offset 0x3427
+	push hl	; offset 0x3428
+	ld hl,44975	; offset 0x342b
+	push hl	; offset 0x342c
+	ld hl,44975	; offset 0x342f
+	push hl	; offset 0x3430
+	ld hl,44975	; offset 0x3433
+	push hl	; offset 0x3434
+	ld hl,44975	; offset 0x3437
+	push hl	; offset 0x3438
+	; src_data blit 143
+	ld sp,screenStartAddr+996	; offset 0x343b
+	ld hl,44975	; offset 0x343e
+	push hl	; offset 0x343f
+	ld hl,44975	; offset 0x3442
+	push hl	; offset 0x3443
+	ld hl,44975	; offset 0x3446
+	push hl	; offset 0x3447
+	ld hl,44975	; offset 0x344a
+	push hl	; offset 0x344b
+	ld hl,44975	; offset 0x344e
+	push hl	; offset 0x344f
+	ld hl,44975	; offset 0x3452
+	push hl	; offset 0x3453
+	; src_data blit 144
+	ld sp,screenStartAddr+1236	; offset 0x3456
+	ld hl,44975	; offset 0x3459
+	push hl	; offset 0x345a
+	ld hl,44975	; offset 0x345d
+	push hl	; offset 0x345e
+	ld hl,44975	; offset 0x3461
+	push hl	; offset 0x3462
+	ld hl,44975	; offset 0x3465
+	push hl	; offset 0x3466
+	ld hl,44975	; offset 0x3469
+	push hl	; offset 0x346a
+	ld hl,44975	; offset 0x346d
+	push hl	; offset 0x346e
+	; src_data blit 145
+	ld sp,screenStartAddr+1248	; offset 0x3471
+	ld hl,44975	; offset 0x3474
+	push hl	; offset 0x3475
+	ld hl,44975	; offset 0x3478
+	push hl	; offset 0x3479
+	ld hl,44975	; offset 0x347c
+	push hl	; offset 0x347d
+	ld hl,44975	; offset 0x3480
+	push hl	; offset 0x3481
+	ld hl,44975	; offset 0x3484
+	push hl	; offset 0x3485
+	ld hl,44975	; offset 0x3488
+	push hl	; offset 0x3489
+	; src_data blit 146
+	ld sp,screenStartAddr+1488	; offset 0x348c
+	ld hl,44975	; offset 0x348f
+	push hl	; offset 0x3490
+	ld hl,44975	; offset 0x3493
+	push hl	; offset 0x3494
+	ld hl,44975	; offset 0x3497
+	push hl	; offset 0x3498
+	ld hl,44975	; offset 0x349b
+	push hl	; offset 0x349c
+	ld hl,44975	; offset 0x349f
+	push hl	; offset 0x34a0
+	ld hl,44975	; offset 0x34a3
+	push hl	; offset 0x34a4
 
 	; attr draw 18
-	ld sp,0x8020
-	ld bc,10280
-	push bc
-	ld bc,10280
-	push bc
-	pop af
+	ld sp,attr8and16vals+4
+	pop af	; src 16
 	ex af,af'
-	pop af
+	pop af	; src 8
+	ld bc,10280	; src 18
+	ld de,10280	; src 20
+	ld hl,10280	; src 22
+	ld ix,10280	; src 4
+	ld iy,10280	; src 6
+	exx
+	ld bc,10280	; src 10
+	ld de,10280	; src 12
+	ld hl,10280	; src 0
+
 	ld sp,attrStartAddr+16+576
-	ld de,10280
-	ld hl,10280
-	ld ix,10280
-	ld iy,10280
-	exx
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	; start chasing raster here to update ATTR memory
 
-	; start chasing raster here
-
-	ld (attrStartAddr+576),hl
-	ld hl,10280
-	ld (attrStartAddr+2+576),hl
-	ld hl,10280
-	push hl
-	push de
-	push bc
-	push af
+	ld (attrStartAddr+576),hl	; dest 0
+	ld hl,10280	; src 2
+	ld (attrStartAddr+2+576),hl	; dest 2
+	ld hl,10280	; src 14
+	push hl	; dest 14
+	push de	; dest 12
+	push bc	; dest 10
+	push af	; dest 8
 	exx
 	ex af,af'
-	push iy
-	push ix
+	push iy	; dest 6
+	push ix	; dest 4
 	ld sp,attrStartAddr+24+576
-	push hl
-	push de
-	push bc
-	push af
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	push hl	; dest 22
+	push de	; dest 20
+	push bc	; dest 18
+	push af	; dest 16
+	ld bc,10280	; src 24
+	ld de,10280	; src 16
+	ld hl,10280	; src 28
 	ld sp,attrStartAddr+30+576
-	push hl
-	push de
-	push bc
-	ld hl,10280
-	ld (attrStartAddr+30+576),hl
-	; src_data filler blit 576
-	ld bc,52428	; offset 16088
-	ld de,52428	; offset 16091
-	exx    	; offset 16094
-	ld bc,52428	; offset 16095
-	ld de,52428	; offset 16098
-	ld sp,screenStartAddr+5924	; offset 16101
-	push de	; offset 16104
-	push bc	; offset 16105
-	exx    	; offset 16106
-	push de	; offset 16107
-	push bc	; offset 16108
-	nop
-	; end attr draw 18
-	; Clock offset: -1008
+	push hl	; dest 28
+	push de	; dest 26
+	push bc	; dest 24
+	ld hl,10280	; src 30
+	ld (attrStartAddr+30+576),hl;	 dest 30
+	; end attr draw 18, offset 0x364b
+	; Clock offset: -1152
 
-	; src_data blit 420
-	ld bc,52428	; offset 16110
-	ld de,52428	; offset 16113
-	ld hl,52428	; offset 16116
-	exx    	; offset 16119
-	ld bc,52428	; offset 16120
-	ld de,52428	; offset 16123
-	ld hl,52428	; offset 16126
-	ld sp,screenStartAddr+4236	; offset 16129
-	push hl	; offset 16132
-	push de	; offset 16133
-	push bc	; offset 16134
-	exx    	; offset 16135
-	push hl	; offset 16136
-	push de	; offset 16137
-	push bc	; offset 16138
-	; Clock offset: -864
-
-	; src_data blit 421
-	ld bc,52428	; offset 16139
-	ld de,52428	; offset 16142
-	ld hl,52428	; offset 16145
-	exx    	; offset 16148
-	ld bc,52428	; offset 16149
-	ld de,52428	; offset 16152
-	ld hl,52428	; offset 16155
-	ld sp,screenStartAddr+4248	; offset 16158
-	push hl	; offset 16161
-	push de	; offset 16162
-	push bc	; offset 16163
-	exx    	; offset 16164
-	push hl	; offset 16165
-	push de	; offset 16166
-	push bc	; offset 16167
-	; Clock offset: -720
-
-	; src_data blit 422
-	ld bc,52428	; offset 16168
-	ld de,52428	; offset 16171
-	ld hl,52428	; offset 16174
-	exx    	; offset 16177
-	ld bc,52428	; offset 16178
-	ld de,52428	; offset 16181
-	ld hl,52428	; offset 16184
-	ld sp,screenStartAddr+4260	; offset 16187
-	push hl	; offset 16190
-	push de	; offset 16191
-	push bc	; offset 16192
-	exx    	; offset 16193
-	push hl	; offset 16194
-	push de	; offset 16195
-	push bc	; offset 16196
-	; Clock offset: -576
-
-	; src_data blit 423
-	ld bc,52428	; offset 16197
-	ld de,52428	; offset 16200
-	ld hl,52428	; offset 16203
-	exx    	; offset 16206
-	ld bc,52428	; offset 16207
-	ld de,52428	; offset 16210
-	ld hl,52428	; offset 16213
-	ld sp,screenStartAddr+4500	; offset 16216
-	push hl	; offset 16219
-	push de	; offset 16220
-	push bc	; offset 16221
-	exx    	; offset 16222
-	push hl	; offset 16223
-	push de	; offset 16224
-	push bc	; offset 16225
-	; Clock offset: -432
-
-	; src_data blit 424
-	ld bc,52428	; offset 16226
-	ld de,52428	; offset 16229
-	ld hl,52428	; offset 16232
-	exx    	; offset 16235
-	ld bc,52428	; offset 16236
-	ld de,52428	; offset 16239
-	ld hl,52428	; offset 16242
-	ld sp,screenStartAddr+4512	; offset 16245
-	push hl	; offset 16248
-	push de	; offset 16249
-	push bc	; offset 16250
-	exx    	; offset 16251
-	push hl	; offset 16252
-	push de	; offset 16253
-	push bc	; offset 16254
-	; Clock offset: -288
-
-	; src_data blit 425
-	ld bc,52428	; offset 16255
-	ld de,52428	; offset 16258
-	ld hl,52428	; offset 16261
-	exx    	; offset 16264
-	ld bc,52428	; offset 16265
-	ld de,52428	; offset 16268
-	ld hl,52428	; offset 16271
-	ld sp,screenStartAddr+4752	; offset 16274
-	push hl	; offset 16277
-	push de	; offset 16278
-	push bc	; offset 16279
-	exx    	; offset 16280
-	push hl	; offset 16281
-	push de	; offset 16282
-	push bc	; offset 16283
-	; Clock offset: -144
-
-	; src_data blit 426
-	ld bc,52428	; offset 16284
-	ld de,52428	; offset 16287
-	ld hl,52428	; offset 16290
-	exx    	; offset 16293
-	ld bc,52428	; offset 16294
-	ld de,52428	; offset 16297
-	ld hl,52428	; offset 16300
-	ld sp,screenStartAddr+4764	; offset 16303
-	push hl	; offset 16306
-	push de	; offset 16307
-	push bc	; offset 16308
-	exx    	; offset 16309
-	push hl	; offset 16310
-	push de	; offset 16311
-	push bc	; offset 16312
-	; Clock offset: 0
+	; src_data blit 147
+	ld sp,screenStartAddr+1500	; offset 0x364e
+	ld hl,44975	; offset 0x3651
+	push hl	; offset 0x3652
+	ld hl,44975	; offset 0x3655
+	push hl	; offset 0x3656
+	ld hl,44975	; offset 0x3659
+	push hl	; offset 0x365a
+	ld hl,44975	; offset 0x365d
+	push hl	; offset 0x365e
+	ld hl,44975	; offset 0x3661
+	push hl	; offset 0x3662
+	ld hl,44975	; offset 0x3665
+	push hl	; offset 0x3666
+	; src_data blit 148
+	ld sp,screenStartAddr+1512	; offset 0x3669
+	ld hl,44975	; offset 0x366c
+	push hl	; offset 0x366d
+	ld hl,44975	; offset 0x3670
+	push hl	; offset 0x3671
+	ld hl,44975	; offset 0x3674
+	push hl	; offset 0x3675
+	ld hl,44975	; offset 0x3678
+	push hl	; offset 0x3679
+	ld hl,44975	; offset 0x367c
+	push hl	; offset 0x367d
+	ld hl,44975	; offset 0x3680
+	push hl	; offset 0x3681
+	; src_data blit 149
+	ld sp,screenStartAddr+1740	; offset 0x3684
+	ld hl,44975	; offset 0x3687
+	push hl	; offset 0x3688
+	ld hl,44975	; offset 0x368b
+	push hl	; offset 0x368c
+	ld hl,44975	; offset 0x368f
+	push hl	; offset 0x3690
+	ld hl,44975	; offset 0x3693
+	push hl	; offset 0x3694
+	ld hl,44975	; offset 0x3697
+	push hl	; offset 0x3698
+	ld hl,44975	; offset 0x369b
+	push hl	; offset 0x369c
+	; src_data blit 150
+	ld sp,screenStartAddr+1752	; offset 0x369f
+	ld hl,44975	; offset 0x36a2
+	push hl	; offset 0x36a3
+	ld hl,44975	; offset 0x36a6
+	push hl	; offset 0x36a7
+	ld hl,44975	; offset 0x36aa
+	push hl	; offset 0x36ab
+	ld hl,44975	; offset 0x36ae
+	push hl	; offset 0x36af
+	ld hl,44975	; offset 0x36b2
+	push hl	; offset 0x36b3
+	ld hl,44975	; offset 0x36b6
+	push hl	; offset 0x36b7
+	; src_data blit 151
+	ld sp,screenStartAddr+1764	; offset 0x36ba
+	ld hl,44975	; offset 0x36bd
+	push hl	; offset 0x36be
+	ld hl,44975	; offset 0x36c1
+	push hl	; offset 0x36c2
+	ld hl,44975	; offset 0x36c5
+	push hl	; offset 0x36c6
+	ld hl,44975	; offset 0x36c9
+	push hl	; offset 0x36ca
+	ld hl,44975	; offset 0x36cd
+	push hl	; offset 0x36ce
+	ld hl,44975	; offset 0x36d1
+	push hl	; offset 0x36d2
+	; src_data blit 152
+	ld sp,screenStartAddr+2004	; offset 0x36d5
+	ld hl,44975	; offset 0x36d8
+	push hl	; offset 0x36d9
+	ld hl,44975	; offset 0x36dc
+	push hl	; offset 0x36dd
+	ld hl,44975	; offset 0x36e0
+	push hl	; offset 0x36e1
+	ld hl,44975	; offset 0x36e4
+	push hl	; offset 0x36e5
+	ld hl,44975	; offset 0x36e8
+	push hl	; offset 0x36e9
+	ld hl,44975	; offset 0x36ec
+	push hl	; offset 0x36ed
+	; src_data blit 153
+	ld sp,screenStartAddr+2016	; offset 0x36f0
+	ld hl,44975	; offset 0x36f3
+	push hl	; offset 0x36f4
+	ld hl,44975	; offset 0x36f7
+	push hl	; offset 0x36f8
+	ld hl,44975	; offset 0x36fb
+	push hl	; offset 0x36fc
+	ld hl,44975	; offset 0x36ff
+	push hl	; offset 0x3700
+	ld hl,44975	; offset 0x3703
+	push hl	; offset 0x3704
+	ld hl,44975	; offset 0x3707
+	push hl	; offset 0x3708
+	; src_data blit 154
+	ld sp,screenStartAddr+240	; offset 0x370b
+	ld hl,44975	; offset 0x370e
+	push hl	; offset 0x370f
+	ld hl,44975	; offset 0x3712
+	push hl	; offset 0x3713
+	ld hl,44975	; offset 0x3716
+	push hl	; offset 0x3717
+	ld hl,44975	; offset 0x371a
+	push hl	; offset 0x371b
+	ld hl,44975	; offset 0x371e
+	push hl	; offset 0x371f
+	ld hl,44975	; offset 0x3722
+	push hl	; offset 0x3723
 
 	; attr draw 19
-	ld sp,0x8020
-	ld bc,10280
-	push bc
-	ld bc,10280
-	push bc
-	pop af
+	ld sp,attr8and16vals+4
+	pop af	; src 16
 	ex af,af'
-	pop af
+	pop af	; src 8
+	ld bc,10280	; src 18
+	ld de,10280	; src 20
+	ld hl,10280	; src 22
+	ld ix,10280	; src 4
+	ld iy,10280	; src 6
+	exx
+	ld bc,10280	; src 10
+	ld de,10280	; src 12
+	ld hl,10280	; src 0
+
 	ld sp,attrStartAddr+16+608
-	ld de,10280
-	ld hl,10280
-	ld ix,10280
-	ld iy,10280
-	exx
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	; start chasing raster here to update ATTR memory
 
-	; start chasing raster here
-
-	ld (attrStartAddr+608),hl
-	ld hl,10280
-	ld (attrStartAddr+2+608),hl
-	ld hl,10280
-	push hl
-	push de
-	push bc
-	push af
+	ld (attrStartAddr+608),hl	; dest 0
+	ld hl,10280	; src 2
+	ld (attrStartAddr+2+608),hl	; dest 2
+	ld hl,10280	; src 14
+	push hl	; dest 14
+	push de	; dest 12
+	push bc	; dest 10
+	push af	; dest 8
 	exx
 	ex af,af'
-	push iy
-	push ix
+	push iy	; dest 6
+	push ix	; dest 4
 	ld sp,attrStartAddr+24+608
-	push hl
-	push de
-	push bc
-	push af
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	push hl	; dest 22
+	push de	; dest 20
+	push bc	; dest 18
+	push af	; dest 16
+	ld bc,10280	; src 24
+	ld de,10280	; src 16
+	ld hl,10280	; src 28
 	ld sp,attrStartAddr+30+608
-	push hl
-	push de
-	push bc
-	ld hl,10280
-	ld (attrStartAddr+30+608),hl
-	; src_data filler blit 608
-	ld bc,52428	; offset 16768
-	ld de,52428	; offset 16771
-	exx    	; offset 16774
-	ld bc,52428	; offset 16775
-	ld de,52428	; offset 16778
-	ld sp,screenStartAddr+5932	; offset 16781
-	push de	; offset 16784
-	push bc	; offset 16785
-	exx    	; offset 16786
-	push de	; offset 16787
-	push bc	; offset 16788
-	nop
-	; end attr draw 19
-	; Clock offset: -1008
+	push hl	; dest 28
+	push de	; dest 26
+	push bc	; dest 24
+	ld hl,10280	; src 30
+	ld (attrStartAddr+30+608),hl;	 dest 30
+	; end attr draw 19, offset 0x38ca
+	; Clock offset: -1152
 
-	; src_data blit 427
-	ld bc,52428	; offset 16790
-	ld de,52428	; offset 16793
-	ld hl,52428	; offset 16796
-	exx    	; offset 16799
-	ld bc,52428	; offset 16800
-	ld de,52428	; offset 16803
-	ld hl,52428	; offset 16806
-	ld sp,screenStartAddr+4776	; offset 16809
-	push hl	; offset 16812
-	push de	; offset 16813
-	push bc	; offset 16814
-	exx    	; offset 16815
-	push hl	; offset 16816
-	push de	; offset 16817
-	push bc	; offset 16818
-	; Clock offset: -864
-
-	; src_data blit 428
-	ld bc,52428	; offset 16819
-	ld de,52428	; offset 16822
-	ld hl,52428	; offset 16825
-	exx    	; offset 16828
-	ld bc,52428	; offset 16829
-	ld de,52428	; offset 16832
-	ld hl,52428	; offset 16835
-	ld sp,screenStartAddr+5004	; offset 16838
-	push hl	; offset 16841
-	push de	; offset 16842
-	push bc	; offset 16843
-	exx    	; offset 16844
-	push hl	; offset 16845
-	push de	; offset 16846
-	push bc	; offset 16847
-	; Clock offset: -720
-
-	; src_data blit 429
-	ld bc,52428	; offset 16848
-	ld de,52428	; offset 16851
-	ld hl,52428	; offset 16854
-	exx    	; offset 16857
-	ld bc,52428	; offset 16858
-	ld de,52428	; offset 16861
-	ld hl,52428	; offset 16864
-	ld sp,screenStartAddr+5016	; offset 16867
-	push hl	; offset 16870
-	push de	; offset 16871
-	push bc	; offset 16872
-	exx    	; offset 16873
-	push hl	; offset 16874
-	push de	; offset 16875
-	push bc	; offset 16876
-	; Clock offset: -576
-
-	; src_data blit 430
-	ld bc,52428	; offset 16877
-	ld de,52428	; offset 16880
-	ld hl,52428	; offset 16883
-	exx    	; offset 16886
-	ld bc,52428	; offset 16887
-	ld de,52428	; offset 16890
-	ld hl,52428	; offset 16893
-	ld sp,screenStartAddr+5028	; offset 16896
-	push hl	; offset 16899
-	push de	; offset 16900
-	push bc	; offset 16901
-	exx    	; offset 16902
-	push hl	; offset 16903
-	push de	; offset 16904
-	push bc	; offset 16905
-	; Clock offset: -432
-
-	; src_data blit 431
-	ld bc,52428	; offset 16906
-	ld de,52428	; offset 16909
-	ld hl,52428	; offset 16912
-	exx    	; offset 16915
-	ld bc,52428	; offset 16916
-	ld de,52428	; offset 16919
-	ld hl,52428	; offset 16922
-	ld sp,screenStartAddr+5268	; offset 16925
-	push hl	; offset 16928
-	push de	; offset 16929
-	push bc	; offset 16930
-	exx    	; offset 16931
-	push hl	; offset 16932
-	push de	; offset 16933
-	push bc	; offset 16934
-	; Clock offset: -288
-
-	; src_data blit 432
-	ld bc,52428	; offset 16935
-	ld de,52428	; offset 16938
-	ld hl,52428	; offset 16941
-	exx    	; offset 16944
-	ld bc,52428	; offset 16945
-	ld de,52428	; offset 16948
-	ld hl,52428	; offset 16951
-	ld sp,screenStartAddr+5280	; offset 16954
-	push hl	; offset 16957
-	push de	; offset 16958
-	push bc	; offset 16959
-	exx    	; offset 16960
-	push hl	; offset 16961
-	push de	; offset 16962
-	push bc	; offset 16963
-	; Clock offset: -144
-
-	; src_data blit 433
-	ld bc,52428	; offset 16964
-	ld de,52428	; offset 16967
-	ld hl,52428	; offset 16970
-	exx    	; offset 16973
-	ld bc,52428	; offset 16974
-	ld de,52428	; offset 16977
-	ld hl,52428	; offset 16980
-	ld sp,screenStartAddr+5520	; offset 16983
-	push hl	; offset 16986
-	push de	; offset 16987
-	push bc	; offset 16988
-	exx    	; offset 16989
-	push hl	; offset 16990
-	push de	; offset 16991
-	push bc	; offset 16992
-	; Clock offset: 0
+	; src_data blit 155
+	ld sp,screenStartAddr+252	; offset 0x38cd
+	ld hl,44975	; offset 0x38d0
+	push hl	; offset 0x38d1
+	ld hl,44975	; offset 0x38d4
+	push hl	; offset 0x38d5
+	ld hl,44975	; offset 0x38d8
+	push hl	; offset 0x38d9
+	ld hl,44975	; offset 0x38dc
+	push hl	; offset 0x38dd
+	ld hl,44975	; offset 0x38e0
+	push hl	; offset 0x38e1
+	ld hl,44975	; offset 0x38e4
+	push hl	; offset 0x38e5
+	; src_data blit 156
+	ld sp,screenStartAddr+492	; offset 0x38e8
+	ld hl,44975	; offset 0x38eb
+	push hl	; offset 0x38ec
+	ld hl,44975	; offset 0x38ef
+	push hl	; offset 0x38f0
+	ld hl,44975	; offset 0x38f3
+	push hl	; offset 0x38f4
+	ld hl,44975	; offset 0x38f7
+	push hl	; offset 0x38f8
+	ld hl,44975	; offset 0x38fb
+	push hl	; offset 0x38fc
+	ld hl,44975	; offset 0x38ff
+	push hl	; offset 0x3900
+	; src_data blit 157
+	ld sp,screenStartAddr+504	; offset 0x3903
+	ld hl,44975	; offset 0x3906
+	push hl	; offset 0x3907
+	ld hl,44975	; offset 0x390a
+	push hl	; offset 0x390b
+	ld hl,44975	; offset 0x390e
+	push hl	; offset 0x390f
+	ld hl,44975	; offset 0x3912
+	push hl	; offset 0x3913
+	ld hl,44975	; offset 0x3916
+	push hl	; offset 0x3917
+	ld hl,44975	; offset 0x391a
+	push hl	; offset 0x391b
+	; src_data blit 158
+	ld sp,screenStartAddr+756	; offset 0x391e
+	ld hl,44975	; offset 0x3921
+	push hl	; offset 0x3922
+	ld hl,44975	; offset 0x3925
+	push hl	; offset 0x3926
+	ld hl,44975	; offset 0x3929
+	push hl	; offset 0x392a
+	ld hl,44975	; offset 0x392d
+	push hl	; offset 0x392e
+	ld hl,44975	; offset 0x3931
+	push hl	; offset 0x3932
+	ld hl,44975	; offset 0x3935
+	push hl	; offset 0x3936
+	; src_data blit 159
+	ld sp,screenStartAddr+768	; offset 0x3939
+	ld hl,44975	; offset 0x393c
+	push hl	; offset 0x393d
+	ld hl,44975	; offset 0x3940
+	push hl	; offset 0x3941
+	ld hl,44975	; offset 0x3944
+	push hl	; offset 0x3945
+	ld hl,44975	; offset 0x3948
+	push hl	; offset 0x3949
+	ld hl,44975	; offset 0x394c
+	push hl	; offset 0x394d
+	ld hl,44975	; offset 0x3950
+	push hl	; offset 0x3951
+	; src_data blit 160
+	ld sp,screenStartAddr+1008	; offset 0x3954
+	ld hl,44975	; offset 0x3957
+	push hl	; offset 0x3958
+	ld hl,44975	; offset 0x395b
+	push hl	; offset 0x395c
+	ld hl,44975	; offset 0x395f
+	push hl	; offset 0x3960
+	ld hl,44975	; offset 0x3963
+	push hl	; offset 0x3964
+	ld hl,44975	; offset 0x3967
+	push hl	; offset 0x3968
+	ld hl,44975	; offset 0x396b
+	push hl	; offset 0x396c
+	; src_data blit 161
+	ld sp,screenStartAddr+1020	; offset 0x396f
+	ld hl,44975	; offset 0x3972
+	push hl	; offset 0x3973
+	ld hl,44975	; offset 0x3976
+	push hl	; offset 0x3977
+	ld hl,44975	; offset 0x397a
+	push hl	; offset 0x397b
+	ld hl,44975	; offset 0x397e
+	push hl	; offset 0x397f
+	ld hl,44975	; offset 0x3982
+	push hl	; offset 0x3983
+	ld hl,44975	; offset 0x3986
+	push hl	; offset 0x3987
+	; src_data blit 162
+	ld sp,screenStartAddr+1260	; offset 0x398a
+	ld hl,44975	; offset 0x398d
+	push hl	; offset 0x398e
+	ld hl,44975	; offset 0x3991
+	push hl	; offset 0x3992
+	ld hl,44975	; offset 0x3995
+	push hl	; offset 0x3996
+	ld hl,44975	; offset 0x3999
+	push hl	; offset 0x399a
+	ld hl,44975	; offset 0x399d
+	push hl	; offset 0x399e
+	ld hl,44975	; offset 0x39a1
+	push hl	; offset 0x39a2
 
 	; attr draw 20
-	ld sp,0x8020
-	ld bc,10280
-	push bc
-	ld bc,10280
-	push bc
-	pop af
+	ld sp,attr8and16vals+4
+	pop af	; src 16
 	ex af,af'
-	pop af
+	pop af	; src 8
+	ld bc,10280	; src 18
+	ld de,10280	; src 20
+	ld hl,10280	; src 22
+	ld ix,10280	; src 4
+	ld iy,10280	; src 6
+	exx
+	ld bc,10280	; src 10
+	ld de,10280	; src 12
+	ld hl,10280	; src 0
+
 	ld sp,attrStartAddr+16+640
-	ld de,10280
-	ld hl,10280
-	ld ix,10280
-	ld iy,10280
-	exx
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	; start chasing raster here to update ATTR memory
 
-	; start chasing raster here
-
-	ld (attrStartAddr+640),hl
-	ld hl,10280
-	ld (attrStartAddr+2+640),hl
-	ld hl,10280
-	push hl
-	push de
-	push bc
-	push af
+	ld (attrStartAddr+640),hl	; dest 0
+	ld hl,10280	; src 2
+	ld (attrStartAddr+2+640),hl	; dest 2
+	ld hl,10280	; src 14
+	push hl	; dest 14
+	push de	; dest 12
+	push bc	; dest 10
+	push af	; dest 8
 	exx
 	ex af,af'
-	push iy
-	push ix
+	push iy	; dest 6
+	push ix	; dest 4
 	ld sp,attrStartAddr+24+640
-	push hl
-	push de
-	push bc
-	push af
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	push hl	; dest 22
+	push de	; dest 20
+	push bc	; dest 18
+	push af	; dest 16
+	ld bc,10280	; src 24
+	ld de,10280	; src 16
+	ld hl,10280	; src 28
 	ld sp,attrStartAddr+30+640
-	push hl
-	push de
-	push bc
-	ld hl,10280
-	ld (attrStartAddr+30+640),hl
-	; src_data filler blit 640
-	ld bc,52428	; offset 17448
-	ld de,52428	; offset 17451
-	exx    	; offset 17454
-	ld bc,52428	; offset 17455
-	ld de,52428	; offset 17458
-	ld sp,screenStartAddr+5940	; offset 17461
-	push de	; offset 17464
-	push bc	; offset 17465
-	exx    	; offset 17466
-	push de	; offset 17467
-	push bc	; offset 17468
-	nop
-	; end attr draw 20
-	; Clock offset: -1008
+	push hl	; dest 28
+	push de	; dest 26
+	push bc	; dest 24
+	ld hl,10280	; src 30
+	ld (attrStartAddr+30+640),hl;	 dest 30
+	; end attr draw 20, offset 0x3b49
+	; Clock offset: -1152
 
-	; src_data blit 434
-	ld bc,52428	; offset 17470
-	ld de,52428	; offset 17473
-	ld hl,52428	; offset 17476
-	exx    	; offset 17479
-	ld bc,52428	; offset 17480
-	ld de,52428	; offset 17483
-	ld hl,52428	; offset 17486
-	ld sp,screenStartAddr+5532	; offset 17489
-	push hl	; offset 17492
-	push de	; offset 17493
-	push bc	; offset 17494
-	exx    	; offset 17495
-	push hl	; offset 17496
-	push de	; offset 17497
-	push bc	; offset 17498
-	; Clock offset: -864
-
-	; src_data blit 435
-	ld bc,52428	; offset 17499
-	ld de,52428	; offset 17502
-	ld hl,52428	; offset 17505
-	exx    	; offset 17508
-	ld bc,52428	; offset 17509
-	ld de,52428	; offset 17512
-	ld hl,52428	; offset 17515
-	ld sp,screenStartAddr+5544	; offset 17518
-	push hl	; offset 17521
-	push de	; offset 17522
-	push bc	; offset 17523
-	exx    	; offset 17524
-	push hl	; offset 17525
-	push de	; offset 17526
-	push bc	; offset 17527
-	; Clock offset: -720
-
-	; src_data blit 436
-	ld bc,52428	; offset 17528
-	ld de,52428	; offset 17531
-	ld hl,52428	; offset 17534
-	exx    	; offset 17537
-	ld bc,52428	; offset 17538
-	ld de,52428	; offset 17541
-	ld hl,52428	; offset 17544
-	ld sp,screenStartAddr+5772	; offset 17547
-	push hl	; offset 17550
-	push de	; offset 17551
-	push bc	; offset 17552
-	exx    	; offset 17553
-	push hl	; offset 17554
-	push de	; offset 17555
-	push bc	; offset 17556
-	; Clock offset: -576
-
-	; src_data blit 437
-	ld bc,52428	; offset 17557
-	ld de,52428	; offset 17560
-	ld hl,52428	; offset 17563
-	exx    	; offset 17566
-	ld bc,52428	; offset 17567
-	ld de,52428	; offset 17570
-	ld hl,52428	; offset 17573
-	ld sp,screenStartAddr+5784	; offset 17576
-	push hl	; offset 17579
-	push de	; offset 17580
-	push bc	; offset 17581
-	exx    	; offset 17582
-	push hl	; offset 17583
-	push de	; offset 17584
-	push bc	; offset 17585
-	; Clock offset: -432
-
-	; src_data blit 438
-	ld bc,52428	; offset 17586
-	ld de,52428	; offset 17589
-	ld hl,52428	; offset 17592
-	exx    	; offset 17595
-	ld bc,52428	; offset 17596
-	ld de,52428	; offset 17599
-	ld hl,52428	; offset 17602
-	ld sp,screenStartAddr+4272	; offset 17605
-	push hl	; offset 17608
-	push de	; offset 17609
-	push bc	; offset 17610
-	exx    	; offset 17611
-	push hl	; offset 17612
-	push de	; offset 17613
-	push bc	; offset 17614
-	; Clock offset: -288
-
-	; src_data blit 439
-	ld bc,52428	; offset 17615
-	ld de,52428	; offset 17618
-	ld hl,52428	; offset 17621
-	exx    	; offset 17624
-	ld bc,52428	; offset 17625
-	ld de,52428	; offset 17628
-	ld hl,52428	; offset 17631
-	ld sp,screenStartAddr+4284	; offset 17634
-	push hl	; offset 17637
-	push de	; offset 17638
-	push bc	; offset 17639
-	exx    	; offset 17640
-	push hl	; offset 17641
-	push de	; offset 17642
-	push bc	; offset 17643
-	; Clock offset: -144
-
-	; src_data blit 440
-	ld bc,52428	; offset 17644
-	ld de,52428	; offset 17647
-	ld hl,52428	; offset 17650
-	exx    	; offset 17653
-	ld bc,52428	; offset 17654
-	ld de,52428	; offset 17657
-	ld hl,52428	; offset 17660
-	ld sp,screenStartAddr+4296	; offset 17663
-	push hl	; offset 17666
-	push de	; offset 17667
-	push bc	; offset 17668
-	exx    	; offset 17669
-	push hl	; offset 17670
-	push de	; offset 17671
-	push bc	; offset 17672
-	; Clock offset: 0
+	; src_data blit 163
+	ld sp,screenStartAddr+1272	; offset 0x3b4c
+	ld hl,44975	; offset 0x3b4f
+	push hl	; offset 0x3b50
+	ld hl,44975	; offset 0x3b53
+	push hl	; offset 0x3b54
+	ld hl,44975	; offset 0x3b57
+	push hl	; offset 0x3b58
+	ld hl,44975	; offset 0x3b5b
+	push hl	; offset 0x3b5c
+	ld hl,44975	; offset 0x3b5f
+	push hl	; offset 0x3b60
+	ld hl,44975	; offset 0x3b63
+	push hl	; offset 0x3b64
+	; src_data blit 164
+	ld sp,screenStartAddr+1524	; offset 0x3b67
+	ld hl,44975	; offset 0x3b6a
+	push hl	; offset 0x3b6b
+	ld hl,44975	; offset 0x3b6e
+	push hl	; offset 0x3b6f
+	ld hl,44975	; offset 0x3b72
+	push hl	; offset 0x3b73
+	ld hl,44975	; offset 0x3b76
+	push hl	; offset 0x3b77
+	ld hl,44975	; offset 0x3b7a
+	push hl	; offset 0x3b7b
+	ld hl,44975	; offset 0x3b7e
+	push hl	; offset 0x3b7f
+	; src_data blit 165
+	ld sp,screenStartAddr+1536	; offset 0x3b82
+	ld hl,44975	; offset 0x3b85
+	push hl	; offset 0x3b86
+	ld hl,44975	; offset 0x3b89
+	push hl	; offset 0x3b8a
+	ld hl,44975	; offset 0x3b8d
+	push hl	; offset 0x3b8e
+	ld hl,44975	; offset 0x3b91
+	push hl	; offset 0x3b92
+	ld hl,44975	; offset 0x3b95
+	push hl	; offset 0x3b96
+	ld hl,44975	; offset 0x3b99
+	push hl	; offset 0x3b9a
+	; src_data blit 166
+	ld sp,screenStartAddr+1776	; offset 0x3b9d
+	ld hl,44975	; offset 0x3ba0
+	push hl	; offset 0x3ba1
+	ld hl,44975	; offset 0x3ba4
+	push hl	; offset 0x3ba5
+	ld hl,44975	; offset 0x3ba8
+	push hl	; offset 0x3ba9
+	ld hl,44975	; offset 0x3bac
+	push hl	; offset 0x3bad
+	ld hl,44975	; offset 0x3bb0
+	push hl	; offset 0x3bb1
+	ld hl,44975	; offset 0x3bb4
+	push hl	; offset 0x3bb5
+	; src_data blit 167
+	ld sp,screenStartAddr+1788	; offset 0x3bb8
+	ld hl,44975	; offset 0x3bbb
+	push hl	; offset 0x3bbc
+	ld hl,44975	; offset 0x3bbf
+	push hl	; offset 0x3bc0
+	ld hl,44975	; offset 0x3bc3
+	push hl	; offset 0x3bc4
+	ld hl,44975	; offset 0x3bc7
+	push hl	; offset 0x3bc8
+	ld hl,44975	; offset 0x3bcb
+	push hl	; offset 0x3bcc
+	ld hl,44975	; offset 0x3bcf
+	push hl	; offset 0x3bd0
+	; src_data blit 168
+	ld sp,screenStartAddr+2028	; offset 0x3bd3
+	ld hl,44975	; offset 0x3bd6
+	push hl	; offset 0x3bd7
+	ld hl,44975	; offset 0x3bda
+	push hl	; offset 0x3bdb
+	ld hl,44975	; offset 0x3bde
+	push hl	; offset 0x3bdf
+	ld hl,44975	; offset 0x3be2
+	push hl	; offset 0x3be3
+	ld hl,44975	; offset 0x3be6
+	push hl	; offset 0x3be7
+	ld hl,44975	; offset 0x3bea
+	push hl	; offset 0x3beb
+	; src_data blit 169
+	ld sp,screenStartAddr+2040	; offset 0x3bee
+	ld hl,44975	; offset 0x3bf1
+	push hl	; offset 0x3bf2
+	ld hl,44975	; offset 0x3bf5
+	push hl	; offset 0x3bf6
+	ld hl,44975	; offset 0x3bf9
+	push hl	; offset 0x3bfa
+	ld hl,44975	; offset 0x3bfd
+	push hl	; offset 0x3bfe
+	ld hl,44975	; offset 0x3c01
+	push hl	; offset 0x3c02
+	ld hl,44975	; offset 0x3c05
+	push hl	; offset 0x3c06
+	; src_data blit 170
+	ld sp,screenStartAddr+2052	; offset 0x3c09
+	ld hl,44975	; offset 0x3c0c
+	push hl	; offset 0x3c0d
+	ld hl,44975	; offset 0x3c10
+	push hl	; offset 0x3c11
+	ld hl,44975	; offset 0x3c14
+	push hl	; offset 0x3c15
+	ld hl,44975	; offset 0x3c18
+	push hl	; offset 0x3c19
+	ld hl,44975	; offset 0x3c1c
+	push hl	; offset 0x3c1d
+	ld hl,44975	; offset 0x3c20
+	push hl	; offset 0x3c21
 
 	; attr draw 21
-	ld sp,0x8020
-	ld bc,10280
-	push bc
-	ld bc,10280
-	push bc
-	pop af
+	ld sp,attr8and16vals+4
+	pop af	; src 16
 	ex af,af'
-	pop af
+	pop af	; src 8
+	ld bc,10280	; src 18
+	ld de,10280	; src 20
+	ld hl,10280	; src 22
+	ld ix,10280	; src 4
+	ld iy,10280	; src 6
+	exx
+	ld bc,10280	; src 10
+	ld de,10280	; src 12
+	ld hl,10280	; src 0
+
 	ld sp,attrStartAddr+16+672
-	ld de,10280
-	ld hl,10280
-	ld ix,10280
-	ld iy,10280
-	exx
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	; start chasing raster here to update ATTR memory
 
-	; start chasing raster here
-
-	ld (attrStartAddr+672),hl
-	ld hl,10280
-	ld (attrStartAddr+2+672),hl
-	ld hl,10280
-	push hl
-	push de
-	push bc
-	push af
+	ld (attrStartAddr+672),hl	; dest 0
+	ld hl,10280	; src 2
+	ld (attrStartAddr+2+672),hl	; dest 2
+	ld hl,10280	; src 14
+	push hl	; dest 14
+	push de	; dest 12
+	push bc	; dest 10
+	push af	; dest 8
 	exx
 	ex af,af'
-	push iy
-	push ix
+	push iy	; dest 6
+	push ix	; dest 4
 	ld sp,attrStartAddr+24+672
-	push hl
-	push de
-	push bc
-	push af
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	push hl	; dest 22
+	push de	; dest 20
+	push bc	; dest 18
+	push af	; dest 16
+	ld bc,10280	; src 24
+	ld de,10280	; src 16
+	ld hl,10280	; src 28
 	ld sp,attrStartAddr+30+672
-	push hl
-	push de
-	push bc
-	ld hl,10280
-	ld (attrStartAddr+30+672),hl
-	; src_data filler blit 672
-	ld bc,52428	; offset 18128
-	ld de,52428	; offset 18131
-	exx    	; offset 18134
-	ld bc,52428	; offset 18135
-	ld de,52428	; offset 18138
-	ld sp,screenStartAddr+5948	; offset 18141
-	push de	; offset 18144
-	push bc	; offset 18145
-	exx    	; offset 18146
-	push de	; offset 18147
-	push bc	; offset 18148
-	nop
-	; end attr draw 21
-	; Clock offset: -1008
+	push hl	; dest 28
+	push de	; dest 26
+	push bc	; dest 24
+	ld hl,10280	; src 30
+	ld (attrStartAddr+30+672),hl;	 dest 30
+	; end attr draw 21, offset 0x3dc8
+	; Clock offset: -1152
 
-	; src_data blit 441
-	ld bc,52428	; offset 18150
-	ld de,52428	; offset 18153
-	ld hl,52428	; offset 18156
-	exx    	; offset 18159
-	ld bc,52428	; offset 18160
-	ld de,52428	; offset 18163
-	ld hl,52428	; offset 18166
-	ld sp,screenStartAddr+4524	; offset 18169
-	push hl	; offset 18172
-	push de	; offset 18173
-	push bc	; offset 18174
-	exx    	; offset 18175
-	push hl	; offset 18176
-	push de	; offset 18177
-	push bc	; offset 18178
-	; Clock offset: -864
-
-	; src_data blit 442
-	ld bc,52428	; offset 18179
-	ld de,52428	; offset 18182
-	ld hl,52428	; offset 18185
-	exx    	; offset 18188
-	ld bc,52428	; offset 18189
-	ld de,52428	; offset 18192
-	ld hl,52428	; offset 18195
-	ld sp,screenStartAddr+4536	; offset 18198
-	push hl	; offset 18201
-	push de	; offset 18202
-	push bc	; offset 18203
-	exx    	; offset 18204
-	push hl	; offset 18205
-	push de	; offset 18206
-	push bc	; offset 18207
-	; Clock offset: -720
-
-	; src_data blit 443
-	ld bc,52428	; offset 18208
-	ld de,52428	; offset 18211
-	ld hl,52428	; offset 18214
-	exx    	; offset 18217
-	ld bc,52428	; offset 18218
-	ld de,52428	; offset 18221
-	ld hl,52428	; offset 18224
-	ld sp,screenStartAddr+4548	; offset 18227
-	push hl	; offset 18230
-	push de	; offset 18231
-	push bc	; offset 18232
-	exx    	; offset 18233
-	push hl	; offset 18234
-	push de	; offset 18235
-	push bc	; offset 18236
-	; Clock offset: -576
-
-	; src_data blit 444
-	ld bc,52428	; offset 18237
-	ld de,52428	; offset 18240
-	ld hl,52428	; offset 18243
-	exx    	; offset 18246
-	ld bc,52428	; offset 18247
-	ld de,52428	; offset 18250
-	ld hl,52428	; offset 18253
-	ld sp,screenStartAddr+4788	; offset 18256
-	push hl	; offset 18259
-	push de	; offset 18260
-	push bc	; offset 18261
-	exx    	; offset 18262
-	push hl	; offset 18263
-	push de	; offset 18264
-	push bc	; offset 18265
-	; Clock offset: -432
-
-	; src_data blit 445
-	ld bc,52428	; offset 18266
-	ld de,52428	; offset 18269
-	ld hl,52428	; offset 18272
-	exx    	; offset 18275
-	ld bc,52428	; offset 18276
-	ld de,52428	; offset 18279
-	ld hl,52428	; offset 18282
-	ld sp,screenStartAddr+4800	; offset 18285
-	push hl	; offset 18288
-	push de	; offset 18289
-	push bc	; offset 18290
-	exx    	; offset 18291
-	push hl	; offset 18292
-	push de	; offset 18293
-	push bc	; offset 18294
-	; Clock offset: -288
-
-	; src_data blit 446
-	ld bc,52428	; offset 18295
-	ld de,52428	; offset 18298
-	ld hl,52428	; offset 18301
-	exx    	; offset 18304
-	ld bc,52428	; offset 18305
-	ld de,52428	; offset 18308
-	ld hl,52428	; offset 18311
-	ld sp,screenStartAddr+5040	; offset 18314
-	push hl	; offset 18317
-	push de	; offset 18318
-	push bc	; offset 18319
-	exx    	; offset 18320
-	push hl	; offset 18321
-	push de	; offset 18322
-	push bc	; offset 18323
-	; Clock offset: -144
-
-	; src_data blit 447
-	ld bc,52428	; offset 18324
-	ld de,52428	; offset 18327
-	ld hl,52428	; offset 18330
-	exx    	; offset 18333
-	ld bc,52428	; offset 18334
-	ld de,52428	; offset 18337
-	ld hl,52428	; offset 18340
-	ld sp,screenStartAddr+5052	; offset 18343
-	push hl	; offset 18346
-	push de	; offset 18347
-	push bc	; offset 18348
-	exx    	; offset 18349
-	push hl	; offset 18350
-	push de	; offset 18351
-	push bc	; offset 18352
-	; Clock offset: 0
+	; src_data blit 171
+	ld sp,screenStartAddr+2064	; offset 0x3dcb
+	ld hl,44975	; offset 0x3dce
+	push hl	; offset 0x3dcf
+	ld hl,44975	; offset 0x3dd2
+	push hl	; offset 0x3dd3
+	ld hl,44975	; offset 0x3dd6
+	push hl	; offset 0x3dd7
+	ld hl,44975	; offset 0x3dda
+	push hl	; offset 0x3ddb
+	ld hl,44975	; offset 0x3dde
+	push hl	; offset 0x3ddf
+	ld hl,44975	; offset 0x3de2
+	push hl	; offset 0x3de3
+	; src_data blit 172
+	ld sp,screenStartAddr+2076	; offset 0x3de6
+	ld hl,44975	; offset 0x3de9
+	push hl	; offset 0x3dea
+	ld hl,44975	; offset 0x3ded
+	push hl	; offset 0x3dee
+	ld hl,44975	; offset 0x3df1
+	push hl	; offset 0x3df2
+	ld hl,44975	; offset 0x3df5
+	push hl	; offset 0x3df6
+	ld hl,44975	; offset 0x3df9
+	push hl	; offset 0x3dfa
+	ld hl,44975	; offset 0x3dfd
+	push hl	; offset 0x3dfe
+	; src_data blit 173
+	ld sp,screenStartAddr+2088	; offset 0x3e01
+	ld hl,44975	; offset 0x3e04
+	push hl	; offset 0x3e05
+	ld hl,44975	; offset 0x3e08
+	push hl	; offset 0x3e09
+	ld hl,44975	; offset 0x3e0c
+	push hl	; offset 0x3e0d
+	ld hl,44975	; offset 0x3e10
+	push hl	; offset 0x3e11
+	ld hl,44975	; offset 0x3e14
+	push hl	; offset 0x3e15
+	ld hl,44975	; offset 0x3e18
+	push hl	; offset 0x3e19
+	; src_data blit 174
+	ld sp,screenStartAddr+2316	; offset 0x3e1c
+	ld hl,44975	; offset 0x3e1f
+	push hl	; offset 0x3e20
+	ld hl,44975	; offset 0x3e23
+	push hl	; offset 0x3e24
+	ld hl,44975	; offset 0x3e27
+	push hl	; offset 0x3e28
+	ld hl,44975	; offset 0x3e2b
+	push hl	; offset 0x3e2c
+	ld hl,44975	; offset 0x3e2f
+	push hl	; offset 0x3e30
+	ld hl,44975	; offset 0x3e33
+	push hl	; offset 0x3e34
+	; src_data blit 175
+	ld sp,screenStartAddr+2328	; offset 0x3e37
+	ld hl,44975	; offset 0x3e3a
+	push hl	; offset 0x3e3b
+	ld hl,44975	; offset 0x3e3e
+	push hl	; offset 0x3e3f
+	ld hl,44975	; offset 0x3e42
+	push hl	; offset 0x3e43
+	ld hl,44975	; offset 0x3e46
+	push hl	; offset 0x3e47
+	ld hl,44975	; offset 0x3e4a
+	push hl	; offset 0x3e4b
+	ld hl,44975	; offset 0x3e4e
+	push hl	; offset 0x3e4f
+	; src_data blit 176
+	ld sp,screenStartAddr+2340	; offset 0x3e52
+	ld hl,44975	; offset 0x3e55
+	push hl	; offset 0x3e56
+	ld hl,44975	; offset 0x3e59
+	push hl	; offset 0x3e5a
+	ld hl,44975	; offset 0x3e5d
+	push hl	; offset 0x3e5e
+	ld hl,44975	; offset 0x3e61
+	push hl	; offset 0x3e62
+	ld hl,44975	; offset 0x3e65
+	push hl	; offset 0x3e66
+	ld hl,44975	; offset 0x3e69
+	push hl	; offset 0x3e6a
+	; src_data blit 177
+	ld sp,screenStartAddr+2568	; offset 0x3e6d
+	ld hl,44975	; offset 0x3e70
+	push hl	; offset 0x3e71
+	ld hl,44975	; offset 0x3e74
+	push hl	; offset 0x3e75
+	ld hl,44975	; offset 0x3e78
+	push hl	; offset 0x3e79
+	ld hl,44975	; offset 0x3e7c
+	push hl	; offset 0x3e7d
+	ld hl,44975	; offset 0x3e80
+	push hl	; offset 0x3e81
+	ld hl,44975	; offset 0x3e84
+	push hl	; offset 0x3e85
+	; src_data blit 178
+	ld sp,screenStartAddr+2580	; offset 0x3e88
+	ld hl,44975	; offset 0x3e8b
+	push hl	; offset 0x3e8c
+	ld hl,44975	; offset 0x3e8f
+	push hl	; offset 0x3e90
+	ld hl,44975	; offset 0x3e93
+	push hl	; offset 0x3e94
+	ld hl,44975	; offset 0x3e97
+	push hl	; offset 0x3e98
+	ld hl,44975	; offset 0x3e9b
+	push hl	; offset 0x3e9c
+	ld hl,44975	; offset 0x3e9f
+	push hl	; offset 0x3ea0
 
 	; attr draw 22
-	ld sp,0x8020
-	ld bc,10280
-	push bc
-	ld bc,10280
-	push bc
-	pop af
+	ld sp,attr8and16vals+4
+	pop af	; src 16
 	ex af,af'
-	pop af
+	pop af	; src 8
+	ld bc,10280	; src 18
+	ld de,10280	; src 20
+	ld hl,10280	; src 22
+	ld ix,10280	; src 4
+	ld iy,10280	; src 6
+	exx
+	ld bc,10280	; src 10
+	ld de,10280	; src 12
+	ld hl,10280	; src 0
+
 	ld sp,attrStartAddr+16+704
-	ld de,10280
-	ld hl,10280
-	ld ix,10280
-	ld iy,10280
-	exx
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	; start chasing raster here to update ATTR memory
 
-	; start chasing raster here
-
-	ld (attrStartAddr+704),hl
-	ld hl,10280
-	ld (attrStartAddr+2+704),hl
-	ld hl,10280
-	push hl
-	push de
-	push bc
-	push af
+	ld (attrStartAddr+704),hl	; dest 0
+	ld hl,10280	; src 2
+	ld (attrStartAddr+2+704),hl	; dest 2
+	ld hl,10280	; src 14
+	push hl	; dest 14
+	push de	; dest 12
+	push bc	; dest 10
+	push af	; dest 8
 	exx
 	ex af,af'
-	push iy
-	push ix
+	push iy	; dest 6
+	push ix	; dest 4
 	ld sp,attrStartAddr+24+704
-	push hl
-	push de
-	push bc
-	push af
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	push hl	; dest 22
+	push de	; dest 20
+	push bc	; dest 18
+	push af	; dest 16
+	ld bc,10280	; src 24
+	ld de,10280	; src 16
+	ld hl,10280	; src 28
 	ld sp,attrStartAddr+30+704
-	push hl
-	push de
-	push bc
-	ld hl,10280
-	ld (attrStartAddr+30+704),hl
-	; src_data filler blit 704
-	ld bc,52428	; offset 18808
-	ld de,52428	; offset 18811
-	exx    	; offset 18814
-	ld bc,52428	; offset 18815
-	ld de,52428	; offset 18818
-	ld sp,screenStartAddr+5956	; offset 18821
-	push de	; offset 18824
-	push bc	; offset 18825
-	exx    	; offset 18826
-	push de	; offset 18827
-	push bc	; offset 18828
-	nop
-	; end attr draw 22
-	; Clock offset: -1008
+	push hl	; dest 28
+	push de	; dest 26
+	push bc	; dest 24
+	ld hl,10280	; src 30
+	ld (attrStartAddr+30+704),hl;	 dest 30
+	; end attr draw 22, offset 0x4047
+	; Clock offset: -1152
 
-	; src_data blit 448
-	ld bc,52428	; offset 18830
-	ld de,52428	; offset 18833
-	ld hl,52428	; offset 18836
-	exx    	; offset 18839
-	ld bc,52428	; offset 18840
-	ld de,52428	; offset 18843
-	ld hl,52428	; offset 18846
-	ld sp,screenStartAddr+5064	; offset 18849
-	push hl	; offset 18852
-	push de	; offset 18853
-	push bc	; offset 18854
-	exx    	; offset 18855
-	push hl	; offset 18856
-	push de	; offset 18857
-	push bc	; offset 18858
-	; Clock offset: -864
-
-	; src_data blit 449
-	ld bc,52428	; offset 18859
-	ld de,52428	; offset 18862
-	ld hl,52428	; offset 18865
-	exx    	; offset 18868
-	ld bc,52428	; offset 18869
-	ld de,52428	; offset 18872
-	ld hl,52428	; offset 18875
-	ld sp,screenStartAddr+5292	; offset 18878
-	push hl	; offset 18881
-	push de	; offset 18882
-	push bc	; offset 18883
-	exx    	; offset 18884
-	push hl	; offset 18885
-	push de	; offset 18886
-	push bc	; offset 18887
-	; Clock offset: -720
-
-	; src_data blit 450
-	ld bc,52428	; offset 18888
-	ld de,52428	; offset 18891
-	ld hl,52428	; offset 18894
-	exx    	; offset 18897
-	ld bc,52428	; offset 18898
-	ld de,52428	; offset 18901
-	ld hl,52428	; offset 18904
-	ld sp,screenStartAddr+5304	; offset 18907
-	push hl	; offset 18910
-	push de	; offset 18911
-	push bc	; offset 18912
-	exx    	; offset 18913
-	push hl	; offset 18914
-	push de	; offset 18915
-	push bc	; offset 18916
-	; Clock offset: -576
-
-	; src_data blit 451
-	ld bc,52428	; offset 18917
-	ld de,52428	; offset 18920
-	ld hl,52428	; offset 18923
-	exx    	; offset 18926
-	ld bc,52428	; offset 18927
-	ld de,52428	; offset 18930
-	ld hl,52428	; offset 18933
-	ld sp,screenStartAddr+5316	; offset 18936
-	push hl	; offset 18939
-	push de	; offset 18940
-	push bc	; offset 18941
-	exx    	; offset 18942
-	push hl	; offset 18943
-	push de	; offset 18944
-	push bc	; offset 18945
-	; Clock offset: -432
-
-	; src_data blit 452
-	ld bc,52428	; offset 18946
-	ld de,52428	; offset 18949
-	ld hl,52428	; offset 18952
-	exx    	; offset 18955
-	ld bc,52428	; offset 18956
-	ld de,52428	; offset 18959
-	ld hl,52428	; offset 18962
-	ld sp,screenStartAddr+5556	; offset 18965
-	push hl	; offset 18968
-	push de	; offset 18969
-	push bc	; offset 18970
-	exx    	; offset 18971
-	push hl	; offset 18972
-	push de	; offset 18973
-	push bc	; offset 18974
-	; Clock offset: -288
-
-	; src_data blit 453
-	ld bc,52428	; offset 18975
-	ld de,52428	; offset 18978
-	ld hl,52428	; offset 18981
-	exx    	; offset 18984
-	ld bc,52428	; offset 18985
-	ld de,52428	; offset 18988
-	ld hl,52428	; offset 18991
-	ld sp,screenStartAddr+5568	; offset 18994
-	push hl	; offset 18997
-	push de	; offset 18998
-	push bc	; offset 18999
-	exx    	; offset 19000
-	push hl	; offset 19001
-	push de	; offset 19002
-	push bc	; offset 19003
-	; Clock offset: -144
-
-	; src_data blit 454
-	ld bc,52428	; offset 19004
-	ld de,52428	; offset 19007
-	ld hl,52428	; offset 19010
-	exx    	; offset 19013
-	ld bc,52428	; offset 19014
-	ld de,52428	; offset 19017
-	ld hl,52428	; offset 19020
-	ld sp,screenStartAddr+4308	; offset 19023
-	push hl	; offset 19026
-	push de	; offset 19027
-	push bc	; offset 19028
-	exx    	; offset 19029
-	push hl	; offset 19030
-	push de	; offset 19031
-	push bc	; offset 19032
-	; Clock offset: 0
+	; src_data blit 179
+	ld sp,screenStartAddr+2592	; offset 0x404a
+	ld hl,44975	; offset 0x404d
+	push hl	; offset 0x404e
+	ld hl,44975	; offset 0x4051
+	push hl	; offset 0x4052
+	ld hl,44975	; offset 0x4055
+	push hl	; offset 0x4056
+	ld hl,44975	; offset 0x4059
+	push hl	; offset 0x405a
+	ld hl,44975	; offset 0x405d
+	push hl	; offset 0x405e
+	ld hl,44975	; offset 0x4061
+	push hl	; offset 0x4062
+	; src_data blit 180
+	ld sp,screenStartAddr+2820	; offset 0x4065
+	ld hl,44975	; offset 0x4068
+	push hl	; offset 0x4069
+	ld hl,44975	; offset 0x406c
+	push hl	; offset 0x406d
+	ld hl,44975	; offset 0x4070
+	push hl	; offset 0x4071
+	ld hl,44975	; offset 0x4074
+	push hl	; offset 0x4075
+	ld hl,44975	; offset 0x4078
+	push hl	; offset 0x4079
+	ld hl,44975	; offset 0x407c
+	push hl	; offset 0x407d
+	; src_data blit 181
+	ld sp,screenStartAddr+2832	; offset 0x4080
+	ld hl,44975	; offset 0x4083
+	push hl	; offset 0x4084
+	ld hl,44975	; offset 0x4087
+	push hl	; offset 0x4088
+	ld hl,44975	; offset 0x408b
+	push hl	; offset 0x408c
+	ld hl,44975	; offset 0x408f
+	push hl	; offset 0x4090
+	ld hl,44975	; offset 0x4093
+	push hl	; offset 0x4094
+	ld hl,44975	; offset 0x4097
+	push hl	; offset 0x4098
+	; src_data blit 182
+	ld sp,screenStartAddr+2844	; offset 0x409b
+	ld hl,44975	; offset 0x409e
+	push hl	; offset 0x409f
+	ld hl,44975	; offset 0x40a2
+	push hl	; offset 0x40a3
+	ld hl,44975	; offset 0x40a6
+	push hl	; offset 0x40a7
+	ld hl,44975	; offset 0x40aa
+	push hl	; offset 0x40ab
+	ld hl,44975	; offset 0x40ae
+	push hl	; offset 0x40af
+	ld hl,44975	; offset 0x40b2
+	push hl	; offset 0x40b3
+	; src_data blit 183
+	ld sp,screenStartAddr+2856	; offset 0x40b6
+	ld hl,44975	; offset 0x40b9
+	push hl	; offset 0x40ba
+	ld hl,44975	; offset 0x40bd
+	push hl	; offset 0x40be
+	ld hl,44975	; offset 0x40c1
+	push hl	; offset 0x40c2
+	ld hl,44975	; offset 0x40c5
+	push hl	; offset 0x40c6
+	ld hl,44975	; offset 0x40c9
+	push hl	; offset 0x40ca
+	ld hl,44975	; offset 0x40cd
+	push hl	; offset 0x40ce
+	; src_data blit 184
+	ld sp,screenStartAddr+3084	; offset 0x40d1
+	ld hl,44975	; offset 0x40d4
+	push hl	; offset 0x40d5
+	ld hl,44975	; offset 0x40d8
+	push hl	; offset 0x40d9
+	ld hl,44975	; offset 0x40dc
+	push hl	; offset 0x40dd
+	ld hl,44975	; offset 0x40e0
+	push hl	; offset 0x40e1
+	ld hl,44975	; offset 0x40e4
+	push hl	; offset 0x40e5
+	ld hl,44975	; offset 0x40e8
+	push hl	; offset 0x40e9
+	; src_data blit 185
+	ld sp,screenStartAddr+3096	; offset 0x40ec
+	ld hl,44975	; offset 0x40ef
+	push hl	; offset 0x40f0
+	ld hl,44975	; offset 0x40f3
+	push hl	; offset 0x40f4
+	ld hl,44975	; offset 0x40f7
+	push hl	; offset 0x40f8
+	ld hl,44975	; offset 0x40fb
+	push hl	; offset 0x40fc
+	ld hl,44975	; offset 0x40ff
+	push hl	; offset 0x4100
+	ld hl,44975	; offset 0x4103
+	push hl	; offset 0x4104
+	; src_data blit 186
+	ld sp,screenStartAddr+3108	; offset 0x4107
+	ld hl,44975	; offset 0x410a
+	push hl	; offset 0x410b
+	ld hl,44975	; offset 0x410e
+	push hl	; offset 0x410f
+	ld hl,44975	; offset 0x4112
+	push hl	; offset 0x4113
+	ld hl,44975	; offset 0x4116
+	push hl	; offset 0x4117
+	ld hl,44975	; offset 0x411a
+	push hl	; offset 0x411b
+	ld hl,44975	; offset 0x411e
+	push hl	; offset 0x411f
 
 	; attr draw 23
-	ld sp,0x8020
-	ld bc,10280
-	push bc
-	ld bc,10280
-	push bc
-	pop af
+	ld sp,attr8and16vals+4
+	pop af	; src 16
 	ex af,af'
-	pop af
+	pop af	; src 8
+	ld bc,10280	; src 18
+	ld de,10280	; src 20
+	ld hl,10280	; src 22
+	ld ix,10280	; src 4
+	ld iy,10280	; src 6
+	exx
+	ld bc,10280	; src 10
+	ld de,10280	; src 12
+	ld hl,10280	; src 0
+
 	ld sp,attrStartAddr+16+736
-	ld de,10280
-	ld hl,10280
-	ld ix,10280
-	ld iy,10280
-	exx
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	; start chasing raster here to update ATTR memory
 
-	; start chasing raster here
-
-	ld (attrStartAddr+736),hl
-	ld hl,10280
-	ld (attrStartAddr+2+736),hl
-	ld hl,10280
-	push hl
-	push de
-	push bc
-	push af
+	ld (attrStartAddr+736),hl	; dest 0
+	ld hl,10280	; src 2
+	ld (attrStartAddr+2+736),hl	; dest 2
+	ld hl,10280	; src 14
+	push hl	; dest 14
+	push de	; dest 12
+	push bc	; dest 10
+	push af	; dest 8
 	exx
 	ex af,af'
-	push iy
-	push ix
+	push iy	; dest 6
+	push ix	; dest 4
 	ld sp,attrStartAddr+24+736
-	push hl
-	push de
-	push bc
-	push af
-	ld bc,10280
-	ld de,10280
-	ld hl,10280
+	push hl	; dest 22
+	push de	; dest 20
+	push bc	; dest 18
+	push af	; dest 16
+	ld bc,10280	; src 24
+	ld de,10280	; src 16
+	ld hl,10280	; src 28
 	ld sp,attrStartAddr+30+736
-	push hl
-	push de
-	push bc
-	ld hl,10280
-	ld (attrStartAddr+30+736),hl
-	; end attr draw 23
-	; src_data blit 455
-	ld bc,52428	; offset 19488
-	ld de,52428	; offset 19491
-	ld hl,52428	; offset 19494
-	exx    	; offset 19497
-	ld bc,52428	; offset 19498
-	ld de,52428	; offset 19501
-	ld hl,52428	; offset 19504
-	ld sp,screenStartAddr+4320	; offset 19507
-	push hl	; offset 19510
-	push de	; offset 19511
-	push bc	; offset 19512
-	exx    	; offset 19513
-	push hl	; offset 19514
-	push de	; offset 19515
-	push bc	; offset 19516
+	push hl	; dest 28
+	push de	; dest 26
+	push bc	; dest 24
+	ld hl,10280	; src 30
+	ld (attrStartAddr+30+736),hl;	 dest 30
+	; Inter-frame delay
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	; end attr draw 23, offset 0x42ce
+	; Clock offset: -1152
 
-	; src_data blit 456
-	ld bc,52428	; offset 19517
-	ld de,52428	; offset 19520
-	ld hl,52428	; offset 19523
-	exx    	; offset 19526
-	ld bc,52428	; offset 19527
-	ld de,52428	; offset 19530
-	ld hl,52428	; offset 19533
-	ld sp,screenStartAddr+4560	; offset 19536
-	push hl	; offset 19539
-	push de	; offset 19540
-	push bc	; offset 19541
-	exx    	; offset 19542
-	push hl	; offset 19543
-	push de	; offset 19544
-	push bc	; offset 19545
+	; src_data blit 187
+	ld sp,screenStartAddr+3336	; offset 0x42d1
+	ld hl,44975	; offset 0x42d4
+	push hl	; offset 0x42d5
+	ld hl,44975	; offset 0x42d8
+	push hl	; offset 0x42d9
+	ld hl,44975	; offset 0x42dc
+	push hl	; offset 0x42dd
+	ld hl,44975	; offset 0x42e0
+	push hl	; offset 0x42e1
+	ld hl,44975	; offset 0x42e4
+	push hl	; offset 0x42e5
+	ld hl,44975	; offset 0x42e8
+	push hl	; offset 0x42e9
+	; src_data blit 188
+	ld sp,screenStartAddr+3348	; offset 0x42ec
+	ld hl,44975	; offset 0x42ef
+	push hl	; offset 0x42f0
+	ld hl,44975	; offset 0x42f3
+	push hl	; offset 0x42f4
+	ld hl,44975	; offset 0x42f7
+	push hl	; offset 0x42f8
+	ld hl,44975	; offset 0x42fb
+	push hl	; offset 0x42fc
+	ld hl,44975	; offset 0x42ff
+	push hl	; offset 0x4300
+	ld hl,44975	; offset 0x4303
+	push hl	; offset 0x4304
+	; src_data blit 189
+	ld sp,screenStartAddr+3360	; offset 0x4307
+	ld hl,44975	; offset 0x430a
+	push hl	; offset 0x430b
+	ld hl,44975	; offset 0x430e
+	push hl	; offset 0x430f
+	ld hl,44975	; offset 0x4312
+	push hl	; offset 0x4313
+	ld hl,44975	; offset 0x4316
+	push hl	; offset 0x4317
+	ld hl,44975	; offset 0x431a
+	push hl	; offset 0x431b
+	ld hl,44975	; offset 0x431e
+	push hl	; offset 0x431f
+	; src_data blit 190
+	ld sp,screenStartAddr+3588	; offset 0x4322
+	ld hl,44975	; offset 0x4325
+	push hl	; offset 0x4326
+	ld hl,44975	; offset 0x4329
+	push hl	; offset 0x432a
+	ld hl,44975	; offset 0x432d
+	push hl	; offset 0x432e
+	ld hl,44975	; offset 0x4331
+	push hl	; offset 0x4332
+	ld hl,44975	; offset 0x4335
+	push hl	; offset 0x4336
+	ld hl,44975	; offset 0x4339
+	push hl	; offset 0x433a
+	; src_data blit 191
+	ld sp,screenStartAddr+3600	; offset 0x433d
+	ld hl,44975	; offset 0x4340
+	push hl	; offset 0x4341
+	ld hl,44975	; offset 0x4344
+	push hl	; offset 0x4345
+	ld hl,44975	; offset 0x4348
+	push hl	; offset 0x4349
+	ld hl,44975	; offset 0x434c
+	push hl	; offset 0x434d
+	ld hl,44975	; offset 0x4350
+	push hl	; offset 0x4351
+	ld hl,44975	; offset 0x4354
+	push hl	; offset 0x4355
+	; src_data blit 192
+	ld sp,screenStartAddr+3612	; offset 0x4358
+	ld hl,44975	; offset 0x435b
+	push hl	; offset 0x435c
+	ld hl,44975	; offset 0x435f
+	push hl	; offset 0x4360
+	ld hl,44975	; offset 0x4363
+	push hl	; offset 0x4364
+	ld hl,44975	; offset 0x4367
+	push hl	; offset 0x4368
+	ld hl,44975	; offset 0x436b
+	push hl	; offset 0x436c
+	ld hl,44975	; offset 0x436f
+	push hl	; offset 0x4370
+	; src_data blit 193
+	ld sp,screenStartAddr+3624	; offset 0x4373
+	ld hl,44975	; offset 0x4376
+	push hl	; offset 0x4377
+	ld hl,44975	; offset 0x437a
+	push hl	; offset 0x437b
+	ld hl,44975	; offset 0x437e
+	push hl	; offset 0x437f
+	ld hl,44975	; offset 0x4382
+	push hl	; offset 0x4383
+	ld hl,44975	; offset 0x4386
+	push hl	; offset 0x4387
+	ld hl,44975	; offset 0x438a
+	push hl	; offset 0x438b
+	; src_data blit 194
+	ld sp,screenStartAddr+3852	; offset 0x438e
+	ld hl,44975	; offset 0x4391
+	push hl	; offset 0x4392
+	ld hl,44975	; offset 0x4395
+	push hl	; offset 0x4396
+	ld hl,44975	; offset 0x4399
+	push hl	; offset 0x439a
+	ld hl,44975	; offset 0x439d
+	push hl	; offset 0x439e
+	ld hl,44975	; offset 0x43a1
+	push hl	; offset 0x43a2
+	ld hl,44975	; offset 0x43a5
+	push hl	; offset 0x43a6
+	; src_data blit 195
+	ld sp,screenStartAddr+3864	; offset 0x43a9
+	ld hl,44975	; offset 0x43ac
+	push hl	; offset 0x43ad
+	ld hl,44975	; offset 0x43b0
+	push hl	; offset 0x43b1
+	ld hl,44975	; offset 0x43b4
+	push hl	; offset 0x43b5
+	ld hl,44975	; offset 0x43b8
+	push hl	; offset 0x43b9
+	ld hl,44975	; offset 0x43bc
+	push hl	; offset 0x43bd
+	ld hl,44975	; offset 0x43c0
+	push hl	; offset 0x43c1
+	; delay to get start of scanline (-144 T-states) at offset 0x43c1
 
-	; src_data blit 457
-	ld bc,52428	; offset 19546
-	ld de,52428	; offset 19549
-	ld hl,52428	; offset 19552
-	exx    	; offset 19555
-	ld bc,52428	; offset 19556
-	ld de,52428	; offset 19559
-	ld hl,52428	; offset 19562
-	ld sp,screenStartAddr+4572	; offset 19565
-	push hl	; offset 19568
-	push de	; offset 19569
-	push bc	; offset 19570
-	exx    	; offset 19571
-	push hl	; offset 19572
-	push de	; offset 19573
-	push bc	; offset 19574
+	; src_data blit 196
+	ld sp,screenStartAddr+3876	; offset 0x43c4
+	ld hl,44975	; offset 0x43c7
+	push hl	; offset 0x43c8
+	ld hl,44975	; offset 0x43cb
+	push hl	; offset 0x43cc
+	ld hl,44975	; offset 0x43cf
+	push hl	; offset 0x43d0
+	ld hl,44975	; offset 0x43d3
+	push hl	; offset 0x43d4
+	ld hl,44975	; offset 0x43d7
+	push hl	; offset 0x43d8
+	ld hl,44975	; offset 0x43db
+	push hl	; offset 0x43dc
+	; delay to get start of scanline (-144 T-states) at offset 0x43dc
 
-	; src_data blit 458
-	ld bc,52428	; offset 19575
-	ld de,52428	; offset 19578
-	ld hl,52428	; offset 19581
-	exx    	; offset 19584
-	ld bc,52428	; offset 19585
-	ld de,52428	; offset 19588
-	ld hl,52428	; offset 19591
-	ld sp,screenStartAddr+4584	; offset 19594
-	push hl	; offset 19597
-	push de	; offset 19598
-	push bc	; offset 19599
-	exx    	; offset 19600
-	push hl	; offset 19601
-	push de	; offset 19602
-	push bc	; offset 19603
+	; src_data blit 197
+	ld sp,screenStartAddr+2100	; offset 0x43df
+	ld hl,44975	; offset 0x43e2
+	push hl	; offset 0x43e3
+	ld hl,44975	; offset 0x43e6
+	push hl	; offset 0x43e7
+	ld hl,44975	; offset 0x43ea
+	push hl	; offset 0x43eb
+	ld hl,44975	; offset 0x43ee
+	push hl	; offset 0x43ef
+	ld hl,44975	; offset 0x43f2
+	push hl	; offset 0x43f3
+	ld hl,44975	; offset 0x43f6
+	push hl	; offset 0x43f7
+	; delay to get start of scanline (-144 T-states) at offset 0x43f7
 
-	; src_data blit 459
-	ld bc,52428	; offset 19604
-	ld de,52428	; offset 19607
-	ld hl,52428	; offset 19610
-	exx    	; offset 19613
-	ld bc,52428	; offset 19614
-	ld de,52428	; offset 19617
-	ld hl,52428	; offset 19620
-	ld sp,screenStartAddr+4812	; offset 19623
-	push hl	; offset 19626
-	push de	; offset 19627
-	push bc	; offset 19628
-	exx    	; offset 19629
-	push hl	; offset 19630
-	push de	; offset 19631
-	push bc	; offset 19632
+	; src_data blit 198
+	ld sp,screenStartAddr+2112	; offset 0x43fa
+	ld hl,44975	; offset 0x43fd
+	push hl	; offset 0x43fe
+	ld hl,44975	; offset 0x4401
+	push hl	; offset 0x4402
+	ld hl,44975	; offset 0x4405
+	push hl	; offset 0x4406
+	ld hl,44975	; offset 0x4409
+	push hl	; offset 0x440a
+	ld hl,44975	; offset 0x440d
+	push hl	; offset 0x440e
+	ld hl,44975	; offset 0x4411
+	push hl	; offset 0x4412
+	; delay to get start of scanline (-144 T-states) at offset 0x4412
 
-	; src_data blit 460
-	ld bc,52428	; offset 19633
-	ld de,52428	; offset 19636
-	ld hl,52428	; offset 19639
-	exx    	; offset 19642
-	ld bc,52428	; offset 19643
-	ld de,52428	; offset 19646
-	ld hl,52428	; offset 19649
-	ld sp,screenStartAddr+4824	; offset 19652
-	push hl	; offset 19655
-	push de	; offset 19656
-	push bc	; offset 19657
-	exx    	; offset 19658
-	push hl	; offset 19659
-	push de	; offset 19660
-	push bc	; offset 19661
+	; src_data blit 199
+	ld sp,screenStartAddr+2352	; offset 0x4415
+	ld hl,44975	; offset 0x4418
+	push hl	; offset 0x4419
+	ld hl,44975	; offset 0x441c
+	push hl	; offset 0x441d
+	ld hl,44975	; offset 0x4420
+	push hl	; offset 0x4421
+	ld hl,44975	; offset 0x4424
+	push hl	; offset 0x4425
+	ld hl,44975	; offset 0x4428
+	push hl	; offset 0x4429
+	ld hl,44975	; offset 0x442c
+	push hl	; offset 0x442d
+	; delay to get start of scanline (-144 T-states) at offset 0x442d
 
-	; src_data blit 461
-	ld bc,52428	; offset 19662
-	ld de,52428	; offset 19665
-	ld hl,52428	; offset 19668
-	exx    	; offset 19671
-	ld bc,52428	; offset 19672
-	ld de,52428	; offset 19675
-	ld hl,52428	; offset 19678
-	ld sp,screenStartAddr+4836	; offset 19681
-	push hl	; offset 19684
-	push de	; offset 19685
-	push bc	; offset 19686
-	exx    	; offset 19687
-	push hl	; offset 19688
-	push de	; offset 19689
-	push bc	; offset 19690
+	; src_data blit 200
+	ld sp,screenStartAddr+2364	; offset 0x4430
+	ld hl,44975	; offset 0x4433
+	push hl	; offset 0x4434
+	ld hl,44975	; offset 0x4437
+	push hl	; offset 0x4438
+	ld hl,44975	; offset 0x443b
+	push hl	; offset 0x443c
+	ld hl,44975	; offset 0x443f
+	push hl	; offset 0x4440
+	ld hl,44975	; offset 0x4443
+	push hl	; offset 0x4444
+	ld hl,44975	; offset 0x4447
+	push hl	; offset 0x4448
+	; delay to get start of scanline (-144 T-states) at offset 0x4448
 
-	; src_data blit 462
-	ld bc,52428	; offset 19691
-	ld de,52428	; offset 19694
-	ld hl,52428	; offset 19697
-	exx    	; offset 19700
-	ld bc,52428	; offset 19701
-	ld de,52428	; offset 19704
-	ld hl,52428	; offset 19707
-	ld sp,screenStartAddr+5076	; offset 19710
-	push hl	; offset 19713
-	push de	; offset 19714
-	push bc	; offset 19715
-	exx    	; offset 19716
-	push hl	; offset 19717
-	push de	; offset 19718
-	push bc	; offset 19719
+	; src_data blit 201
+	ld sp,screenStartAddr+2376	; offset 0x444b
+	ld hl,44975	; offset 0x444e
+	push hl	; offset 0x444f
+	ld hl,44975	; offset 0x4452
+	push hl	; offset 0x4453
+	ld hl,44975	; offset 0x4456
+	push hl	; offset 0x4457
+	ld hl,44975	; offset 0x445a
+	push hl	; offset 0x445b
+	ld hl,44975	; offset 0x445e
+	push hl	; offset 0x445f
+	ld hl,44975	; offset 0x4462
+	push hl	; offset 0x4463
+	; delay to get start of scanline (-144 T-states) at offset 0x4463
 
-	; src_data blit 463
-	ld bc,52428	; offset 19720
-	ld de,52428	; offset 19723
-	ld hl,52428	; offset 19726
-	exx    	; offset 19729
-	ld bc,52428	; offset 19730
-	ld de,52428	; offset 19733
-	ld hl,52428	; offset 19736
-	ld sp,screenStartAddr+5088	; offset 19739
-	push hl	; offset 19742
-	push de	; offset 19743
-	push bc	; offset 19744
-	exx    	; offset 19745
-	push hl	; offset 19746
-	push de	; offset 19747
-	push bc	; offset 19748
+	; src_data blit 202
+	ld sp,screenStartAddr+2604	; offset 0x4466
+	ld hl,44975	; offset 0x4469
+	push hl	; offset 0x446a
+	ld hl,44975	; offset 0x446d
+	push hl	; offset 0x446e
+	ld hl,44975	; offset 0x4471
+	push hl	; offset 0x4472
+	ld hl,44975	; offset 0x4475
+	push hl	; offset 0x4476
+	ld hl,44975	; offset 0x4479
+	push hl	; offset 0x447a
+	ld hl,44975	; offset 0x447d
+	push hl	; offset 0x447e
+	; delay to get start of scanline (-144 T-states) at offset 0x447e
 
-	; src_data blit 464
-	ld bc,52428	; offset 19749
-	ld de,52428	; offset 19752
-	ld hl,52428	; offset 19755
-	exx    	; offset 19758
-	ld bc,52428	; offset 19759
-	ld de,52428	; offset 19762
-	ld hl,52428	; offset 19765
-	ld sp,screenStartAddr+5328	; offset 19768
-	push hl	; offset 19771
-	push de	; offset 19772
-	push bc	; offset 19773
-	exx    	; offset 19774
-	push hl	; offset 19775
-	push de	; offset 19776
-	push bc	; offset 19777
+	; src_data blit 203
+	ld sp,screenStartAddr+2616	; offset 0x4481
+	ld hl,44975	; offset 0x4484
+	push hl	; offset 0x4485
+	ld hl,44975	; offset 0x4488
+	push hl	; offset 0x4489
+	ld hl,44975	; offset 0x448c
+	push hl	; offset 0x448d
+	ld hl,44975	; offset 0x4490
+	push hl	; offset 0x4491
+	ld hl,44975	; offset 0x4494
+	push hl	; offset 0x4495
+	ld hl,44975	; offset 0x4498
+	push hl	; offset 0x4499
+	; delay to get start of scanline (-144 T-states) at offset 0x4499
 
-	; src_data blit 465
-	ld bc,52428	; offset 19778
-	ld de,52428	; offset 19781
-	ld hl,52428	; offset 19784
-	exx    	; offset 19787
-	ld bc,52428	; offset 19788
-	ld de,52428	; offset 19791
-	ld hl,52428	; offset 19794
-	ld sp,screenStartAddr+5340	; offset 19797
-	push hl	; offset 19800
-	push de	; offset 19801
-	push bc	; offset 19802
-	exx    	; offset 19803
-	push hl	; offset 19804
-	push de	; offset 19805
-	push bc	; offset 19806
+	; src_data blit 204
+	ld sp,screenStartAddr+2628	; offset 0x449c
+	ld hl,44975	; offset 0x449f
+	push hl	; offset 0x44a0
+	ld hl,44975	; offset 0x44a3
+	push hl	; offset 0x44a4
+	ld hl,44975	; offset 0x44a7
+	push hl	; offset 0x44a8
+	ld hl,44975	; offset 0x44ab
+	push hl	; offset 0x44ac
+	ld hl,44975	; offset 0x44af
+	push hl	; offset 0x44b0
+	ld hl,44975	; offset 0x44b3
+	push hl	; offset 0x44b4
+	; delay to get start of scanline (-144 T-states) at offset 0x44b4
 
-	; src_data blit 466
-	ld bc,52428	; offset 19807
-	ld de,52428	; offset 19810
-	ld hl,52428	; offset 19813
-	exx    	; offset 19816
-	ld bc,52428	; offset 19817
-	ld de,52428	; offset 19820
-	ld hl,52428	; offset 19823
-	ld sp,screenStartAddr+5352	; offset 19826
-	push hl	; offset 19829
-	push de	; offset 19830
-	push bc	; offset 19831
-	exx    	; offset 19832
-	push hl	; offset 19833
-	push de	; offset 19834
-	push bc	; offset 19835
+	; src_data blit 205
+	ld sp,screenStartAddr+2868	; offset 0x44b7
+	ld hl,44975	; offset 0x44ba
+	push hl	; offset 0x44bb
+	ld hl,44975	; offset 0x44be
+	push hl	; offset 0x44bf
+	ld hl,44975	; offset 0x44c2
+	push hl	; offset 0x44c3
+	ld hl,44975	; offset 0x44c6
+	push hl	; offset 0x44c7
+	ld hl,44975	; offset 0x44ca
+	push hl	; offset 0x44cb
+	ld hl,44975	; offset 0x44ce
+	push hl	; offset 0x44cf
+	; delay to get start of scanline (-144 T-states) at offset 0x44cf
 
-	; src_data blit 467
-	ld bc,52428	; offset 19836
-	ld de,52428	; offset 19839
-	ld hl,52428	; offset 19842
-	exx    	; offset 19845
-	ld bc,52428	; offset 19846
-	ld de,52428	; offset 19849
-	ld hl,52428	; offset 19852
-	ld sp,screenStartAddr+5580	; offset 19855
-	push hl	; offset 19858
-	push de	; offset 19859
-	push bc	; offset 19860
-	exx    	; offset 19861
-	push hl	; offset 19862
-	push de	; offset 19863
-	push bc	; offset 19864
+	; src_data blit 206
+	ld sp,screenStartAddr+2880	; offset 0x44d2
+	ld hl,44975	; offset 0x44d5
+	push hl	; offset 0x44d6
+	ld hl,44975	; offset 0x44d9
+	push hl	; offset 0x44da
+	ld hl,44975	; offset 0x44dd
+	push hl	; offset 0x44de
+	ld hl,44975	; offset 0x44e1
+	push hl	; offset 0x44e2
+	ld hl,44975	; offset 0x44e5
+	push hl	; offset 0x44e6
+	ld hl,44975	; offset 0x44e9
+	push hl	; offset 0x44ea
+	; delay to get start of scanline (-144 T-states) at offset 0x44ea
 
-	; src_data blit 468
-	ld bc,52428	; offset 19865
-	ld de,52428	; offset 19868
-	ld hl,52428	; offset 19871
-	exx    	; offset 19874
-	ld bc,52428	; offset 19875
-	ld de,52428	; offset 19878
-	ld hl,52428	; offset 19881
-	ld sp,screenStartAddr+5592	; offset 19884
-	push hl	; offset 19887
-	push de	; offset 19888
-	push bc	; offset 19889
-	exx    	; offset 19890
-	push hl	; offset 19891
-	push de	; offset 19892
-	push bc	; offset 19893
+	; src_data blit 207
+	ld sp,screenStartAddr+3120	; offset 0x44ed
+	ld hl,44975	; offset 0x44f0
+	push hl	; offset 0x44f1
+	ld hl,44975	; offset 0x44f4
+	push hl	; offset 0x44f5
+	ld hl,44975	; offset 0x44f8
+	push hl	; offset 0x44f9
+	ld hl,44975	; offset 0x44fc
+	push hl	; offset 0x44fd
+	ld hl,44975	; offset 0x4500
+	push hl	; offset 0x4501
+	ld hl,44975	; offset 0x4504
+	push hl	; offset 0x4505
+	; delay to get start of scanline (-144 T-states) at offset 0x4505
 
-	; src_data blit 469
-	ld bc,52428	; offset 19894
-	ld de,52428	; offset 19897
-	ld hl,52428	; offset 19900
-	exx    	; offset 19903
-	ld bc,52428	; offset 19904
-	ld de,52428	; offset 19907
-	ld hl,52428	; offset 19910
-	ld sp,screenStartAddr+5604	; offset 19913
-	push hl	; offset 19916
-	push de	; offset 19917
-	push bc	; offset 19918
-	exx    	; offset 19919
-	push hl	; offset 19920
-	push de	; offset 19921
-	push bc	; offset 19922
+	; src_data blit 208
+	ld sp,screenStartAddr+3132	; offset 0x4508
+	ld hl,44975	; offset 0x450b
+	push hl	; offset 0x450c
+	ld hl,44975	; offset 0x450f
+	push hl	; offset 0x4510
+	ld hl,44975	; offset 0x4513
+	push hl	; offset 0x4514
+	ld hl,44975	; offset 0x4517
+	push hl	; offset 0x4518
+	ld hl,44975	; offset 0x451b
+	push hl	; offset 0x451c
+	ld hl,44975	; offset 0x451f
+	push hl	; offset 0x4520
+	; delay to get start of scanline (-144 T-states) at offset 0x4520
 
-	; src_data blit 470
-	ld bc,52428	; offset 19923
-	ld de,52428	; offset 19926
-	ld hl,52428	; offset 19929
-	exx    	; offset 19932
-	ld bc,52428	; offset 19933
-	ld de,52428	; offset 19936
-	ld hl,52428	; offset 19939
-	ld sp,screenStartAddr+4332	; offset 19942
-	push hl	; offset 19945
-	push de	; offset 19946
-	push bc	; offset 19947
-	exx    	; offset 19948
-	push hl	; offset 19949
-	push de	; offset 19950
-	push bc	; offset 19951
+	; src_data blit 209
+	ld sp,screenStartAddr+3144	; offset 0x4523
+	ld hl,44975	; offset 0x4526
+	push hl	; offset 0x4527
+	ld hl,44975	; offset 0x452a
+	push hl	; offset 0x452b
+	ld hl,44975	; offset 0x452e
+	push hl	; offset 0x452f
+	ld hl,44975	; offset 0x4532
+	push hl	; offset 0x4533
+	ld hl,44975	; offset 0x4536
+	push hl	; offset 0x4537
+	ld hl,44975	; offset 0x453a
+	push hl	; offset 0x453b
+	; delay to get start of scanline (-144 T-states) at offset 0x453b
 
-	; src_data blit 471
-	ld bc,52428	; offset 19952
-	ld de,52428	; offset 19955
-	ld hl,52428	; offset 19958
-	exx    	; offset 19961
-	ld bc,52428	; offset 19962
-	ld de,52428	; offset 19965
-	ld hl,52428	; offset 19968
-	ld sp,screenStartAddr+4344	; offset 19971
-	push hl	; offset 19974
-	push de	; offset 19975
-	push bc	; offset 19976
-	exx    	; offset 19977
-	push hl	; offset 19978
-	push de	; offset 19979
-	push bc	; offset 19980
+	; src_data blit 210
+	ld sp,screenStartAddr+3372	; offset 0x453e
+	ld hl,44975	; offset 0x4541
+	push hl	; offset 0x4542
+	ld hl,44975	; offset 0x4545
+	push hl	; offset 0x4546
+	ld hl,44975	; offset 0x4549
+	push hl	; offset 0x454a
+	ld hl,44975	; offset 0x454d
+	push hl	; offset 0x454e
+	ld hl,44975	; offset 0x4551
+	push hl	; offset 0x4552
+	ld hl,44975	; offset 0x4555
+	push hl	; offset 0x4556
+	; delay to get start of scanline (-144 T-states) at offset 0x4556
 
-	; src_data blit 472
-	ld bc,52428	; offset 19981
-	ld de,52428	; offset 19984
-	ld hl,52428	; offset 19987
-	exx    	; offset 19990
-	ld bc,52428	; offset 19991
-	ld de,52428	; offset 19994
-	ld hl,52428	; offset 19997
-	ld sp,screenStartAddr+4596	; offset 20000
-	push hl	; offset 20003
-	push de	; offset 20004
-	push bc	; offset 20005
-	exx    	; offset 20006
-	push hl	; offset 20007
-	push de	; offset 20008
-	push bc	; offset 20009
+	; src_data blit 211
+	ld sp,screenStartAddr+3384	; offset 0x4559
+	ld hl,44975	; offset 0x455c
+	push hl	; offset 0x455d
+	ld hl,44975	; offset 0x4560
+	push hl	; offset 0x4561
+	ld hl,44975	; offset 0x4564
+	push hl	; offset 0x4565
+	ld hl,44975	; offset 0x4568
+	push hl	; offset 0x4569
+	ld hl,44975	; offset 0x456c
+	push hl	; offset 0x456d
+	ld hl,44975	; offset 0x4570
+	push hl	; offset 0x4571
+	; delay to get start of scanline (-144 T-states) at offset 0x4571
 
-	; src_data blit 473
-	ld bc,52428	; offset 20010
-	ld de,52428	; offset 20013
-	ld hl,52428	; offset 20016
-	exx    	; offset 20019
-	ld bc,52428	; offset 20020
-	ld de,52428	; offset 20023
-	ld hl,52428	; offset 20026
-	ld sp,screenStartAddr+4608	; offset 20029
-	push hl	; offset 20032
-	push de	; offset 20033
-	push bc	; offset 20034
-	exx    	; offset 20035
-	push hl	; offset 20036
-	push de	; offset 20037
-	push bc	; offset 20038
+	; src_data blit 212
+	ld sp,screenStartAddr+3396	; offset 0x4574
+	ld hl,44975	; offset 0x4577
+	push hl	; offset 0x4578
+	ld hl,44975	; offset 0x457b
+	push hl	; offset 0x457c
+	ld hl,44975	; offset 0x457f
+	push hl	; offset 0x4580
+	ld hl,44975	; offset 0x4583
+	push hl	; offset 0x4584
+	ld hl,44975	; offset 0x4587
+	push hl	; offset 0x4588
+	ld hl,44975	; offset 0x458b
+	push hl	; offset 0x458c
+	; delay to get start of scanline (-144 T-states) at offset 0x458c
 
-	; src_data blit 474
-	ld bc,52428	; offset 20039
-	ld de,52428	; offset 20042
-	ld hl,52428	; offset 20045
-	exx    	; offset 20048
-	ld bc,52428	; offset 20049
-	ld de,52428	; offset 20052
-	ld hl,52428	; offset 20055
-	ld sp,screenStartAddr+4848	; offset 20058
-	push hl	; offset 20061
-	push de	; offset 20062
-	push bc	; offset 20063
-	exx    	; offset 20064
-	push hl	; offset 20065
-	push de	; offset 20066
-	push bc	; offset 20067
+	; src_data blit 213
+	ld sp,screenStartAddr+3636	; offset 0x458f
+	ld hl,44975	; offset 0x4592
+	push hl	; offset 0x4593
+	ld hl,44975	; offset 0x4596
+	push hl	; offset 0x4597
+	ld hl,44975	; offset 0x459a
+	push hl	; offset 0x459b
+	ld hl,44975	; offset 0x459e
+	push hl	; offset 0x459f
+	ld hl,44975	; offset 0x45a2
+	push hl	; offset 0x45a3
+	ld hl,44975	; offset 0x45a6
+	push hl	; offset 0x45a7
+	; delay to get start of scanline (-144 T-states) at offset 0x45a7
 
-	; src_data blit 475
-	ld bc,52428	; offset 20068
-	ld de,52428	; offset 20071
-	ld hl,52428	; offset 20074
-	exx    	; offset 20077
-	ld bc,52428	; offset 20078
-	ld de,52428	; offset 20081
-	ld hl,52428	; offset 20084
-	ld sp,screenStartAddr+4860	; offset 20087
-	push hl	; offset 20090
-	push de	; offset 20091
-	push bc	; offset 20092
-	exx    	; offset 20093
-	push hl	; offset 20094
-	push de	; offset 20095
-	push bc	; offset 20096
+	; src_data blit 214
+	ld sp,screenStartAddr+3648	; offset 0x45aa
+	ld hl,44975	; offset 0x45ad
+	push hl	; offset 0x45ae
+	ld hl,44975	; offset 0x45b1
+	push hl	; offset 0x45b2
+	ld hl,44975	; offset 0x45b5
+	push hl	; offset 0x45b6
+	ld hl,44975	; offset 0x45b9
+	push hl	; offset 0x45ba
+	ld hl,44975	; offset 0x45bd
+	push hl	; offset 0x45be
+	ld hl,44975	; offset 0x45c1
+	push hl	; offset 0x45c2
+	; delay to get start of scanline (-144 T-states) at offset 0x45c2
 
-	; src_data blit 476
-	ld bc,52428	; offset 20097
-	ld de,52428	; offset 20100
-	ld hl,52428	; offset 20103
-	exx    	; offset 20106
-	ld bc,52428	; offset 20107
-	ld de,52428	; offset 20110
-	ld hl,52428	; offset 20113
-	ld sp,screenStartAddr+5100	; offset 20116
-	push hl	; offset 20119
-	push de	; offset 20120
-	push bc	; offset 20121
-	exx    	; offset 20122
-	push hl	; offset 20123
-	push de	; offset 20124
-	push bc	; offset 20125
+	; src_data blit 215
+	ld sp,screenStartAddr+3888	; offset 0x45c5
+	ld hl,44975	; offset 0x45c8
+	push hl	; offset 0x45c9
+	ld hl,44975	; offset 0x45cc
+	push hl	; offset 0x45cd
+	ld hl,44975	; offset 0x45d0
+	push hl	; offset 0x45d1
+	ld hl,44975	; offset 0x45d4
+	push hl	; offset 0x45d5
+	ld hl,44975	; offset 0x45d8
+	push hl	; offset 0x45d9
+	ld hl,44975	; offset 0x45dc
+	push hl	; offset 0x45dd
+	; delay to get start of scanline (-144 T-states) at offset 0x45dd
 
-	; src_data blit 477
-	ld bc,52428	; offset 20126
-	ld de,52428	; offset 20129
-	ld hl,52428	; offset 20132
-	exx    	; offset 20135
-	ld bc,52428	; offset 20136
-	ld de,52428	; offset 20139
-	ld hl,52428	; offset 20142
-	ld sp,screenStartAddr+5112	; offset 20145
-	push hl	; offset 20148
-	push de	; offset 20149
-	push bc	; offset 20150
-	exx    	; offset 20151
-	push hl	; offset 20152
-	push de	; offset 20153
-	push bc	; offset 20154
+	; src_data blit 216
+	ld sp,screenStartAddr+3900	; offset 0x45e0
+	ld hl,44975	; offset 0x45e3
+	push hl	; offset 0x45e4
+	ld hl,44975	; offset 0x45e7
+	push hl	; offset 0x45e8
+	ld hl,44975	; offset 0x45eb
+	push hl	; offset 0x45ec
+	ld hl,44975	; offset 0x45ef
+	push hl	; offset 0x45f0
+	ld hl,44975	; offset 0x45f3
+	push hl	; offset 0x45f4
+	ld hl,44975	; offset 0x45f7
+	push hl	; offset 0x45f8
+	; delay to get start of scanline (-144 T-states) at offset 0x45f8
 
-	; src_data blit 478
-	ld bc,52428	; offset 20155
-	ld de,52428	; offset 20158
-	ld hl,52428	; offset 20161
-	exx    	; offset 20164
-	ld bc,52428	; offset 20165
-	ld de,52428	; offset 20168
-	ld hl,52428	; offset 20171
-	ld sp,screenStartAddr+5364	; offset 20174
-	push hl	; offset 20177
-	push de	; offset 20178
-	push bc	; offset 20179
-	exx    	; offset 20180
-	push hl	; offset 20181
-	push de	; offset 20182
-	push bc	; offset 20183
+	; src_data blit 217
+	ld sp,screenStartAddr+3912	; offset 0x45fb
+	ld hl,44975	; offset 0x45fe
+	push hl	; offset 0x45ff
+	ld hl,44975	; offset 0x4602
+	push hl	; offset 0x4603
+	ld hl,44975	; offset 0x4606
+	push hl	; offset 0x4607
+	ld hl,44975	; offset 0x460a
+	push hl	; offset 0x460b
+	ld hl,44975	; offset 0x460e
+	push hl	; offset 0x460f
+	ld hl,44975	; offset 0x4612
+	push hl	; offset 0x4613
+	; delay to get start of scanline (-144 T-states) at offset 0x4613
 
-	; src_data blit 479
-	ld bc,52428	; offset 20184
-	ld de,52428	; offset 20187
-	ld hl,52428	; offset 20190
-	exx    	; offset 20193
-	ld bc,52428	; offset 20194
-	ld de,52428	; offset 20197
-	ld hl,52428	; offset 20200
-	ld sp,screenStartAddr+5376	; offset 20203
-	push hl	; offset 20206
-	push de	; offset 20207
-	push bc	; offset 20208
-	exx    	; offset 20209
-	push hl	; offset 20210
-	push de	; offset 20211
-	push bc	; offset 20212
+	; src_data blit 218
+	ld sp,screenStartAddr+2124	; offset 0x4616
+	ld hl,44975	; offset 0x4619
+	push hl	; offset 0x461a
+	ld hl,44975	; offset 0x461d
+	push hl	; offset 0x461e
+	ld hl,44975	; offset 0x4621
+	push hl	; offset 0x4622
+	ld hl,44975	; offset 0x4625
+	push hl	; offset 0x4626
+	ld hl,44975	; offset 0x4629
+	push hl	; offset 0x462a
+	ld hl,44975	; offset 0x462d
+	push hl	; offset 0x462e
+	; delay to get start of scanline (-144 T-states) at offset 0x462e
 
-	; src_data blit 480
-	ld bc,52428	; offset 20213
-	ld de,52428	; offset 20216
-	ld hl,52428	; offset 20219
-	exx    	; offset 20222
-	ld bc,52428	; offset 20223
-	ld de,52428	; offset 20226
-	ld hl,52428	; offset 20229
-	ld sp,screenStartAddr+5616	; offset 20232
-	push hl	; offset 20235
-	push de	; offset 20236
-	push bc	; offset 20237
-	exx    	; offset 20238
-	push hl	; offset 20239
-	push de	; offset 20240
-	push bc	; offset 20241
+	; src_data blit 219
+	ld sp,screenStartAddr+2136	; offset 0x4631
+	ld hl,44975	; offset 0x4634
+	push hl	; offset 0x4635
+	ld hl,44975	; offset 0x4638
+	push hl	; offset 0x4639
+	ld hl,44975	; offset 0x463c
+	push hl	; offset 0x463d
+	ld hl,44975	; offset 0x4640
+	push hl	; offset 0x4641
+	ld hl,44975	; offset 0x4644
+	push hl	; offset 0x4645
+	ld hl,44975	; offset 0x4648
+	push hl	; offset 0x4649
+	; delay to get start of scanline (-144 T-states) at offset 0x4649
 
-	; src_data blit 481
-	ld bc,52428	; offset 20242
-	ld de,52428	; offset 20245
-	ld hl,52428	; offset 20248
-	exx    	; offset 20251
-	ld bc,52428	; offset 20252
-	ld de,52428	; offset 20255
-	ld hl,52428	; offset 20258
-	ld sp,screenStartAddr+5628	; offset 20261
-	push hl	; offset 20264
-	push de	; offset 20265
-	push bc	; offset 20266
-	exx    	; offset 20267
-	push hl	; offset 20268
-	push de	; offset 20269
-	push bc	; offset 20270
+	; src_data blit 220
+	ld sp,screenStartAddr+2148	; offset 0x464c
+	ld hl,44975	; offset 0x464f
+	push hl	; offset 0x4650
+	ld hl,44975	; offset 0x4653
+	push hl	; offset 0x4654
+	ld hl,44975	; offset 0x4657
+	push hl	; offset 0x4658
+	ld hl,44975	; offset 0x465b
+	push hl	; offset 0x465c
+	ld hl,44975	; offset 0x465f
+	push hl	; offset 0x4660
+	ld hl,44975	; offset 0x4663
+	push hl	; offset 0x4664
+	; delay to get start of scanline (-144 T-states) at offset 0x4664
 
-	ld sp,(spBackupAddr)
+	; src_data blit 221
+	ld sp,screenStartAddr+2388	; offset 0x4667
+	ld hl,44975	; offset 0x466a
+	push hl	; offset 0x466b
+	ld hl,44975	; offset 0x466e
+	push hl	; offset 0x466f
+	ld hl,44975	; offset 0x4672
+	push hl	; offset 0x4673
+	ld hl,44975	; offset 0x4676
+	push hl	; offset 0x4677
+	ld hl,44975	; offset 0x467a
+	push hl	; offset 0x467b
+	ld hl,44975	; offset 0x467e
+	push hl	; offset 0x467f
+	; delay to get start of scanline (-144 T-states) at offset 0x467f
+
+	; src_data blit 222
+	ld sp,screenStartAddr+2400	; offset 0x4682
+	ld hl,44975	; offset 0x4685
+	push hl	; offset 0x4686
+	ld hl,44975	; offset 0x4689
+	push hl	; offset 0x468a
+	ld hl,44975	; offset 0x468d
+	push hl	; offset 0x468e
+	ld hl,44975	; offset 0x4691
+	push hl	; offset 0x4692
+	ld hl,44975	; offset 0x4695
+	push hl	; offset 0x4696
+	ld hl,44975	; offset 0x4699
+	push hl	; offset 0x469a
+	; delay to get start of scanline (-144 T-states) at offset 0x469a
+
+	; src_data blit 223
+	ld sp,screenStartAddr+2640	; offset 0x469d
+	ld hl,44975	; offset 0x46a0
+	push hl	; offset 0x46a1
+	ld hl,44975	; offset 0x46a4
+	push hl	; offset 0x46a5
+	ld hl,44975	; offset 0x46a8
+	push hl	; offset 0x46a9
+	ld hl,44975	; offset 0x46ac
+	push hl	; offset 0x46ad
+	ld hl,44975	; offset 0x46b0
+	push hl	; offset 0x46b1
+	ld hl,44975	; offset 0x46b4
+	push hl	; offset 0x46b5
+	; delay to get start of scanline (-144 T-states) at offset 0x46b5
+
+	; src_data blit 224
+	ld sp,screenStartAddr+2652	; offset 0x46b8
+	ld hl,44975	; offset 0x46bb
+	push hl	; offset 0x46bc
+	ld hl,44975	; offset 0x46bf
+	push hl	; offset 0x46c0
+	ld hl,44975	; offset 0x46c3
+	push hl	; offset 0x46c4
+	ld hl,44975	; offset 0x46c7
+	push hl	; offset 0x46c8
+	ld hl,44975	; offset 0x46cb
+	push hl	; offset 0x46cc
+	ld hl,44975	; offset 0x46cf
+	push hl	; offset 0x46d0
+	; delay to get start of scanline (-144 T-states) at offset 0x46d0
+
+	; src_data blit 225
+	ld sp,screenStartAddr+2664	; offset 0x46d3
+	ld hl,44975	; offset 0x46d6
+	push hl	; offset 0x46d7
+	ld hl,44975	; offset 0x46da
+	push hl	; offset 0x46db
+	ld hl,44975	; offset 0x46de
+	push hl	; offset 0x46df
+	ld hl,44975	; offset 0x46e2
+	push hl	; offset 0x46e3
+	ld hl,44975	; offset 0x46e6
+	push hl	; offset 0x46e7
+	ld hl,44975	; offset 0x46ea
+	push hl	; offset 0x46eb
+	; delay to get start of scanline (-144 T-states) at offset 0x46eb
+
+	; src_data blit 226
+	ld sp,screenStartAddr+2892	; offset 0x46ee
+	ld hl,44975	; offset 0x46f1
+	push hl	; offset 0x46f2
+	ld hl,44975	; offset 0x46f5
+	push hl	; offset 0x46f6
+	ld hl,44975	; offset 0x46f9
+	push hl	; offset 0x46fa
+	ld hl,44975	; offset 0x46fd
+	push hl	; offset 0x46fe
+	ld hl,44975	; offset 0x4701
+	push hl	; offset 0x4702
+	ld hl,44975	; offset 0x4705
+	push hl	; offset 0x4706
+	; delay to get start of scanline (-144 T-states) at offset 0x4706
+
+	; src_data blit 227
+	ld sp,screenStartAddr+2904	; offset 0x4709
+	ld hl,44975	; offset 0x470c
+	push hl	; offset 0x470d
+	ld hl,44975	; offset 0x4710
+	push hl	; offset 0x4711
+	ld hl,44975	; offset 0x4714
+	push hl	; offset 0x4715
+	ld hl,44975	; offset 0x4718
+	push hl	; offset 0x4719
+	ld hl,44975	; offset 0x471c
+	push hl	; offset 0x471d
+	ld hl,44975	; offset 0x4720
+	push hl	; offset 0x4721
+	; delay to get start of scanline (-144 T-states) at offset 0x4721
+
+	; src_data blit 228
+	ld sp,screenStartAddr+2916	; offset 0x4724
+	ld hl,44975	; offset 0x4727
+	push hl	; offset 0x4728
+	ld hl,44975	; offset 0x472b
+	push hl	; offset 0x472c
+	ld hl,44975	; offset 0x472f
+	push hl	; offset 0x4730
+	ld hl,44975	; offset 0x4733
+	push hl	; offset 0x4734
+	ld hl,44975	; offset 0x4737
+	push hl	; offset 0x4738
+	ld hl,44975	; offset 0x473b
+	push hl	; offset 0x473c
+	; delay to get start of scanline (-144 T-states) at offset 0x473c
+
+	; src_data blit 229
+	ld sp,screenStartAddr+3156	; offset 0x473f
+	ld hl,44975	; offset 0x4742
+	push hl	; offset 0x4743
+	ld hl,44975	; offset 0x4746
+	push hl	; offset 0x4747
+	ld hl,44975	; offset 0x474a
+	push hl	; offset 0x474b
+	ld hl,44975	; offset 0x474e
+	push hl	; offset 0x474f
+	ld hl,44975	; offset 0x4752
+	push hl	; offset 0x4753
+	ld hl,44975	; offset 0x4756
+	push hl	; offset 0x4757
+	; delay to get start of scanline (-144 T-states) at offset 0x4757
+
+	; src_data blit 230
+	ld sp,screenStartAddr+3168	; offset 0x475a
+	ld hl,44975	; offset 0x475d
+	push hl	; offset 0x475e
+	ld hl,44975	; offset 0x4761
+	push hl	; offset 0x4762
+	ld hl,44975	; offset 0x4765
+	push hl	; offset 0x4766
+	ld hl,44975	; offset 0x4769
+	push hl	; offset 0x476a
+	ld hl,44975	; offset 0x476d
+	push hl	; offset 0x476e
+	ld hl,44975	; offset 0x4771
+	push hl	; offset 0x4772
+	; delay to get start of scanline (-144 T-states) at offset 0x4772
+
+	; src_data blit 231
+	ld sp,screenStartAddr+3408	; offset 0x4775
+	ld hl,44975	; offset 0x4778
+	push hl	; offset 0x4779
+	ld hl,44975	; offset 0x477c
+	push hl	; offset 0x477d
+	ld hl,44975	; offset 0x4780
+	push hl	; offset 0x4781
+	ld hl,44975	; offset 0x4784
+	push hl	; offset 0x4785
+	ld hl,44975	; offset 0x4788
+	push hl	; offset 0x4789
+	ld hl,44975	; offset 0x478c
+	push hl	; offset 0x478d
+	; delay to get start of scanline (-144 T-states) at offset 0x478d
+
+	; src_data blit 232
+	ld sp,screenStartAddr+3420	; offset 0x4790
+	ld hl,44975	; offset 0x4793
+	push hl	; offset 0x4794
+	ld hl,44975	; offset 0x4797
+	push hl	; offset 0x4798
+	ld hl,44975	; offset 0x479b
+	push hl	; offset 0x479c
+	ld hl,44975	; offset 0x479f
+	push hl	; offset 0x47a0
+	ld hl,44975	; offset 0x47a3
+	push hl	; offset 0x47a4
+	ld hl,44975	; offset 0x47a7
+	push hl	; offset 0x47a8
+	; delay to get start of scanline (-144 T-states) at offset 0x47a8
+
+	; src_data blit 233
+	ld sp,screenStartAddr+3432	; offset 0x47ab
+	ld hl,44975	; offset 0x47ae
+	push hl	; offset 0x47af
+	ld hl,44975	; offset 0x47b2
+	push hl	; offset 0x47b3
+	ld hl,44975	; offset 0x47b6
+	push hl	; offset 0x47b7
+	ld hl,44975	; offset 0x47ba
+	push hl	; offset 0x47bb
+	ld hl,44975	; offset 0x47be
+	push hl	; offset 0x47bf
+	ld hl,44975	; offset 0x47c2
+	push hl	; offset 0x47c3
+	; delay to get start of scanline (-144 T-states) at offset 0x47c3
+
+	; src_data blit 234
+	ld sp,screenStartAddr+3660	; offset 0x47c6
+	ld hl,44975	; offset 0x47c9
+	push hl	; offset 0x47ca
+	ld hl,44975	; offset 0x47cd
+	push hl	; offset 0x47ce
+	ld hl,44975	; offset 0x47d1
+	push hl	; offset 0x47d2
+	ld hl,44975	; offset 0x47d5
+	push hl	; offset 0x47d6
+	ld hl,44975	; offset 0x47d9
+	push hl	; offset 0x47da
+	ld hl,44975	; offset 0x47dd
+	push hl	; offset 0x47de
+	; delay to get start of scanline (-144 T-states) at offset 0x47de
+
+	; src_data blit 235
+	ld sp,screenStartAddr+3672	; offset 0x47e1
+	ld hl,44975	; offset 0x47e4
+	push hl	; offset 0x47e5
+	ld hl,44975	; offset 0x47e8
+	push hl	; offset 0x47e9
+	ld hl,44975	; offset 0x47ec
+	push hl	; offset 0x47ed
+	ld hl,44975	; offset 0x47f0
+	push hl	; offset 0x47f1
+	ld hl,44975	; offset 0x47f4
+	push hl	; offset 0x47f5
+	ld hl,44975	; offset 0x47f8
+	push hl	; offset 0x47f9
+	; delay to get start of scanline (-144 T-states) at offset 0x47f9
+
+	; src_data blit 236
+	ld sp,screenStartAddr+3684	; offset 0x47fc
+	ld hl,44975	; offset 0x47ff
+	push hl	; offset 0x4800
+	ld hl,44975	; offset 0x4803
+	push hl	; offset 0x4804
+	ld hl,44975	; offset 0x4807
+	push hl	; offset 0x4808
+	ld hl,44975	; offset 0x480b
+	push hl	; offset 0x480c
+	ld hl,44975	; offset 0x480f
+	push hl	; offset 0x4810
+	ld hl,44975	; offset 0x4813
+	push hl	; offset 0x4814
+	; delay to get start of scanline (-144 T-states) at offset 0x4814
+
+	; src_data blit 237
+	ld sp,screenStartAddr+3924	; offset 0x4817
+	ld hl,44975	; offset 0x481a
+	push hl	; offset 0x481b
+	ld hl,44975	; offset 0x481e
+	push hl	; offset 0x481f
+	ld hl,44975	; offset 0x4822
+	push hl	; offset 0x4823
+	ld hl,44975	; offset 0x4826
+	push hl	; offset 0x4827
+	ld hl,44975	; offset 0x482a
+	push hl	; offset 0x482b
+	ld hl,44975	; offset 0x482e
+	push hl	; offset 0x482f
+	; delay to get start of scanline (-144 T-states) at offset 0x482f
+
+	; src_data blit 238
+	ld sp,screenStartAddr+3936	; offset 0x4832
+	ld hl,44975	; offset 0x4835
+	push hl	; offset 0x4836
+	ld hl,44975	; offset 0x4839
+	push hl	; offset 0x483a
+	ld hl,44975	; offset 0x483d
+	push hl	; offset 0x483e
+	ld hl,44975	; offset 0x4841
+	push hl	; offset 0x4842
+	ld hl,44975	; offset 0x4845
+	push hl	; offset 0x4846
+	ld hl,44975	; offset 0x4849
+	push hl	; offset 0x484a
+	; delay to get start of scanline (-144 T-states) at offset 0x484a
+
+	; src_data blit 239
+	ld sp,screenStartAddr+2160	; offset 0x484d
+	ld hl,44975	; offset 0x4850
+	push hl	; offset 0x4851
+	ld hl,44975	; offset 0x4854
+	push hl	; offset 0x4855
+	ld hl,44975	; offset 0x4858
+	push hl	; offset 0x4859
+	ld hl,44975	; offset 0x485c
+	push hl	; offset 0x485d
+	ld hl,44975	; offset 0x4860
+	push hl	; offset 0x4861
+	ld hl,44975	; offset 0x4864
+	push hl	; offset 0x4865
+	; delay to get start of scanline (-144 T-states) at offset 0x4865
+
+	; src_data blit 240
+	ld sp,screenStartAddr+2172	; offset 0x4868
+	ld hl,44975	; offset 0x486b
+	push hl	; offset 0x486c
+	ld hl,44975	; offset 0x486f
+	push hl	; offset 0x4870
+	ld hl,44975	; offset 0x4873
+	push hl	; offset 0x4874
+	ld hl,44975	; offset 0x4877
+	push hl	; offset 0x4878
+	ld hl,44975	; offset 0x487b
+	push hl	; offset 0x487c
+	ld hl,44975	; offset 0x487f
+	push hl	; offset 0x4880
+	; delay to get start of scanline (-144 T-states) at offset 0x4880
+
+	; src_data blit 241
+	ld sp,screenStartAddr+2184	; offset 0x4883
+	ld hl,44975	; offset 0x4886
+	push hl	; offset 0x4887
+	ld hl,44975	; offset 0x488a
+	push hl	; offset 0x488b
+	ld hl,44975	; offset 0x488e
+	push hl	; offset 0x488f
+	ld hl,44975	; offset 0x4892
+	push hl	; offset 0x4893
+	ld hl,44975	; offset 0x4896
+	push hl	; offset 0x4897
+	ld hl,44975	; offset 0x489a
+	push hl	; offset 0x489b
+	; delay to get start of scanline (-144 T-states) at offset 0x489b
+
+	; src_data blit 242
+	ld sp,screenStartAddr+2412	; offset 0x489e
+	ld hl,44975	; offset 0x48a1
+	push hl	; offset 0x48a2
+	ld hl,44975	; offset 0x48a5
+	push hl	; offset 0x48a6
+	ld hl,44975	; offset 0x48a9
+	push hl	; offset 0x48aa
+	ld hl,44975	; offset 0x48ad
+	push hl	; offset 0x48ae
+	ld hl,44975	; offset 0x48b1
+	push hl	; offset 0x48b2
+	ld hl,44975	; offset 0x48b5
+	push hl	; offset 0x48b6
+	; delay to get start of scanline (-144 T-states) at offset 0x48b6
+
+	; src_data blit 243
+	ld sp,screenStartAddr+2424	; offset 0x48b9
+	ld hl,44975	; offset 0x48bc
+	push hl	; offset 0x48bd
+	ld hl,44975	; offset 0x48c0
+	push hl	; offset 0x48c1
+	ld hl,44975	; offset 0x48c4
+	push hl	; offset 0x48c5
+	ld hl,44975	; offset 0x48c8
+	push hl	; offset 0x48c9
+	ld hl,44975	; offset 0x48cc
+	push hl	; offset 0x48cd
+	ld hl,44975	; offset 0x48d0
+	push hl	; offset 0x48d1
+	; delay to get start of scanline (-144 T-states) at offset 0x48d1
+
+	; src_data blit 244
+	ld sp,screenStartAddr+2436	; offset 0x48d4
+	ld hl,44975	; offset 0x48d7
+	push hl	; offset 0x48d8
+	ld hl,44975	; offset 0x48db
+	push hl	; offset 0x48dc
+	ld hl,44975	; offset 0x48df
+	push hl	; offset 0x48e0
+	ld hl,44975	; offset 0x48e3
+	push hl	; offset 0x48e4
+	ld hl,44975	; offset 0x48e7
+	push hl	; offset 0x48e8
+	ld hl,44975	; offset 0x48eb
+	push hl	; offset 0x48ec
+	; delay to get start of scanline (-144 T-states) at offset 0x48ec
+
+	; src_data blit 245
+	ld sp,screenStartAddr+2676	; offset 0x48ef
+	ld hl,44975	; offset 0x48f2
+	push hl	; offset 0x48f3
+	ld hl,44975	; offset 0x48f6
+	push hl	; offset 0x48f7
+	ld hl,44975	; offset 0x48fa
+	push hl	; offset 0x48fb
+	ld hl,44975	; offset 0x48fe
+	push hl	; offset 0x48ff
+	ld hl,44975	; offset 0x4902
+	push hl	; offset 0x4903
+	ld hl,44975	; offset 0x4906
+	push hl	; offset 0x4907
+	; delay to get start of scanline (-144 T-states) at offset 0x4907
+
+	; src_data blit 246
+	ld sp,screenStartAddr+2688	; offset 0x490a
+	ld hl,44975	; offset 0x490d
+	push hl	; offset 0x490e
+	ld hl,44975	; offset 0x4911
+	push hl	; offset 0x4912
+	ld hl,44975	; offset 0x4915
+	push hl	; offset 0x4916
+	ld hl,44975	; offset 0x4919
+	push hl	; offset 0x491a
+	ld hl,44975	; offset 0x491d
+	push hl	; offset 0x491e
+	ld hl,44975	; offset 0x4921
+	push hl	; offset 0x4922
+	; delay to get start of scanline (-144 T-states) at offset 0x4922
+
+	; src_data blit 247
+	ld sp,screenStartAddr+2928	; offset 0x4925
+	ld hl,44975	; offset 0x4928
+	push hl	; offset 0x4929
+	ld hl,44975	; offset 0x492c
+	push hl	; offset 0x492d
+	ld hl,44975	; offset 0x4930
+	push hl	; offset 0x4931
+	ld hl,44975	; offset 0x4934
+	push hl	; offset 0x4935
+	ld hl,44975	; offset 0x4938
+	push hl	; offset 0x4939
+	ld hl,44975	; offset 0x493c
+	push hl	; offset 0x493d
+	; delay to get start of scanline (-144 T-states) at offset 0x493d
+
+	; src_data blit 248
+	ld sp,screenStartAddr+2940	; offset 0x4940
+	ld hl,44975	; offset 0x4943
+	push hl	; offset 0x4944
+	ld hl,44975	; offset 0x4947
+	push hl	; offset 0x4948
+	ld hl,44975	; offset 0x494b
+	push hl	; offset 0x494c
+	ld hl,44975	; offset 0x494f
+	push hl	; offset 0x4950
+	ld hl,44975	; offset 0x4953
+	push hl	; offset 0x4954
+	ld hl,44975	; offset 0x4957
+	push hl	; offset 0x4958
+	; delay to get start of scanline (-144 T-states) at offset 0x4958
+
+	; src_data blit 249
+	ld sp,screenStartAddr+2952	; offset 0x495b
+	ld hl,44975	; offset 0x495e
+	push hl	; offset 0x495f
+	ld hl,44975	; offset 0x4962
+	push hl	; offset 0x4963
+	ld hl,44975	; offset 0x4966
+	push hl	; offset 0x4967
+	ld hl,44975	; offset 0x496a
+	push hl	; offset 0x496b
+	ld hl,44975	; offset 0x496e
+	push hl	; offset 0x496f
+	ld hl,44975	; offset 0x4972
+	push hl	; offset 0x4973
+	; delay to get start of scanline (-144 T-states) at offset 0x4973
+
+	; src_data blit 250
+	ld sp,screenStartAddr+3180	; offset 0x4976
+	ld hl,44975	; offset 0x4979
+	push hl	; offset 0x497a
+	ld hl,44975	; offset 0x497d
+	push hl	; offset 0x497e
+	ld hl,44975	; offset 0x4981
+	push hl	; offset 0x4982
+	ld hl,44975	; offset 0x4985
+	push hl	; offset 0x4986
+	ld hl,44975	; offset 0x4989
+	push hl	; offset 0x498a
+	ld hl,44975	; offset 0x498d
+	push hl	; offset 0x498e
+	; delay to get start of scanline (-144 T-states) at offset 0x498e
+
+	; src_data blit 251
+	ld sp,screenStartAddr+3192	; offset 0x4991
+	ld hl,44975	; offset 0x4994
+	push hl	; offset 0x4995
+	ld hl,44975	; offset 0x4998
+	push hl	; offset 0x4999
+	ld hl,44975	; offset 0x499c
+	push hl	; offset 0x499d
+	ld hl,44975	; offset 0x49a0
+	push hl	; offset 0x49a1
+	ld hl,44975	; offset 0x49a4
+	push hl	; offset 0x49a5
+	ld hl,44975	; offset 0x49a8
+	push hl	; offset 0x49a9
+	; delay to get start of scanline (-144 T-states) at offset 0x49a9
+
+	; src_data blit 252
+	ld sp,screenStartAddr+3204	; offset 0x49ac
+	ld hl,44975	; offset 0x49af
+	push hl	; offset 0x49b0
+	ld hl,44975	; offset 0x49b3
+	push hl	; offset 0x49b4
+	ld hl,44975	; offset 0x49b7
+	push hl	; offset 0x49b8
+	ld hl,44975	; offset 0x49bb
+	push hl	; offset 0x49bc
+	ld hl,44975	; offset 0x49bf
+	push hl	; offset 0x49c0
+	ld hl,44975	; offset 0x49c3
+	push hl	; offset 0x49c4
+	; delay to get start of scanline (-144 T-states) at offset 0x49c4
+
+	; src_data blit 253
+	ld sp,screenStartAddr+3444	; offset 0x49c7
+	ld hl,44975	; offset 0x49ca
+	push hl	; offset 0x49cb
+	ld hl,44975	; offset 0x49ce
+	push hl	; offset 0x49cf
+	ld hl,44975	; offset 0x49d2
+	push hl	; offset 0x49d3
+	ld hl,44975	; offset 0x49d6
+	push hl	; offset 0x49d7
+	ld hl,44975	; offset 0x49da
+	push hl	; offset 0x49db
+	ld hl,44975	; offset 0x49de
+	push hl	; offset 0x49df
+	; delay to get start of scanline (-144 T-states) at offset 0x49df
+
+	; src_data blit 254
+	ld sp,screenStartAddr+3456	; offset 0x49e2
+	ld hl,44975	; offset 0x49e5
+	push hl	; offset 0x49e6
+	ld hl,44975	; offset 0x49e9
+	push hl	; offset 0x49ea
+	ld hl,44975	; offset 0x49ed
+	push hl	; offset 0x49ee
+	ld hl,44975	; offset 0x49f1
+	push hl	; offset 0x49f2
+	ld hl,44975	; offset 0x49f5
+	push hl	; offset 0x49f6
+	ld hl,44975	; offset 0x49f9
+	push hl	; offset 0x49fa
+	; delay to get start of scanline (-144 T-states) at offset 0x49fa
+
+	; src_data blit 255
+	ld sp,screenStartAddr+3696	; offset 0x49fd
+	ld hl,44975	; offset 0x4a00
+	push hl	; offset 0x4a01
+	ld hl,44975	; offset 0x4a04
+	push hl	; offset 0x4a05
+	ld hl,44975	; offset 0x4a08
+	push hl	; offset 0x4a09
+	ld hl,44975	; offset 0x4a0c
+	push hl	; offset 0x4a0d
+	ld hl,44975	; offset 0x4a10
+	push hl	; offset 0x4a11
+	ld hl,44975	; offset 0x4a14
+	push hl	; offset 0x4a15
+	; delay to get start of scanline (-144 T-states) at offset 0x4a15
+
+	; src_data blit 256
+	ld sp,screenStartAddr+3708	; offset 0x4a18
+	ld hl,44975	; offset 0x4a1b
+	push hl	; offset 0x4a1c
+	ld hl,44975	; offset 0x4a1f
+	push hl	; offset 0x4a20
+	ld hl,44975	; offset 0x4a23
+	push hl	; offset 0x4a24
+	ld hl,44975	; offset 0x4a27
+	push hl	; offset 0x4a28
+	ld hl,44975	; offset 0x4a2b
+	push hl	; offset 0x4a2c
+	ld hl,44975	; offset 0x4a2f
+	push hl	; offset 0x4a30
+	; delay to get start of scanline (-144 T-states) at offset 0x4a30
+
+	; src_data blit 257
+	ld sp,screenStartAddr+3720	; offset 0x4a33
+	ld hl,44975	; offset 0x4a36
+	push hl	; offset 0x4a37
+	ld hl,44975	; offset 0x4a3a
+	push hl	; offset 0x4a3b
+	ld hl,44975	; offset 0x4a3e
+	push hl	; offset 0x4a3f
+	ld hl,44975	; offset 0x4a42
+	push hl	; offset 0x4a43
+	ld hl,44975	; offset 0x4a46
+	push hl	; offset 0x4a47
+	ld hl,44975	; offset 0x4a4a
+	push hl	; offset 0x4a4b
+	; delay to get start of scanline (-144 T-states) at offset 0x4a4b
+
+	; src_data blit 258
+	ld sp,screenStartAddr+3948	; offset 0x4a4e
+	ld hl,44975	; offset 0x4a51
+	push hl	; offset 0x4a52
+	ld hl,44975	; offset 0x4a55
+	push hl	; offset 0x4a56
+	ld hl,44975	; offset 0x4a59
+	push hl	; offset 0x4a5a
+	ld hl,44975	; offset 0x4a5d
+	push hl	; offset 0x4a5e
+	ld hl,44975	; offset 0x4a61
+	push hl	; offset 0x4a62
+	ld hl,44975	; offset 0x4a65
+	push hl	; offset 0x4a66
+	; delay to get start of scanline (-144 T-states) at offset 0x4a66
+
+	; src_data blit 259
+	ld sp,screenStartAddr+3960	; offset 0x4a69
+	ld hl,44975	; offset 0x4a6c
+	push hl	; offset 0x4a6d
+	ld hl,44975	; offset 0x4a70
+	push hl	; offset 0x4a71
+	ld hl,44975	; offset 0x4a74
+	push hl	; offset 0x4a75
+	ld hl,44975	; offset 0x4a78
+	push hl	; offset 0x4a79
+	ld hl,44975	; offset 0x4a7c
+	push hl	; offset 0x4a7d
+	ld hl,44975	; offset 0x4a80
+	push hl	; offset 0x4a81
+	; delay to get start of scanline (-144 T-states) at offset 0x4a81
+
+	; src_data blit 260
+	ld sp,screenStartAddr+3972	; offset 0x4a84
+	ld hl,44975	; offset 0x4a87
+	push hl	; offset 0x4a88
+	ld hl,44975	; offset 0x4a8b
+	push hl	; offset 0x4a8c
+	ld hl,44975	; offset 0x4a8f
+	push hl	; offset 0x4a90
+	ld hl,44975	; offset 0x4a93
+	push hl	; offset 0x4a94
+	ld hl,44975	; offset 0x4a97
+	push hl	; offset 0x4a98
+	ld hl,44975	; offset 0x4a9b
+	push hl	; offset 0x4a9c
+	; delay to get start of scanline (-144 T-states) at offset 0x4a9c
+
+	; src_data blit 261
+	ld sp,screenStartAddr+2196	; offset 0x4a9f
+	ld hl,44975	; offset 0x4aa2
+	push hl	; offset 0x4aa3
+	ld hl,44975	; offset 0x4aa6
+	push hl	; offset 0x4aa7
+	ld hl,44975	; offset 0x4aaa
+	push hl	; offset 0x4aab
+	ld hl,44975	; offset 0x4aae
+	push hl	; offset 0x4aaf
+	ld hl,44975	; offset 0x4ab2
+	push hl	; offset 0x4ab3
+	ld hl,44975	; offset 0x4ab6
+	push hl	; offset 0x4ab7
+	; delay to get start of scanline (-144 T-states) at offset 0x4ab7
+
+	; src_data blit 262
+	ld sp,screenStartAddr+2208	; offset 0x4aba
+	ld hl,44975	; offset 0x4abd
+	push hl	; offset 0x4abe
+	ld hl,44975	; offset 0x4ac1
+	push hl	; offset 0x4ac2
+	ld hl,44975	; offset 0x4ac5
+	push hl	; offset 0x4ac6
+	ld hl,44975	; offset 0x4ac9
+	push hl	; offset 0x4aca
+	ld hl,44975	; offset 0x4acd
+	push hl	; offset 0x4ace
+	ld hl,44975	; offset 0x4ad1
+	push hl	; offset 0x4ad2
+	; delay to get start of scanline (-144 T-states) at offset 0x4ad2
+
+	; src_data blit 263
+	ld sp,screenStartAddr+2448	; offset 0x4ad5
+	ld hl,44975	; offset 0x4ad8
+	push hl	; offset 0x4ad9
+	ld hl,44975	; offset 0x4adc
+	push hl	; offset 0x4add
+	ld hl,44975	; offset 0x4ae0
+	push hl	; offset 0x4ae1
+	ld hl,44975	; offset 0x4ae4
+	push hl	; offset 0x4ae5
+	ld hl,44975	; offset 0x4ae8
+	push hl	; offset 0x4ae9
+	ld hl,44975	; offset 0x4aec
+	push hl	; offset 0x4aed
+	; delay to get start of scanline (-144 T-states) at offset 0x4aed
+
+	; src_data blit 264
+	ld sp,screenStartAddr+2460	; offset 0x4af0
+	ld hl,44975	; offset 0x4af3
+	push hl	; offset 0x4af4
+	ld hl,44975	; offset 0x4af7
+	push hl	; offset 0x4af8
+	ld hl,44975	; offset 0x4afb
+	push hl	; offset 0x4afc
+	ld hl,44975	; offset 0x4aff
+	push hl	; offset 0x4b00
+	ld hl,44975	; offset 0x4b03
+	push hl	; offset 0x4b04
+	ld hl,44975	; offset 0x4b07
+	push hl	; offset 0x4b08
+	; delay to get start of scanline (-144 T-states) at offset 0x4b08
+
+	; src_data blit 265
+	ld sp,screenStartAddr+2472	; offset 0x4b0b
+	ld hl,44975	; offset 0x4b0e
+	push hl	; offset 0x4b0f
+	ld hl,44975	; offset 0x4b12
+	push hl	; offset 0x4b13
+	ld hl,44975	; offset 0x4b16
+	push hl	; offset 0x4b17
+	ld hl,44975	; offset 0x4b1a
+	push hl	; offset 0x4b1b
+	ld hl,44975	; offset 0x4b1e
+	push hl	; offset 0x4b1f
+	ld hl,44975	; offset 0x4b22
+	push hl	; offset 0x4b23
+	; delay to get start of scanline (-144 T-states) at offset 0x4b23
+
+	; src_data blit 266
+	ld sp,screenStartAddr+2700	; offset 0x4b26
+	ld hl,44975	; offset 0x4b29
+	push hl	; offset 0x4b2a
+	ld hl,44975	; offset 0x4b2d
+	push hl	; offset 0x4b2e
+	ld hl,44975	; offset 0x4b31
+	push hl	; offset 0x4b32
+	ld hl,44975	; offset 0x4b35
+	push hl	; offset 0x4b36
+	ld hl,44975	; offset 0x4b39
+	push hl	; offset 0x4b3a
+	ld hl,44975	; offset 0x4b3d
+	push hl	; offset 0x4b3e
+	; delay to get start of scanline (-144 T-states) at offset 0x4b3e
+
+	; src_data blit 267
+	ld sp,screenStartAddr+2712	; offset 0x4b41
+	ld hl,44975	; offset 0x4b44
+	push hl	; offset 0x4b45
+	ld hl,44975	; offset 0x4b48
+	push hl	; offset 0x4b49
+	ld hl,44975	; offset 0x4b4c
+	push hl	; offset 0x4b4d
+	ld hl,44975	; offset 0x4b50
+	push hl	; offset 0x4b51
+	ld hl,44975	; offset 0x4b54
+	push hl	; offset 0x4b55
+	ld hl,44975	; offset 0x4b58
+	push hl	; offset 0x4b59
+	; delay to get start of scanline (-144 T-states) at offset 0x4b59
+
+	; Jump to second half of frame render (normally jumps back to pop_push_even, and MCU swaps buffer pointer so new command list exists in same memory space)
+	jp fake_jmp
+fake_jmp:
+
+	; Restore the stack pointer
+	ld sp,(spBackupAddr)	; offset 0x4b5f
 	ret
 
 	SAVEBIN "sp48.rom",0,$
