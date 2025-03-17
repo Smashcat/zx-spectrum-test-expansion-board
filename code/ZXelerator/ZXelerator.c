@@ -24,7 +24,7 @@
 // gpio pins
 // ---------------------------------------------------------------------------
 #define PIN_A0      0   // GPIO 0-13 for A0-A13
-#define PIN_D0      14  // GPIO 15-21 for D0-D7
+#define PIN_D0      14  // GPIO 14-21 for D0-D7
 #define PIN_LED     25  // Default LED pin for Pico (not W)
 //                  3         2         1   
 //                 10987654321098765432109876543210
@@ -40,62 +40,18 @@
 #define poMaskn  0b0011111111000000
 #define lkMask   0b0011111111100000
 #define bkMask   0b0000000000001111
-//
-const uint8_t MAXROMS=*(&roms + 1) - roms; // test
-uint8_t bank1[131072];   // equivalent to a 128K EPROM
-uint8_t romSelector[16384];
-volatile uint8_t rompos=0;     
-volatile bool pagingOn=false;    
-volatile uint32_t adder=0;     
+
 PIO pio;
 uint addr_data_sm;
+uint32_t bank1SwapCnt=0;
+uint32_t currentBank=0;
+
 //
-void dtoBuffer(uint8_t *to,const uint8_t *from);
-uint16_t simplelz(uint8_t* fload,uint8_t* store,uint16_t filesize);
+//void dtoBuffer(uint8_t *to,const uint8_t *from);
+//uint16_t simplelz(uint8_t* fload,uint8_t* store,uint16_t filesize);
 void resetButton(uint gpio,uint32_t events);
 //
 void main() {
-    // ---------------------------------------------------------------------
-    // build the ROM Selector ROM from picoif2_lite.h, only need to do this once
-    //   ** this is specific to the ROM Explorer ROM **
-    // ---------------------------------------------------------------------
-    dtoBuffer(romSelector,roms[0]); // ROM Explorer ROM into romSelector
-    // 0x0123 maxroms (-1)
-    // 0x0160 maxpages
-    romSelector[0x012e]=MAXROMS-1;
-    romSelector[0x016b]=((MAXROMS-1)/21)+1;                
-    uint16_t bpos=0;
-    uint8_t romnum=0;          
-    // build text in bank 1
-    do {
-        if(romnum==MAXROMS-1) bank1[bpos++]=31;
-        else bank1[bpos++]=30;
-        uint i=0;
-        do {
-            if(roms[romnum][2+i]<0x20||roms[romnum][2+i]>=0x80) {
-                bank1[bpos++]=0x20;
-            } else {
-                bank1[bpos++]=roms[romnum][2+i];
-            }                
-            i++;
-        } while(roms[romnum][2+i]!=0&&i<32);
-        if(roms[romnum][0]==1) {
-            bank1[bpos++]=9;
-            bank1[bpos++]=28;
-            bank1[bpos++]=29;
-        } else if(roms[romnum][0]==3||roms[romnum][0]==8) { // 48k or 128k snapshot
-            bank1[bpos++]=9;
-            bank1[bpos++]=26;
-            bank1[bpos++]=27;
-        }
-        if(romnum==MAXROMS-1||(romnum+1)%21==0) {
-            bank1[bpos++]=0;
-        }
-        else {
-            bank1[bpos++]=10;
-        }
-    } while(++romnum!=MAXROMS);
-    uint16_t compsize=simplelz(bank1,&romSelector[0x1e00],bpos);  // compress the text and put into romSelector               
     // -------------------------------
     // set-up user, romcs & reset gpio
     // -------------------------------
@@ -148,45 +104,21 @@ void main() {
     uint32_t c;
     while(true) {
         address=pio_sm_get_blocking(pio,addr_data_sm);
-        pio_sm_put_blocking(pio,addr_data_sm,bank1[address+adder]); // if ROMCS off then direction of Data chip is input so they do not interfere
+//        pio_sm_put_blocking(pio,addr_data_sm,bank1[address+adder]); // if ROMCS off then direction of Data chip is input so they do not interfere
+        pio_sm_put_blocking(pio,addr_data_sm,bank[currentBank][address]); // if ROMCS off then direction of Data chip is input so they do not interfere
         // z80 routine
-        if((roms[rompos][0]==3||roms[rompos][0]==8)) {      
-            if(address==0x3fff) {
-                if(pagingOn==true) {
-                    gpio_xor_mask(MASK_LED);
-                    adder+=16384;
-                    if(adder==roms[rompos][0]*16384) {
-                        adder=0;
-                        pagingOn=false;
-                    }
-                } else {
-                    gpio_put(PIN_ROMCS,false);    // ROM off
-                    gpio_put(PIN_LED,false);                    
-                }
-            }
-        } else if(roms[rompos][0]==1&&pagingOn==true) {
-                // top 64 ROM locations (0x3fc0-0x3fff)
-                // 15 14 13 12 11 10  9  8  7  6  5  4  3  2  1  0
-                //  0  0  1  1  1  1  1  1  1  1  l  p  b  b  b  b
-                // (l)ock - set to 1 to prevent further paging (0x3fe0)
-                // (p)age out - set to 1 to page out the ROM cartridge, 0 to page back in (0x3fd0)
-                // (b)ank - select between the 16 banks
-                if(address>=0x3fc0) {
-                    // page in/out
-                    if((address&poMask)==poMask) {
-                        gpio_put(PIN_ROMCS,false);     // turn off ROMCS  
-                        gpio_put(PIN_LED,false);     
-                    } else {
-                        gpio_put(PIN_ROMCS,true);     // turn on ROMCS 
-                        gpio_put(PIN_LED,true);       
-                    }  
-                    // bank 0-7 (not enough memory for all 16 banks, only 8 allowed)
-                    adder=(address&bkMask)*16384;
-                    if(adder>131072) adder=0;
-                    // lock paging
-                    if((address&lkMask)==lkMask) {
-                        pagingOn=false;
-                    }
+        if(address==0x3fff) {       // Z80 is about to send scan codes from keys
+
+        }else if(address==0x3ffe){  // Z80 is about to read the first bank, for the bottom half of the screen
+            currentBank=0;
+            gpio_put(PIN_LED,true);
+        }else if(address==0x3ffd){  // Z80 is about to read the second bank, for the bottom half of the screen
+            bank1SwapCnt=4; // We allow 3 more memory reads before swapping the bank, so the Z80 can read in the jump instruction following the request to swap banks
+        }
+        if(bank1SwapCnt>0){
+            if(--bank1SwapCnt==0){
+                currentBank=1;
+                gpio_put(PIN_LED,false);
             }
         }
     }
@@ -209,143 +141,9 @@ void resetButton(uint gpio,uint32_t events) {
     } while((gpio_get(PIN_USER)==false)&&(time_us_64()<lastPing+1000000));
     // button pressed for >=1second?
     if(time_us_64()>=lastPing+1000000) {                                              
-        romSelector[0x0009]=rompos;   // 0x0005 current rom ** this is specific to the ROM Explorer ROM **
-        romSelector[0x000e]=rompos-((rompos/21)*21);  // 0x000a current pos ** this is specific to the ROM Explorer ROM **
-        romSelector[0x0013]=(rompos/21)+1;    // 0x000f current page ** this is specific to the ROM Explorer ROM ** 
-        // run the Selector ROM          
         gpio_put(PIN_ROMCS,true);     // turn on ROMCS  
-        gpio_put(PIN_RESET,true);   // lift reset         
-        // check for ROM crash but looking for 10 im1 interupts (0x0038) in 1/2 second, if these aren't received then reset the ROM and try again
-        uint16_t countAddress=0;
-        lastPing=time_us_64();
-        do {
-            address=pio_sm_get_blocking(pio,addr_data_sm);
-            pio_sm_put_blocking(pio,addr_data_sm,romSelector[address]);             
-            if(address=0x0038) countAddress++;            
-            else if(time_us_64()>=lastPing+500000) {
-                gpio_put(PIN_RESET,false);   // lift reset  
-                busy_wait_us_32(100000);
-                gpio_put(PIN_RESET,true);   // lift reset  
-                lastPing=time_us_64();
-                countAddress=0;
-            }
-        } while(countAddress<10);
-        //
         gpio_put(PIN_LED,true);          
-        countAddress=0;                    
-        do {
-            address=pio_sm_get_blocking(pio,addr_data_sm);
-            pio_sm_put_blocking(pio,addr_data_sm,romSelector[address]); 
-            if(address>=0x3f80) countAddress++;
-        } while(countAddress<256);    // wait for consistent signal above 0x3f80 from ROM selector 
-        // ROM selected
-        gpio_put(PIN_RESET,false); // put Spectrum in RESET state
-        rompos=address-0x3f80;
-
-        if(rompos>=MAXROMS) {
-            rompos=MAXROMS-1; // error trap
-        }                        
-        dtoBuffer(bank1,roms[rompos]);  // unpack correct ROM                                                                    
     }
-    // final set-up before restart
-    if(roms[rompos][0]==1||roms[rompos][0]==3||roms[rompos][0]==8) {
-        pagingOn=true; // if the ROM had this off make sure it is back on
-    }
-    if(rompos==0) {
-        gpio_put(PIN_ROMCS,false);     // turn off ROMCS  
-        gpio_put(PIN_LED,false);     
-    } else {
-        gpio_put(PIN_ROMCS,true);     // turn on ROMCS 
-        gpio_put(PIN_LED,true);       
-    }    
-    adder=0;
     busy_wait_us_32(100000);    // wait 100ms before lifting RESET       
     gpio_put(PIN_RESET,true);   // lift reset    
-}
-//
-// ---------------------------------------------------------------------------
-// dtoBuffer - decompress compressed ROM directly into buffer (simple LZ)
-// input:
-//   to - the buffer
-//   from - the compressed storage
-// *simple LZ has a simple 256 backwards window and greedy parser but is very
-// fast
-// ---------------------------------------------------------------------------
-void dtoBuffer(uint8_t *to,const uint8_t *from) { 
-    uint i=0,j=34,k; // start j at 34 to skip header
-    uint8_t c,o;
-    do {
-        c=from[j++];
-        if(c==128) return;
-        else if(c<128) {
-            for(k=0;k<c+1;k++) to[i++]=from[j++];
-        }
-        else {
-            o=from[j++]; // offset
-            for(k=0;k<(c-126);k++) {
-                to[i]=to[i-(o+1)];
-                i++;
-            }
-        }
-    } while(true);
-}
-//
-// ---------------------------------------------------------------------------
-// simplelz - very simple lz with 256byte backward look
-//   x=128+ then copy sequence from x-offset from next byte offset 
-//   x=0-127 then copy literal x+1 times
-//   minimum sequence size 2
-// ---------------------------------------------------------------------------
-uint16_t simplelz(uint8_t* fload,uint8_t* store,uint16_t filesize) {
-	uint16_t i;
-	uint8_t * store_p, * store_c;
-	uint8_t litsize = 1;
-	uint16_t repsize, offset, repmax, offmax;
-	store_c = store;
-	store_p = store_c + 1;
-	//
-	i = 0;
-	*store_p++ = fload[i++];
-	do {
-		// scan for sequence
-		repmax = 2;
-		if (i > 255) offset = i - 256; else offset = 0;
-		do {
-			repsize = 0;
-			while (fload[offset + repsize] == fload[i + repsize] && i + repsize < filesize && repsize < 129) {
-				repsize++;
-			}
-			if (repsize > repmax) {
-				repmax = repsize;
-				offmax = i - offset;
-			}
-			offset++;
-		} while (offset < i && repmax < 129);
-		if (repmax > 2) {
-			if (litsize > 0) {
-				*store_c = litsize - 1;
-				store_c = store_p++;
-				litsize = 0;
-			}
-			*store_p++ = offmax - 1; //1-256 -> 0-255
-			*store_c = repmax + 126;
-			store_c = store_p++;
-			i += repmax;
-		}
-		else {
-			litsize++;
-			*store_p++ = fload[i++];
-			if (litsize > 127) {
-				*store_c = litsize - 1;
-				store_c = store_p++;
-				litsize = 0;
-			}
-		}
-	} while (i < filesize);
-	if (litsize > 0) {
-		*store_c = litsize - 1;
-		store_c = store_p++;
-	}
-	*store_c = 128;	// end marker
-	return store_p - store;
 }

@@ -11,6 +11,7 @@
 #include "rominc/128_IF1_ED2_ROM.h"
 #include "rominc/SS128_ROM.h"
 #include "rominc/48.h"
+#include "bank0.h"
 
 // and put them in the order you want them to appear in the selector here
     const uint8_t *roms[] = {romexplorer                        //  0 - 4672bytes

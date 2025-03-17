@@ -429,9 +429,10 @@
     }
 
     function addJmpToDiv(){
-        divTxt+="\t; Jump to second half of frame render (normally jumps back to pop_push_even, and MCU swaps "+
+        divTxt+="\t; Jump to second half of frame render (normally jumps back to pop_push_even, and MCU swaps\n"+
                 "\t; buffer pointer so new command list exists in same memory space)\n"+
                 "\tld a,(0x3ffd)\t; This informs ROM we need the bank for the second half of the screen (racing the beam)\n"+
+                "\tjp pop_push_even\n\n";
                 "\tjp fake_jmp\nfake_jmp:\n";
         codeIX+=3;
     }
@@ -564,11 +565,14 @@
         addAttr8and16Data();
 
         // Mandatory label for function, and storage of stack pointer
-        divTxt+="pop_push_even:\t;offset "+h(codeIX)+"\n\tld (spBackupAddr),sp\n\n";
-        codeIX+=4;
+        divTxt+="pop_push_even:\t;offset "+h(codeIX)+"\n";
 
-        let showEvenFrame=true;
+        let showEvenFrame=false;
         if(showEvenFrame){
+
+                // We only store the stack pointer if we're being called - the code is re-entrant for the bottom half of the frame
+                divTxt+="\tld (spBackupAddr),sp\n\n";
+                codeIX+=4;
 
                 // Add the audio command list up to start of frame
                 addAudioList(0x00,503);
@@ -598,6 +602,8 @@
                 // odd frame
 
                 // Delays simulate the blits from the even frame, so we can just render the odd frame to check timings
+                // Only for testing in emulator!
+                /*
                 setChaseDelay(5000);
                 setChaseDelay(5000);
                 setChaseDelay(5000);
@@ -613,7 +619,7 @@
                 setChaseDelay(5000);
                 setChaseDelay(1050);
                 setChaseDelay((224*7)+114);
-
+                */
                 blockAttrBlit(0b00001110);
                 clockOff=-144*49;
                 frameIX=1;
