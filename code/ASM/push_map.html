@@ -1,5 +1,6 @@
 <html>
 <head>
+    <script type="text/javascript" src="title-screen.js"></script>
     <style>
         body{
             
@@ -43,11 +44,12 @@
     let outPutScreenIX=0;
     let outPutScreenAttrIX=0;
 
+    let displayDataIX=0;
     let divEl=null;
     let canvas=null;
     let ctx=null;
     let chaseDelayIX=0;
-    let codeIX=0x156+0x04; // Address of start of render call, plus the initial stack pointer store
+    let codeIX=0x0064; // Address of start of render call, plus the initial stack pointer store
     let clockOff=0;
     let frameIX=0;
     let biColorIX=0;
@@ -161,15 +163,17 @@
     function getPushTxtX(ix,addr,srcName,dstName,testWord,numBytes){
         clockOff+=144;
         codeIX+=3;
+        displayDataIX+=numBytes;
+        let dIX=displayDataIX;
         const numLocalBlits=numBytes/2;
         let r="\n\t; "+srcName+" blit "+ix+"\n" + 
             "\tld sp,"+dstName+"+"+(addr+numBytes)+"\t; offset "+h(codeIX)+"\n";
         for(let n=0;n<numLocalBlits;n++){
-            r+="\tld hl,"+testWord+"\t; offset "+h(codeIX+3)+"\n" + 
+            r+="\tld hl,"+(displayData[dIX-2]+(displayData[dIX-1]<<8))+"\t; offset "+h(codeIX+3)+"\n" + 
                 "\tpush hl\t; offset "+h(codeIX+3+1)+"\n";
+            dIX-=2;
             codeIX+=4;
         }
-
         return r;
     }
 
@@ -181,9 +185,11 @@
         clockOff+=10;
         attrPos-=2;
         let dWord=testWord+((testWord<<8)|0x40);
+        let srcPos=766;
         for(let n=0;n<768/2;n++){
-            divTxt+="\tld hl,"+dWord+"\t; src offset "+(attrPos-0)+", code offset "+h(codeIX+3)+"\n" + 
+            divTxt+="\tld hl,"+(attrData[srcPos]+(attrData[srcPos+1]<<8))+"\t; src offset "+(attrPos-0)+", code offset "+h(codeIX+3)+"\n" + 
                     "\tpush hl\t\t; code offset "+h(codeIX+4)+"\n";
+            srcPos-=2;
             clockOff+=21;
             codeIX+=4;
             attrPos-=2;
@@ -237,10 +243,8 @@
     }
 
     function renderToDiv(){
-        let txt="pop_push_even:\n\tld (spBackupAddr),sp\n\n";
-            txt+=divTxt;
-            txt+="\tret\n\n\tSAVEBIN \"sp48.rom\",0,$\n\n";
-        divEl.innerText=txt;
+        divTxt+="\tret\n\n\tSAVEBIN \"sp48.rom\",0,$\n\n";
+        divEl.innerText=divTxt;
     }
 
     function setChaseDelay(chaseDelayClocks){
@@ -307,6 +311,32 @@
         divTxt+="\n";
     }
 
+    function getAttr16(ix){
+        return attrData[ix]+(attrData[ix+1]<<8);
+    }
+
+    function getAttr16bc(ix){
+        let r1=attrData[ix];
+        let r2=attrData[ix+1];
+        if((r1&0b00000111)==0b00000010){
+            r1&=0b11111000;
+            r1|=0b00000110;
+        }
+        if((r1&0b00111000)==0b00010000){
+            r1&=0b11000111;
+            r1|=0b00110000;
+        }
+        if((r2&0b00000111)==0b00000010){
+            r2&=0b11111000;
+            r2|=0b00000110;
+        }
+        if((r2&0b00111000)==0b00010000){
+            r2&=0b11000111;
+            r2|=0b00110000;
+        }
+        return r1+(r2<<8);
+    }
+
     function addBicolorLine(screenTestByte){
         if(biColorIX>23){
             return;
@@ -314,31 +344,31 @@
         const tW=screenTestByte+(screenTestByte<<8);
         const ix=biColorIX*32;
         clockOff=-144*6;
-
+        const attrDataIX=ix;
         divTxt+="\n\t; attr draw "+biColorIX+"\n"+
-                "\tld sp,attr8and16vals+4\n"+                   // 3
+                "\tld sp,attr8and16vals+"+(biColorIX*4)+"\n"+                   // 3
 
-                "\tpop af\t; src 16\n"+                         // 1
+                "\tpop af\t; src 8\n"+                         // 1
                 "\tex af,af'\n"+                                // 1
-                "\tpop af\t; src 8\n"+                          // 1
-                "\tld bc,"+tW+"\t; src 18\n"+                   // 3
-                "\tld de,"+tW+"\t; src 20\n"+                   // 3
-                "\tld hl,"+tW+"\t; src 22\n"+                   // 3
-                "\tld ix,"+tW+"\t; src 4\n"+                    // 4
-                "\tld iy,"+tW+"\t; src 6\n"+                    // 4
+                "\tpop af\t; src 16\n"+                          // 1
+                "\tld bc,"+getAttr16bc(attrDataIX+18)+"\t; src 18\n"+                   // 3
+                "\tld de,"+getAttr16bc(attrDataIX+20)+"\t; src 20\n"+                   // 3
+                "\tld hl,"+getAttr16bc(attrDataIX+22)+"\t; src 22\n"+                   // 3
+                "\tld ix,"+getAttr16bc(attrDataIX+4)+"\t; src 4\n"+                    // 4
+                "\tld iy,"+getAttr16bc(attrDataIX+6)+"\t; src 6\n"+                    // 4
                 "\texx\n"+                                      // 1
-                "\tld bc,"+tW+"\t; src 10\n"+                   // 3
-                "\tld de,"+tW+"\t; src 12\n"+                   // 3
-                "\tld hl,"+tW+"\t; src 0\n\n"+                  // 3
+                "\tld bc,"+getAttr16bc(attrDataIX+10)+"\t; src 10\n"+                   // 3
+                "\tld de,"+getAttr16bc(attrDataIX+12)+"\t; src 12\n"+                   // 3
+                "\tld hl,"+getAttr16bc(attrDataIX+0)+"\t; src 0\n\n"+                  // 3
 
                 "\tld sp,attrStartAddr+16+"+ix+"\n"+            // 3
 
                 "\t; start chasing raster here to update ATTR memory\n\n"+
 
                 "\tld (attrStartAddr+"+ix+"),hl\t; dest 0\n"+   // 3
-                "\tld hl,"+tW+"\t; src 2\n"+                    // 3
+                "\tld hl,"+getAttr16bc(attrDataIX+2)+"\t; src 2\n"+                    // 3
                 "\tld (attrStartAddr+2+"+ix+"),hl\t; dest 2\n"+ // 3
-                "\tld hl,"+tW+"\t; src 14\n"+                   // 3
+                "\tld hl,"+getAttr16bc(attrDataIX+14)+"\t; src 14\n"+                   // 3
                 "\tpush hl\t; dest 14\n"+                       // 1
                 "\tpush de\t; dest 12\n"+                       // 1
                 "\tpush bc\t; dest 10\n"+                       // 1
@@ -352,14 +382,14 @@
                 "\tpush de\t; dest 20\n"+                       // 1
                 "\tpush bc\t; dest 18\n"+                       // 1
                 "\tpush af\t; dest 16\n"+                       // 1
-                "\tld bc,"+tW+"\t; src 24\n"+                   // 3
-                "\tld de,"+tW+"\t; src 16\n"+                   // 3
-                "\tld hl,"+tW+"\t; src 28\n"+                   // 3
+                "\tld bc,"+getAttr16bc(attrDataIX+24)+"\t; src 24\n"+                   // 3
+                "\tld de,"+getAttr16bc(attrDataIX+26)+"\t; src 26\n"+                   // 3
+                "\tld hl,"+getAttr16bc(attrDataIX+28)+"\t; src 28\n"+                   // 3
                 "\tld sp,attrStartAddr+30+"+ix+"\n"+            // 3
                 "\tpush hl\t; dest 28\n"+                       // 1
                 "\tpush de\t; dest 26\n"+                       // 1
                 "\tpush bc\t; dest 24\n"+                       // 1
-                "\tld hl,"+tW+"\t; src 30\n"+                   // 3
+                "\tld hl,"+getAttr16bc(attrDataIX+30)+"\t; src 30\n"+                   // 3
                 "\tld (attrStartAddr+30+"+ix+"),hl;\t dest 30\n"; // 3
                 codeIX+=86;
                 if(biColorIX==23){
@@ -412,6 +442,21 @@
         codeIX+=3;
     }
 
+    function addAttr8and16Data(){
+        divTxt+="\t; List of index 8 and 16 dwords for each attr row, for faster loading into AF pair\n"+
+                "attr8and16vals:\n\tdw ";
+        // 24 line for bi-color data, each with 2 words - first is LH for col 8+9, next is LH for col 16+17
+        for(let n=0;n<24;n++){
+            const ix=(n*32);
+            divTxt+=getAttr16bc(ix+16)+","+getAttr16bc(ix+8);
+            if(n<23){
+                divTxt+=",";
+            }
+        }
+        divTxt+="\n\n";
+        codeIX+=24*(2+2);
+    }
+
     function addKeyboardScanToDiv(){
         // Reading from address 0x3fff tells the ROM the Z80 is about to store keyboard scan data
         // The next 8 addresses "read" from 0x3fxx use the bottom 8 bits to specify the 5 bit scan data for each row
@@ -457,7 +502,9 @@
     }
 
     function addAudioList(freq,len){
-        divTxt+="\tld bc,0xfe\n\tld de,0x0010\n";
+        divTxt+="\t; Audio list init\n\n\tld bc,0xfe\n\tld de,0x0010\n";
+        codeIX+=6;
+        divTxt+="\t; Start of audio list at offset "+h(codeIX)+", "+len+" entries of 2 bytes each\n";
         if(freq==0){
             freq=len+1;
         }
@@ -474,7 +521,8 @@
             }
             divTxt+=str[ff];
         }
-        codeIX+=6+(len*2);
+        codeIX+=(len*2);
+        divTxt+="\t; End of audio list at offset "+h(codeIX)+"\n\n";
     }
 
     window.onload=function(){
@@ -510,9 +558,20 @@
         addToRenderRowOrder(renderRowStartBytePartRow, renderRowStartBytePartRowNum,false);
         console.log(renderRowOrder);
         renderToCanvas();
+        
+        // Array with the bi-color line data for rows 8 and 9, and 16, and 17 
+        // (4 bytes for every odd set of 4 pixel rows, so rows 4,5,6,7, then 12,13,14,15 etc)
+        addAttr8and16Data();
+
+        // Mandatory label for function, and storage of stack pointer
+        divTxt+="pop_push_even:\t;offset "+h(codeIX)+"\n\tld (spBackupAddr),sp\n\n";
+        codeIX+=4;
 
         let showEvenFrame=true;
         if(showEvenFrame){
+
+                // Add the audio command list up to start of frame
+                addAudioList(0x00,503);
 
                 // even frame
                 blockAttrBlit(0b00001110);
@@ -526,14 +585,13 @@
 
                 // simulate jump back to start of ROM render address, so Pico can swap the buffer fill command list
                 addJmpToDiv();
-
+/*
                 blockAttrBlit(0b00001110);  // Odd render (39 attr blits)
                 clockOff=-144*49;
                 frameIX=1;
                 biColorIX=0;
-                //addBlitsToDiv(203,0,85,0,0b11001100);  // Odd render (39 attr blits)
-                addBlitsToDiv(203,0,49,0,0b11001100);  // Odd render (39 attr blits)
-
+                addBlitsToDiv(203,0,65,0,0b11001100);  // Odd render (39 attr blits)
+*/
 
         }else{
                 //addBorderColorChange(3);
@@ -552,15 +610,16 @@
                 setChaseDelay(5000);
                 setChaseDelay(5000);
                 setChaseDelay(5000);
+                setChaseDelay(5000);
+                setChaseDelay(1050);
                 setChaseDelay((224*7)+114);
 
                 blockAttrBlit(0b00001110);
-                //fillBlitPos+=(8*23);
-                //console.log("FillBlitPos begins at: "+fillBlitPos);
                 clockOff=-144*49;
                 frameIX=1;
                 biColorIX=0;
-                
+                displayDataIX=203*16;
+
                 addBlitsToDiv(203,0,181,0,0b10101111);  // Odd render (39 attr blits)
 
                 // Read keyboard (188 cycles)
@@ -573,7 +632,7 @@
                 addBicolorLine(0b00101000);
 
                 // Add the audio command list up to end of frame
-                addAudioList(0x30,850);
+                addAudioList(0x00,850);
         }
 
         // Output ASM to div
