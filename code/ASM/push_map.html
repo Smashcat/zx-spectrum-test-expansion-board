@@ -1,6 +1,7 @@
 <html>
 <head>
     <script type="text/javascript" src="title-screen.js"></script>
+    <script type="text/javascript" src="dispLookup.js"></script>
     <style>
         body{
             
@@ -38,6 +39,9 @@
     const renderRowStartBytePartRow=new Uint16Array(1600);
     const renderRowOrder=new Uint16Array(800);
 
+    const lb=1;
+    const hb=0;
+
     let renderRowStartByteFullRowNum=0;
     let renderRowStartBytePartRowNum=0;
     let renderRowOrderIX=0;
@@ -54,7 +58,12 @@
     let frameIX=0;
     let biColorIX=0;
     let fillBlitPos=((screenHeight*screenWidth)-(fillBlitBlockLen+4))+8; // fillBlits happen after an attribute write for bi-color, and are used as padding to get the writes synced up again - they write 8 bytes from the end of screen RAM (not the attribute RAM)
-    let divTxt="";
+    let asmTxt="";
+
+    // We are only generating the top OR the bottom half of the screen render, as it's across 2 video frames. Attr list will be the same on both frames though
+    const attrOffset=new Uint16Array(attrSize*2);
+    // The screen data will only be partially populated on each half - unsure how much it is currently, but offsets will be frame-dependent
+    const dispOffset=new Uint16Array(screenSize);
 
     const color=[
         [0,0,0],
@@ -166,12 +175,16 @@
         displayDataIX+=numBytes;
         let dIX=displayDataIX;
         const numLocalBlits=numBytes/2;
+        let dOff=addr+numBytes; 
         let r="\n\t; "+srcName+" blit "+ix+"\n" + 
-            "\tld sp,"+dstName+"+"+(addr+numBytes)+"\t; offset "+h(codeIX)+"\n";
+            "\tld sp,"+dstName+"+"+dOff+"\t; offset "+h(codeIX)+"\n";
         for(let n=0;n<numLocalBlits;n++){
             r+="\tld hl,"+(displayData[dIX-2]+(displayData[dIX-1]<<8))+"\t; offset "+h(codeIX+3)+"\n" + 
                 "\tpush hl\t; offset "+h(codeIX+3+1)+"\n";
             dIX-=2;
+            dispOffset[dOff-2+lb]=(codeIX+1);
+            dispOffset[dOff-2+hb]=(codeIX+2);
+            dOff-=2;
             codeIX+=4;
         }
         return r;
@@ -180,22 +193,32 @@
     function blockAttrBlit(testWord){
         let attrPos=768;
         codeIX+=3;
-        divTxt+="\t; Block attribute blit start\n"+
+        asmTxt+="\t; Block attribute blit start\n"+
                 "\tld sp,attrStartAddr+"+attrPos+"\t; Set sp to end of attr memory - code offset "+h(codeIX)+"\n\n";
         clockOff+=10;
         attrPos-=2;
         let dWord=testWord+((testWord<<8)|0x40);
         let srcPos=766;
+        let asrcPos=(srcPos+(23*32));
+        let lineIX=0;
+
         for(let n=0;n<768/2;n++){
-            divTxt+="\tld hl,"+(attrData[srcPos]+(attrData[srcPos+1]<<8))+"\t; src offset "+(attrPos-0)+", code offset "+h(codeIX+3)+"\n" + 
+            asmTxt+="\tld hl,"+(attrData[srcPos]+(attrData[srcPos+1]<<8))+"\t; src offset "+(attrPos-0)+", code offset "+h(codeIX+3)+"\n" + 
                     "\tpush hl\t\t; code offset "+h(codeIX+4)+"\n";
+            attrOffset[asrcPos+lb]=(codeIX+1);
+            attrOffset[asrcPos+hb]=(codeIX+2);
+            asrcPos-=2;
+            if(++lineIX==16){
+                asrcPos-=32;
+                lineIX=0;
+            }
             srcPos-=2;
             clockOff+=21;
             codeIX+=4;
             attrPos-=2;
         }
 
-        divTxt+="\n\t; Block attribute blit end\n\n";
+        asmTxt+="\n\t; Block attribute blit end\n\n";
     }
 
     function addBlitsToDiv(screenFirstIX,attrFirstIX,numScreenBlits,numAttrBlits,screenTestByte){
@@ -208,9 +231,9 @@
         for(let n=attrFirstIX;n<endIX;n++){
             let addr=n*blitLen;
             if(addr+blitLen>attrSize){
-                divTxt+=getPushTxtX(n,addr,"src_attr_data","attrStartAddr",screenTestByte+(screenTestByte<<8),screenSize-addr);
+                asmTxt+=getPushTxtX(n,addr,"src_attr_data","attrStartAddr",screenTestByte+(screenTestByte<<8),screenSize-addr);
             }else{
-                divTxt+=getPushTxtX(n,addr,"src_attr_data","attrStartAddr",screenTestByte+(screenTestByte<<8),blitLen);
+                asmTxt+=getPushTxtX(n,addr,"src_attr_data","attrStartAddr",screenTestByte+(screenTestByte<<8),blitLen);
             }
         }
 
@@ -223,9 +246,9 @@
         for(let n=screenFirstIX;n<endIX;n++){
             let addr=renderRowOrder[n];
             if(addr+blitLen>screenSize){
-                divTxt+=getPushTxtX(n,addr,"src_data","screenStartAddr",screenTestByte+(screenTestByte<<8),screenSize-addr);
+                asmTxt+=getPushTxtX(n,addr,"src_data","screenStartAddr",screenTestByte+(screenTestByte<<8),screenSize-addr);
             }else{
-                divTxt+=getPushTxtX(n,addr,"src_data","screenStartAddr",screenTestByte+(screenTestByte<<8),blitLen);
+                asmTxt+=getPushTxtX(n,addr,"src_data","screenStartAddr",screenTestByte+(screenTestByte<<8),blitLen);
                 if(clockOff>-144){
                     setChaseDelay(-clockOff);
                     clockOff=0;
@@ -237,14 +260,40 @@
     }
 
     function restoreStackPtr(){
-        divTxt+="\n\t; Restore the stack pointer\n"+
+        asmTxt+="\n\t; Restore the stack pointer\n"+
                 "\tld sp,(spBackupAddr)\t; offset "+h(codeIX+3)+"\n";
         codeIX+=4;
     }
 
-    function renderToDiv(){
-        divTxt+="\tret\n\n\tSAVEBIN \"sp48.rom\",0,$\n\n";
-        divEl.innerText=divTxt;
+    function renderToDivs(){
+        asmTxt+="\tret\n\n\tSAVEBIN \"sp48.rom\",0,$\n\n";
+        divEl.innerText=asmTxt;
+
+        const cEl=document.getElementById('outputCEl');
+
+        let tmp="";
+
+        tmp+="const uint16_t dispOffset["+screenSize+"]={";
+        for(let n=0;n<screenSize;n++){
+            if((n%16)==0){
+                tmp+="\n\t";
+            }
+            tmp+=h(dispOffset[n])+",";
+        }
+        tmp+="\n}\n\n";
+
+        tmp+="const uint16_t attrOffset["+(attrSize*2)+"]={";
+        for(let n=0;n<(attrSize*2);n++){
+            if((n%16)==0){
+                tmp+="\n\t";
+            }
+            tmp+=h(attrOffset[n])+",";
+        }
+        tmp+="\n}\n\n";
+
+        cEl.innerText=tmp;
+
+
     }
 
     function setChaseDelay(chaseDelayClocks){
@@ -252,7 +301,7 @@
         if(clks==0){
             return;
         }
-        divTxt+="\t; delay to get start of scanline ("+chaseDelayClocks+" T-states) at offset "+h(codeIX)+"\n";
+        asmTxt+="\t; delay to get start of scanline ("+chaseDelayClocks+" T-states) at offset "+h(codeIX)+"\n";
         if(clks>6){
             clks-=7; // For initial ld b,X
             let loops=Math.floor(clks/29);
@@ -271,10 +320,10 @@
                 clks+=29;
 
             }
-            divTxt+="\tld b,"+loops+"\n";
+            asmTxt+="\tld b,"+loops+"\n";
             codeIX+=2;
             if(loops>0){
-                divTxt+="ppe_scan_delay"+chaseDelayIX+":\n"+
+                asmTxt+="ppe_scan_delay"+chaseDelayIX+":\n"+
                         "\tnop\n"+
                         "\tnop\n"+
                         "\tnop\n"+
@@ -283,32 +332,32 @@
                 codeIX+=6;
                 ++chaseDelayIX;
             }
-            divTxt+=addDivTxt;
-            divTxt+="\t\t; offset "+h(codeIX)+", "+clks+" T-states remaining\n";
+            asmTxt+=addDivTxt;
+            asmTxt+="\t\t; offset "+h(codeIX)+", "+clks+" T-states remaining\n";
         }
         while(clks>0){
             if((clks&1)==1){
                 if((clks>=9) && ((clks-9)%4==0) ){
-                    divTxt+="\tld a,i";
+                    asmTxt+="\tld a,i";
                     codeIX+=2;
                     clks-=9;
                 }else if(clks>=7){
-                    divTxt+="\tld b,0";
+                    asmTxt+="\tld b,0";
                     codeIX+=2;
                     clks-=7;
                 }else{
-                    divTxt+="\tnop   ";
+                    asmTxt+="\tnop   ";
                     codeIX+=1;
                     clks-=4;    
                 }
             }else{
-                divTxt+="\tnop   ";
+                asmTxt+="\tnop   ";
                 codeIX+=1;
                 clks-=4;
             }
-            divTxt+="\t; offset "+h(codeIX)+", "+clks+" T-states remaining\n";
+            asmTxt+="\t; offset "+h(codeIX)+", "+clks+" T-states remaining\n";
         }
-        divTxt+="\n";
+        asmTxt+="\n";
     }
 
     function getAttr16(ix){
@@ -345,62 +394,94 @@
         const ix=biColorIX*32;
         clockOff=-144*6;
         const attrDataIX=ix;
-        divTxt+="\n\t; attr draw "+biColorIX+"\n"+
-                "\tld sp,attr8and16vals+"+(biColorIX*4)+"\n"+                   // 3
+        asmTxt+="\n\t; attr draw "+biColorIX+", code offset "+h(codeIX)+"\n"+
+                "\tld sp,attr8and16vals+"+(biColorIX*4)+"\n"+           // 3
 
-                "\tpop af\t; src 8\n"+                         // 1
-                "\tex af,af'\n"+                                // 1
-                "\tpop af\t; src 16\n"+                          // 1
-                "\tld bc,"+getAttr16bc(attrDataIX+18)+"\t; src 18\n"+                   // 3
-                "\tld de,"+getAttr16bc(attrDataIX+20)+"\t; src 20\n"+                   // 3
-                "\tld hl,"+getAttr16bc(attrDataIX+22)+"\t; src 22\n"+                   // 3
-                "\tld ix,"+getAttr16bc(attrDataIX+4)+"\t; src 4\n"+                    // 4
-                "\tld iy,"+getAttr16bc(attrDataIX+6)+"\t; src 6\n"+                    // 4
-                "\texx\n"+                                      // 1
-                "\tld bc,"+getAttr16bc(attrDataIX+10)+"\t; src 10\n"+                   // 3
-                "\tld de,"+getAttr16bc(attrDataIX+12)+"\t; src 12\n"+                   // 3
-                "\tld hl,"+getAttr16bc(attrDataIX+0)+"\t; src 0\n\n"+                  // 3
+                "\tpop af\t; src 16\n"+                                 // 1
+                "\tex af,af'\n"+                                        // 1
+                "\tpop af\t; src 8\n"+                                  // 1
+                "\tld bc,"+getAttr16bc(attrDataIX+18)+"\t; src 18\n"+   // 3 = 8
+                "\tld de,"+getAttr16bc(attrDataIX+20)+"\t; src 20\n"+   // 3 = 11
+                "\tld hl,"+getAttr16bc(attrDataIX+22)+"\t; src 22\n"+   // 3 = 14
+                "\tld ix,"+getAttr16bc(attrDataIX+4)+"\t; src 4\n"+     // 4 = 18
+                "\tld iy,"+getAttr16bc(attrDataIX+6)+"\t; src 6\n"+     // 4 = 22
+                "\texx\n"+                                              // 1 = 23
+                "\tld bc,"+getAttr16bc(attrDataIX+10)+"\t; src 10\n"+   // 3 = 26
+                "\tld de,"+getAttr16bc(attrDataIX+12)+"\t; src 12\n"+   // 3 = 29
+                "\tld hl,"+getAttr16bc(attrDataIX+0)+"\t; src 0\n\n"+   // 3 = 32
 
-                "\tld sp,attrStartAddr+16+"+ix+"\n"+            // 3
+                "\tld sp,attrStartAddr+16+"+ix+"\n"+                    // 3 = 35
 
                 "\t; start chasing raster here to update ATTR memory\n\n"+
 
-                "\tld (attrStartAddr+"+ix+"),hl\t; dest 0\n"+   // 3
-                "\tld hl,"+getAttr16bc(attrDataIX+2)+"\t; src 2\n"+                    // 3
-                "\tld (attrStartAddr+2+"+ix+"),hl\t; dest 2\n"+ // 3
-                "\tld hl,"+getAttr16bc(attrDataIX+14)+"\t; src 14\n"+                   // 3
-                "\tpush hl\t; dest 14\n"+                       // 1
-                "\tpush de\t; dest 12\n"+                       // 1
-                "\tpush bc\t; dest 10\n"+                       // 1
-                "\tpush af\t; dest 8\n"+                        // 1
-                "\texx\n"+                                      // 1
-                "\tex af,af'\n"+                                // 1
-                "\tpush iy\t; dest 6\n"+                        // 2
-                "\tpush ix\t; dest 4\n"+                        // 2
-                "\tld sp,attrStartAddr+24+"+ix+"\n"+            // 3
-                "\tpush hl\t; dest 22\n"+                       // 1
-                "\tpush de\t; dest 20\n"+                       // 1
-                "\tpush bc\t; dest 18\n"+                       // 1
-                "\tpush af\t; dest 16\n"+                       // 1
-                "\tld bc,"+getAttr16bc(attrDataIX+24)+"\t; src 24\n"+                   // 3
-                "\tld de,"+getAttr16bc(attrDataIX+26)+"\t; src 26\n"+                   // 3
-                "\tld hl,"+getAttr16bc(attrDataIX+28)+"\t; src 28\n"+                   // 3
-                "\tld sp,attrStartAddr+30+"+ix+"\n"+            // 3
-                "\tpush hl\t; dest 28\n"+                       // 1
-                "\tpush de\t; dest 26\n"+                       // 1
-                "\tpush bc\t; dest 24\n"+                       // 1
-                "\tld hl,"+getAttr16bc(attrDataIX+30)+"\t; src 30\n"+                   // 3
-                "\tld (attrStartAddr+30+"+ix+"),hl;\t dest 30\n"; // 3
+                "\tld (attrStartAddr+"+ix+"),hl\t; dest 0\n"+           // 3
+                "\tld hl,"+getAttr16bc(attrDataIX+2)+"\t; src 2\n"+     // 3 = 41
+                "\tld (attrStartAddr+2+"+ix+"),hl\t; dest 2\n"+         // 3
+                "\tld hl,"+getAttr16bc(attrDataIX+14)+"\t; src 14\n"+   // 3 = 47
+                "\tpush hl\t; dest 14\n"+                               // 1
+                "\tpush de\t; dest 12\n"+                               // 1
+                "\tpush bc\t; dest 10\n"+                               // 1
+                "\tpush af\t; dest 8\n"+                                // 1
+                "\texx\n"+                                              // 1
+                "\tex af,af'\n"+                                        // 1
+                "\tpush iy\t; dest 6\n"+                                // 2
+                "\tpush ix\t; dest 4\n"+                                // 2
+                "\tld sp,attrStartAddr+24+"+ix+"\n"+                    // 3
+                "\tpush hl\t; dest 22\n"+                               // 1
+                "\tpush de\t; dest 20\n"+                               // 1
+                "\tpush bc\t; dest 18\n"+                               // 1
+                "\tpush af\t; dest 16\n"+                               // 1
+                "\tld bc,"+getAttr16bc(attrDataIX+24)+"\t; src 24\n"+   // 3 = 67
+                "\tld de,"+getAttr16bc(attrDataIX+26)+"\t; src 26\n"+   // 3 = 70
+                "\tld hl,"+getAttr16bc(attrDataIX+28)+"\t; src 28\n"+   // 3 = 73
+                "\tld sp,attrStartAddr+30+"+ix+"\n"+                    // 3
+                "\tpush hl\t; dest 28\n"+                               // 1
+                "\tpush de\t; dest 26\n"+                               // 1
+                "\tpush bc\t; dest 24\n"+                               // 1
+                "\tld hl,"+getAttr16bc(attrDataIX+30)+"\t; src 30\n"+   // 3 = 82
+                "\tld (attrStartAddr+30+"+ix+"),hl;\t dest 30\n";       // 3
+
+                let asrcPos=(biColorIX*64)+32;
+
+                attrOffset[asrcPos+18+lb]=codeIX+7;                     // ld bc,xxxx (3 clocks)
+                attrOffset[asrcPos+18+hb]=codeIX+8;
+                attrOffset[asrcPos+20+lb]=codeIX+10;                    // ld de,xxxx (3 clocks)
+                attrOffset[asrcPos+20+hb]=codeIX+11;
+                attrOffset[asrcPos+22+lb]=codeIX+13;                    // ld hl,xxxx (3 clocks)
+                attrOffset[asrcPos+22+hb]=codeIX+14;
+                attrOffset[asrcPos+4+lb]=codeIX+17;                     // ld ix,xxxx (4 clocks)
+                attrOffset[asrcPos+4+hb]=codeIX+18;
+                attrOffset[asrcPos+6+lb]=codeIX+21;                     // ld iy,xxxx (4 clocks + 1 clock for exx)
+                attrOffset[asrcPos+6+hb]=codeIX+22;
+                attrOffset[asrcPos+10+lb]=codeIX+25;                    // ld bc,xxxx (3 clocks)
+                attrOffset[asrcPos+10+hb]=codeIX+26;
+                attrOffset[asrcPos+12+lb]=codeIX+28;                    // ld de,xxxx (3 clocks)
+                attrOffset[asrcPos+12+hb]=codeIX+29;
+                attrOffset[asrcPos+0+lb]=codeIX+31;                     // ld hl,xxxx (3 clocks + 3 for set sp,xxxx + 3 for ld (xxxx),hl)
+                attrOffset[asrcPos+0+hb]=codeIX+32;
+                attrOffset[asrcPos+2+lb]=codeIX+40;                     // ld hl,xxxx (3 clocks + 3 for ld (xxxx),hl)
+                attrOffset[asrcPos+2+hb]=codeIX+41;
+                attrOffset[asrcPos+14+lb]=codeIX+46;                    // ld hl,xxxx (3 clocks + 17 for pushes etc)
+                attrOffset[asrcPos+14+hb]=codeIX+47;
+                attrOffset[asrcPos+24+lb]=codeIX+66;                    // ld hl,xxxx (3 clocks)
+                attrOffset[asrcPos+24+hb]=codeIX+67;
+                attrOffset[asrcPos+26+lb]=codeIX+69;                    // ld de,xxxx (3 clocks)
+                attrOffset[asrcPos+26+hb]=codeIX+70;
+                attrOffset[asrcPos+28+lb]=codeIX+72;                    // ld bc,xxxx (3 clocks + 6 for ld sp, and pushes)
+                attrOffset[asrcPos+28+hb]=codeIX+73;
+                attrOffset[asrcPos+30+lb]=codeIX+81;                    // ld hl,xxxx (3 clocks)
+                attrOffset[asrcPos+30+hb]=codeIX+82;
+
                 codeIX+=86;
                 if(biColorIX==23){
                     if(frameIX==0){
                         const interFrameDelayLps=8;
                         if(interFrameDelayLps>0){
-                            divTxt+="\t; Inter-frame delay\n"+
+                            asmTxt+="\t; Inter-frame delay\n"+
                                     "\tld b,"+interFrameDelayLps+"\n"+
                                     "ifDelay:\n\tdjnz ifDelay\n\n";
                         }
-                        divTxt+="\tnop\n\tnop\n\n";
+                        asmTxt+="\tnop\n\tnop\n\n";
                         codeIX+=6;
                     }else{
                         clockOff=-9999999;
@@ -408,28 +489,28 @@
                 }else{
                     const interBiColorDelayNops=3;
                     if(interBiColorDelayNops>0){
-                        divTxt+="\t; Inter-bi-color delay\n";
+                        asmTxt+="\t; Inter-bi-color delay\n";
                     }
                     for(let n=0;n<interBiColorDelayNops;n++){
-                        divTxt+="\tnop\n";
+                        asmTxt+="\tnop\n";
                     }
                     codeIX+=interBiColorDelayNops;
                 };
 
-                divTxt+="\t; end attr draw "+biColorIX+", offset "+h(codeIX)+"\n"+
+                asmTxt+="\t; end attr draw "+biColorIX+", offset "+h(codeIX)+"\n"+
                 ((clockOff>-9999)?"\t; Clock offset: "+clockOff+"\n\n":"");
         ++biColorIX;
     }
 
     function addBorderColorChange(col){
-        divTxt+="\t; Change border color\n"+
+        asmTxt+="\t; Change border color\n"+
                 "\tld a,"+col+"\n"+
                 "\tout(0xfe),a\n\n";
         codeIX+=(2+2);
     }
 
     function addJmpToDiv(){
-        divTxt+="\t; Jump to second half of frame render (normally jumps back to pop_push_even, and MCU swaps\n"+
+        asmTxt+="\t; Jump to second half of frame render (normally jumps back to pop_push_even, and MCU swaps\n"+
                 "\t; buffer pointer so new command list exists in same memory space)\n"+
                 "\tld a,(0x3ffd)\t; This informs ROM we need the bank for the second half of the screen (racing the beam)\n"+
                 "\tjp pop_push_even\n\n";
@@ -438,24 +519,31 @@
     }
 
     function playAudioList(){
-        divTxt+="\n\t; Play some audio before we start rendering behind the beam\n"+
+        asmTxt+="\n\t; Play some audio before we start rendering behind the beam\n"+
                 "\tcall audioListAddr\n\n";
         codeIX+=3;
     }
 
     function addAttr8and16Data(){
-        divTxt+="\t; List of index 8 and 16 dwords for each attr row, for faster loading into AF pair\n"+
+        asmTxt+="\t; List of index 8 and 16 dwords for each attr row, for faster loading into AF pair at offset "+h(codeIX)+"\n"+
                 "attr8and16vals:\n\tdw ";
         // 24 line for bi-color data, each with 2 words - first is LH for col 8+9, next is LH for col 16+17
+        let asrcPos=32+8;
+        let attCodeIX=codeIX;
         for(let n=0;n<24;n++){
             const ix=(n*32);
-            divTxt+=getAttr16bc(ix+16)+","+getAttr16bc(ix+8);
+            asmTxt+=getAttr16bc(ix+16)+","+getAttr16bc(ix+8);
             if(n<23){
-                divTxt+=",";
+                asmTxt+=",";
             }
+            attrOffset[asrcPos+lb]=codeIX;
+            attrOffset[asrcPos+hb]=codeIX+1;
+            attrOffset[asrcPos+8+lb]=codeIX+2;
+            attrOffset[asrcPos+8+hb]=codeIX+3;
+            asrcPos+=64;
+            codeIX+=4;
         }
-        divTxt+="\n\n";
-        codeIX+=24*(2+2);
+        asmTxt+="\n\n";
     }
 
     function addKeyboardScanToDiv(){
@@ -463,7 +551,7 @@
         // The next 8 addresses "read" from 0x3fxx use the bottom 8 bits to specify the 5 bit scan data for each row
         // Since the next 8 reads cannot be 0xff, this ensures it does not get reset in error
         // This takes 188 T-cycles
-        divTxt+="\n\t; Scan keyboard, and send codes to accelerator ROM\n"+
+        asmTxt+="\n\t; Scan keyboard, and send codes to accelerator ROM\n"+
 
                 "\tld hl,0x3fff\t; Tells the ROM we're about to send 8 bytes containing scan codes\n"+ // 10 clocks - 3 bytes
                 "\tld d,(hl)\n"+    // 7 clocks - 1 byte
@@ -503,9 +591,9 @@
     }
 
     function addAudioList(freq,len){
-        divTxt+="\t; Audio list init\n\n\tld bc,0xfe\n\tld de,0x0010\n";
+        asmTxt+="\t; Audio list init\n\n\tld bc,0xfe\n\tld de,0x0010\n";
         codeIX+=6;
-        divTxt+="\t; Start of audio list at offset "+h(codeIX)+", "+len+" entries of 2 bytes each\n";
+        asmTxt+="\t; Start of audio list at offset "+h(codeIX)+", "+len+" entries of 2 bytes each\n";
         if(freq==0){
             freq=len+1;
         }
@@ -520,10 +608,10 @@
                 }
                 ff=(ff==1?0:1);
             }
-            divTxt+=str[ff];
+            asmTxt+=str[ff];
         }
         codeIX+=(len*2);
-        divTxt+="\t; End of audio list at offset "+h(codeIX)+"\n\n";
+        asmTxt+="\t; End of audio list at offset "+h(codeIX)+"\n\n";
     }
 
     window.onload=function(){
@@ -565,13 +653,13 @@
         addAttr8and16Data();
 
         // Mandatory label for function, and storage of stack pointer
-        divTxt+="pop_push_even:\t;offset "+h(codeIX)+"\n";
+        asmTxt+="pop_push_even:\t;offset "+h(codeIX)+"\n";
 
         let showEvenFrame=false;
         if(showEvenFrame){
 
                 // We only store the stack pointer if we're being called - the code is re-entrant for the bottom half of the frame
-                divTxt+="\tld (spBackupAddr),sp\n\n";
+                asmTxt+="\tld (spBackupAddr),sp\n\n";
                 codeIX+=4;
 
                 // Add the audio command list up to start of frame
@@ -598,6 +686,13 @@
 */
 
         }else{
+
+                // copy in the data from the top half of the screen render, so we can have it all in one array
+                console.log("Copying "+dispLookup.length+" words into dispOffset array");
+                for(let n=0;n<dispLookup.length;n++){
+                    dispOffset[n]=dispLookup[n];
+                }
+
                 //addBorderColorChange(3);
                 // odd frame
 
@@ -643,7 +738,7 @@
 
         // Output ASM to div
         restoreStackPtr();
-        renderToDiv();
+        renderToDivs();
 
     }
 </script>
@@ -651,5 +746,6 @@
 <body>
     <canvas width="256" height="192" id="c"></canvas>
     <pre id="outputEl"></pre>
+    <pre id="outputCEl"></pre>
 </body>
 </html>
