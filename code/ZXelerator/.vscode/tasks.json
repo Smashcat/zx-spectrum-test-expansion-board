@@ -47,7 +47,9 @@
                 "-f",
                 "target/${command:raspberry-pi-pico.getTarget}.cfg",
                 "-c",
-                "adapter speed 5000; program \"${command:raspberry-pi-pico.launchTargetPath}\" verify reset exit"
+                "rp2350.dap.core1 cortex_m reset_config sysresetreq",
+                "-c",
+                "adapter speed 5000; program \"${command:raspberry-pi-pico.launchTargetPath}\" verify reset reset exit"
             ],
             "problemMatcher": [],
             "windows": {

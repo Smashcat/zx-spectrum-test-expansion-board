@@ -35,7 +35,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(ZXelerator ZXelerator.c )
+add_executable(ZXelerator ZXelerator.c funcs.c game.c resetData.c shared.c)
 
 pico_set_program_name(ZXelerator "ZXelerator")
 pico_set_program_version(ZXelerator "0.1")
@@ -48,7 +48,9 @@ pico_enable_stdio_usb(ZXelerator 0)
 pico_generate_pio_header(ZXelerator ${CMAKE_CURRENT_LIST_DIR}/ZXelerator.pio)
 
 # Add the standard library to the build
-target_link_libraries(ZXelerator
+target_link_libraries(
+        ZXelerator
+        pico_multicore
         pico_stdlib
         hardware_pio
 )
