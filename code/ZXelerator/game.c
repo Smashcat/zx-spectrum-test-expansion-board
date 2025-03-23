@@ -27,7 +27,7 @@ void gameLoop(void)
             break;
         }
         while(frameDrawn==frameRendered){
-            sleep_us(10);
+            tight_loop_contents();
         }
         frameRendered=frameDrawn;
     }

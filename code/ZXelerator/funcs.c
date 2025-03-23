@@ -4,8 +4,6 @@
 
 PIO pio;
 uint addr_data_sm;
-uint32_t bank1SwapCnt=0;
-uint32_t currentSubBank=0;
 
 
 void setupIO(void){
@@ -63,12 +61,16 @@ void releaseReset(void){
     gpio_put(PIN_RESET,true);    // release RESET    
 }
 
+/* Remember, DEBUG settings are on!!!! */
 void handleZ80Read(void){
+    static uint32_t bank1SwapCnt=0;
+    static uint32_t currentSubBank=0;
+    static uint32_t address=0;
     enableROMOutput();
-    while(true) {
-        uint32_t address=pio_sm_get_blocking(pio,addr_data_sm);
+    while(address<0x4000) {
+        address=pio_sm_get_blocking(pio,addr_data_sm);
         pio_sm_put_blocking(pio,addr_data_sm,ram[readBank].memory8[currentSubBank][address]); // if ROMCS off then direction of Data chip is input so they do not interfere
-        // z80 routine
+
         if(address==0x3fff) {       // Z80 is about to send scan codes from keys
 
         }else if(address==0x3ffe){  // Z80 is about to read the first bank, for the top half of the screen (chasing the beam) - this is just before the halt instruction, so there is plenty of time to flip buffers
