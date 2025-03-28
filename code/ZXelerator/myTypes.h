@@ -5,10 +5,10 @@
 typedef union MemoryBank {
 
     // For changing individual screen elements
-    uint8_t  memory8[2][16384];
+    uint8_t  memory8[2][16384] __attribute__((aligned(4)));
 
     // For block blitting into other banks
-    uint32_t memory32[(16384 * 2) / 4];
+    uint32_t memory32[(16384*2)/4] __attribute__((aligned(4)));
 
 } MemoryBank;
 

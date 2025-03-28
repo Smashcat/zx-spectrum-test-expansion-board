@@ -1,5 +1,7 @@
 #pragma once 
 
+#include "hardware/sync.h"
+
 #include "defs.h"
 #include "myTypes.h"
 #include "shared.h"
@@ -8,4 +10,8 @@
 void gameLoop(void);
 void setState(GameState newGS);
 void resetStateVars();
+
+/// @brief Set a single attribute block to a new color
+/// @param ix The index of the block in the attribute table (note, 32x48 colour resolution)
+/// @param v The new colour (FBIIIPPP)
 void setAttrDirect(int ix, uint8_t v);

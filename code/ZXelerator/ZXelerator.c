@@ -5,7 +5,10 @@
 
 void main() {
     setupIO();
+    setupPIO();
+    sleep_ms(1000);
     multicore_reset_core1();
-    multicore_launch_core1(gameLoop);
-    handleZ80Read();
+    multicore_launch_core1(handleZ80Read);
+    gameLoop();
+    
 }        

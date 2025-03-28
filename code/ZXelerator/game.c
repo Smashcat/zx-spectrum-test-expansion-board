@@ -5,31 +5,26 @@
 
 GameState gs=GS_idle;
 GameVar gv;
-uint32_t frameRendered=0;
+volatile uint32_t frameRendered=0;
 
 void gameLoop(void)
 {
-    setState(GS_idle);
-    while(1){
-
-        switch(gs){
-            case GS_idle:
-                copyBank(&ram[writeBank],&resetBank);
-                for(int n=0;n<768*2;n++){
-                    setAttrDirect(1,0b01110011+gv.ix);
-                }
-                if(++gv.ix>255){
-                    gv.ix=0;
-                }
-                flipBank=1;
-            break;
-            case GS_title:
-            break;
-        }
-        while(frameDrawn==frameRendered){
-            tight_loop_contents();
-        }
-        frameRendered=frameDrawn;
+    gpio_init(PIN_LED);
+    gpio_set_dir(PIN_LED,GPIO_OUT);
+    gpio_put(PIN_LED,false);
+    bool tf=false;
+    while(eroneousAddr==0){
+        // Render the frame here - generates the ASM
+        // For now just keep copying the default ASM - title image
+        //copyBank(&ram[writeBank],&resetBank);
+        testBlit();
+        //setAttrDirect(frameRendered&0x1f,0b11110001);
+        __wfe(); // Wait for event
+        __dsb(); // Make sure memory is consistent
+        tf=(tf?false:true);
+        gpio_put(PIN_LED,tf);
+        flipBank=1;
+        ++frameRendered;
     }
 }
 
