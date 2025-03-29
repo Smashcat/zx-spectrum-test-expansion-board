@@ -27,8 +27,9 @@ void setupIO(void){
     gpio_put(PIN_LED,false);
 
     // Initialise the ASM data banks
-    copyBank(&ram[readBank],&resetBank);
-    copyBank(&ram[writeBank],&resetBank);
+    for(int n=0;n<3;n++){
+        copyBank(ram[n][0],resetBank[0]);
+    }
 }
 
 void setupPIO(void){
@@ -69,23 +70,16 @@ void releaseReset(void){
 }
 
 /* Remember, DEBUG settings are on!!!! */
-void handleZ80Read(void){
+void __not_in_flash_func(handleZ80Read)(void){
     uint32_t bank1SwapCnt=0;
     uint32_t keyScanCnt=0;
     uint32_t currentSubBank=0;
-    uint32_t totalFlips=0;
-    const uint8_t *readPtr=ram[readBank].memory8[currentSubBank];
+    int haltCD=0;
+    const uint8_t *readPtr=ram[readBank][currentSubBank];
     
-    // We are not holding the spectrum in RESET at this point, and the ROM is disabled, so populate at least one byte so the output buffer will work correctly!
-    // In the Interface 2 cart, we will not be able to control RESET, so we wait for address 0x38 (ULA interrupt), switch in the ROM, and return NOPs then JP 0
-    //for(uint8_t n=0;n<3;n++){
-    //    pio_sm_get_blocking(pio,addr_data_sm);
-    //    pio_sm_put_blocking(pio,addr_data_sm,n);                         // Output a NOP - won't actually be used as we RESET the Z80 just after this
-    //}
     enableROMOutput();
     gpio_put(PIN_RESET,true);   // lift reset
     while(true){
-        writeOK=0;
         uint32_t address=pio_sm_get_blocking(pio,addr_data_sm);
         pio_sm_put_blocking(pio,addr_data_sm,*(readPtr+address)); // if ROMCS off then direction of Data chip is input so they do not interfere
         writeOK=1;
@@ -102,23 +96,27 @@ void handleZ80Read(void){
 
         // Z80 is about to read the first bank, for the top half of the screen (chasing the beam) - this is just before the halt instruction, so there is plenty of time to flip buffers
         }else if(address==0x3ffe){  
+            haltCD=1;
+        }else if(haltCD>0){
 
-            currentSubBank=0;
-            if(flipBank){
-                if(readBank==0){
-                    readBank=1;
-                    writeBank=0;
-                }else{
-                    readBank=0;
-                    writeBank=1;
+            if(--haltCD==0){
+                currentSubBank=0;
+                
+                if(flipBank){
+                    if(++readBank==2){
+                        readBank=0;
+                    }
+                    if(++writeBank==2){
+                        writeBank=0;
+                    }
                 }
-                ++totalFlips;
+                
+                readPtr=ram[readBank][currentSubBank];
+                ++frameDisplayed;
+                flipBank=0;
+                __dsb();   // Ensure write completes before waking other core
+                __sev();   // Send event to wake core1 out of __wfe()
             }
-            readPtr=ram[readBank].memory8[currentSubBank];
-            ++frameDisplayed;
-            flipBank=0;
-            __dsb();   // Ensure write completes before waking other core
-            __sev();   // Send event to wake core1 out of __wfe()
 
         // Z80 is about to read the second bank, for the bottom half of the screen (racing the beam)
         }else if(address==0x3ffd){  
@@ -126,7 +124,7 @@ void handleZ80Read(void){
         }else if(bank1SwapCnt>0){
             if(--bank1SwapCnt==0){
                 currentSubBank=1;
-                readPtr=ram[readBank].memory8[currentSubBank];
+                readPtr=ram[readBank][currentSubBank];
             }
         }else if(address>0xffff){
             break;
@@ -162,54 +160,14 @@ void resetButton(uint gpio,uint32_t events) {
 }
 
 void enableROMOutput(void){
-//    gpio_put(PIN_RESET,true);   // release reset    
-//    busy_wait_ms(2800);    // wait 1000ms before lifting RESET           
+    //gpio_put(PIN_RESET,true);   // release reset    
+    //busy_wait_ms(2800);    // wait 1000ms before lifting RESET           
     gpio_put(PIN_RESET,false);   // set reset    
     gpio_put(PIN_ROMCS,true);   // turn on ROMCS  
     busy_wait_ms(800);    // wait 1000ms before lifting RESET           
 }
 
-void copyBank(MemoryBank *dest, const MemoryBank *src){
-    /*
-    for(int n=0;n<2;n++){
-        for(int i=0;i<16384;i++){
-            dest->memory8[n][i]=src->memory8[n][i];
-        }
-    }
-    */
-    memcpy(dest->memory32, src->memory32, sizeof(src->memory32));
+void copyBank(uint8_t *dest, const uint8_t *src){
+    memcpy(dest, src, 0x2f00*2);
 }
 
-/// @brief Copy a block to the write buffer in a safe way by waiting till an address read from Z80, then copying 2048 bytes, until all 32k copied to ensure there is no conflict
-/// @param dest 
-/// @param src 
-/// @param seg 
-void copyBankSafe(MemoryBank *dest, const MemoryBank *src){
-
-    while(!writeOK){
-        tight_loop_contents();
-    }
-
-    const int totalSegs=512;
-    const int segSize=4096/totalSegs;
-    int segStart=0;
-    for(int n=0;n<totalSegs;n++){
-        while(!writeOK){
-            tight_loop_contents();
-        }
-        for(int i=segStart;i<segStart+segSize;i++){
-            dest->memory32[i]=src->memory32[i];
-        }
-        segStart+=segSize;
-        while(writeOK){
-            tight_loop_contents();
-        }
-    }
-  
-}
-
-void testBlit(void){
-    for(int n=0;n<32768;n++){
-        vRam[n]=0;
-    }
-}

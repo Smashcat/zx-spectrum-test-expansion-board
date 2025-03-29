@@ -20,16 +20,16 @@ $len=count($hexArray);
 
 // Format the C header file
 $headerContent = "#ifndef OUTPUT_H\n#define OUTPUT_H\n\n#include <stdint.h>\n\n";
-$headerContent.="const uint8_t binaryData[16384] = {";
-for($n=0;$n<16384;$n++){
-    if(($n%16)==0){
+$headerContent.="const uint8_t binaryData[0x2f00] = {";
+for($n=0;$n<0x2f00;$n++){
+    if(($n%32)==0){
         $headerContent.="\n\t/* ".sprintf("0x%04X",$n)." */\t";
     }
     $headerContent.=($n<$len?$hexArray[$n]:"0x00").", ";
 }
 
 
-$headerContent.="};\nconst size_t binaryDataSize = sizeof(binaryData);\n\n#endif // OUTPUT_H\n";
+$headerContent.="};\n\n#endif // OUTPUT_H\n";
 
 // Save the C header file
 if (file_put_contents($headerFile, $headerContent) !== false) {

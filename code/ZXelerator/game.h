@@ -1,6 +1,7 @@
 #pragma once 
 
 #include "hardware/sync.h"
+#include "hardware/dma.h"
 
 #include "defs.h"
 #include "myTypes.h"
@@ -15,3 +16,7 @@ void resetStateVars();
 /// @param ix The index of the block in the attribute table (note, 32x48 colour resolution)
 /// @param v The new colour (FBIIIPPP)
 void setAttrDirect(int ix, uint8_t v);
+
+void setDispDirect(int ix, uint8_t v);
+
+void safeBankBlit(int dstBankIX, const uint8_t *srcBank);

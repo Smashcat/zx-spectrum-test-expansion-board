@@ -18,7 +18,5 @@ void setupPIO(void);
 void releaseReset(void);
 void handleZ80Read(void);
 void resetButton(uint gpio,uint32_t events);
-void copyBank(MemoryBank *dest, const MemoryBank *src);
-void copyBankSafe(MemoryBank *dest, const MemoryBank *src);
-void testBlit(void);
+void copyBank(uint8_t *dest, const uint8_t *src);
 void enableROMOutput(void);

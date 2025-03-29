@@ -39,14 +39,15 @@
     const renderRowStartBytePartRow=new Uint16Array(1600);
     const renderRowOrder=new Uint16Array(800);
 
-    const lb=1;
-    const hb=0;
+    const lb=0;
+    const hb=1;
 
     let renderRowStartByteFullRowNum=0;
     let renderRowStartBytePartRowNum=0;
     let renderRowOrderIX=0;
     let outPutScreenIX=0;
     let outPutScreenAttrIX=0;
+    let dispAddrAdd=0;
 
     let displayDataIX=0;
     let divEl=null;
@@ -176,14 +177,18 @@
         let dIX=displayDataIX;
         const numLocalBlits=numBytes/2;
         let dOff=addr+numBytes; 
+        let offOff=((ix+1)*numBytes);
         let r="\n\t; "+srcName+" blit "+ix+"\n" + 
             "\tld sp,"+dstName+"+"+dOff+"\t; offset "+h(codeIX)+"\n";
         for(let n=0;n<numLocalBlits;n++){
-            r+="\tld hl,"+(displayData[dIX-2]+(displayData[dIX-1]<<8))+"\t; offset "+h(codeIX+3)+"\n" + 
+            r+="\tld hl,"+(displayData[dIX-2]+(displayData[dIX-1]<<8))+"\t; byte addr "+h(dOff)+", code offset "+h(codeIX+3)+"\n" + 
                 "\tpush hl\t; offset "+h(codeIX+3+1)+"\n";
             dIX-=2;
-            dispOffset[dOff-2+lb]=(codeIX+1);
-            dispOffset[dOff-2+hb]=(codeIX+2);
+//            dispOffset[dOff-2+lb]=(codeIX+1+dispAddrAdd);
+//            dispOffset[dOff-2+hb]=(codeIX+2+dispAddrAdd);
+            dispOffset[offOff-2+lb]=(codeIX+1+dispAddrAdd);
+            dispOffset[offOff-2+hb]=(codeIX+2+dispAddrAdd);
+            offOff-=2;
             dOff-=2;
             codeIX+=4;
         }
@@ -271,25 +276,27 @@
 
         const cEl=document.getElementById('outputCEl');
 
-        let tmp="";
+        let tmp="#pragma once\n\n#include <stdlib.h>\n#include <stdint.h>\n\n/// @brief Code offsets for both halfs of the screen, covering the code swap\n";
 
         tmp+="const uint16_t dispOffset["+screenSize+"]={";
-        for(let n=0;n<screenSize;n++){
-            if((n%16)==0){
-                tmp+="\n\t";
+        let n=0;
+        for(n=0;n<screenSize;n++){
+            if((n%32)==0){
+                tmp+=(n==0?"":" // "+n)+"\n\t";
             }
             tmp+=h(dispOffset[n])+",";
         }
-        tmp+="\n}\n\n";
+        tmp+=" // "+n+"\n}\n\n";
 
+        tmp+="/// @brief Offsets into generated ASM to update the 32*48 attribute colour blocks for the top screen render\n"
         tmp+="const uint16_t attrOffset["+(attrSize*2)+"]={";
-        for(let n=0;n<(attrSize*2);n++){
-            if((n%16)==0){
-                tmp+="\n\t";
+        for(n=0;n<(attrSize*2);n++){
+            if((n%32)==0){
+                tmp+=(n==0?"":" // "+n)+"\n\t";
             }
             tmp+=h(attrOffset[n])+",";
         }
-        tmp+="\n}\n\n";
+        tmp+=" // "+n+"\n}\n\n";
 
         cEl.innerText=tmp;
 
@@ -655,6 +662,7 @@
         // Mandatory label for function, and storage of stack pointer
         asmTxt+="pop_push_even:\t;offset "+h(codeIX)+"\n";
 
+        // Even frame is top, chasing the beam. Odd frame is bottom, racing the beam
         let showEvenFrame=false;
         if(showEvenFrame){
 
@@ -692,7 +700,7 @@
                 for(let n=0;n<dispLookup.length;n++){
                     dispOffset[n]=dispLookup[n];
                 }
-
+                dispAddrAdd=0x2f00;
                 //addBorderColorChange(3);
                 // odd frame
 
@@ -733,7 +741,8 @@
                 addBicolorLine(0b00101000);
 
                 // Add the audio command list up to end of frame
-                addAudioList(0x00,850);
+                addAudioList(0x00,700);
+
         }
 
         // Output ASM to div

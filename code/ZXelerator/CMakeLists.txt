@@ -60,6 +60,7 @@ target_link_libraries(
         pico_multicore
         pico_stdlib
         hardware_pio
+        hardware_dma
 )
 
 # Add the standard include files to the build
