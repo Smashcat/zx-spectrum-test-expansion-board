@@ -4,9 +4,13 @@
 #include "hardware/dma.h"
 
 #include "defs.h"
+#include "displayMemoryOffsets.h"
+#include "resetData.h"
 #include "myTypes.h"
 #include "shared.h"
+#include "Sprite.h"
 #include "funcs.h"
+
 
 void gameLoop(void);
 void setState(GameState newGS);

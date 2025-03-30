@@ -4,4 +4,4 @@
 #include "defs.h"
 #include "myTypes.h"
 
-extern uint8_t resetBank[2][0x2f00];
+extern const uint8_t resetBank[2][0x2f00];

@@ -42,7 +42,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(ZXelerator ZXelerator.c funcs.c game.c resetData.c shared.c)
+add_executable(ZXelerator ZXelerator.c funcs.c game.c resetData.c shared.c spriteDefs.c displayMemoryOffsets.c Sprite.c)
 
 pico_set_program_name(ZXelerator "ZXelerator")
 pico_set_program_version(ZXelerator "0.1")

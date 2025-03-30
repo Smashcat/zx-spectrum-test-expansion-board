@@ -1,7 +1,4 @@
 #include "game.h"
-#include "displayMemoryOffsets.h"
-#include "resetData.h"
-
 
 GameState gs=GS_idle;
 GameVar gv;
@@ -25,6 +22,15 @@ void gameLoop(void)
     channel_config_set_read_increment(&dmaBlitCfg, true);
     channel_config_set_write_increment(&dmaBlitCfg, true);
 
+    const int numSprites=512;
+    Sprite s[numSprites];
+    for(int n=0;n<numSprites;n++){
+        s[n].x=rand()%255;
+        s[n].y=rand()%192;
+        s[n].defIX=0;
+        s[n].groupBits=1;
+    };
+
     while(eroneousAddr==0){
         // Wait for core0 to wake us
         __wfe(); // Wait for event
@@ -32,7 +38,7 @@ void gameLoop(void)
         // Render the frame here - generates the ASM
         // For now just keep copying the default ASM - title image
         
-        if(frameRendered>10){
+        if(frameRendered>50){
             safeBankBlit(writeBank,resetBank[0]);
 
             for(int n=0;n<32;n+=2){
@@ -57,7 +63,16 @@ void gameLoop(void)
             }else if(vLPos==0){
                 vLDir=1;
             }
-
+            int spritesToDraw=(frameRendered-50);
+            if(spritesToDraw>numSprites){
+                spritesToDraw=numSprites;
+            }
+            for(int n=0;n<spritesToDraw;n++){
+                drawSprite(s[n]);
+                if(--s[n].x==-32){
+                    s[n].x=255;
+                }
+            }
             tf=(tf?false:true);
             gpio_put(PIN_LED,tf);
             flipBank=1;
