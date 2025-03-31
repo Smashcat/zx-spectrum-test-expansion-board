@@ -11,4 +11,5 @@ extern volatile int flipBank;
 extern volatile int writeOK;
 extern uint8_t keyboardScan[8] __attribute__((aligned(4)));
 extern volatile int eroneousAddr;
-//extern uint8_t vRam[32768] __attribute__((aligned(4)));
+extern uint8_t scratchPixRam[SCREEN_WIDTH_CELLS*SCREEN_HEIGHT_CELLS*8];
+extern uint8_t scratchMaskRam[SCREEN_WIDTH_CELLS*SCREEN_HEIGHT_CELLS*8];

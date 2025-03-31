@@ -8,7 +8,9 @@
 #include "resetData.h"
 #include "myTypes.h"
 #include "shared.h"
+#include "tileDefs.h"
 #include "Sprite.h"
+#include "TileLayer.h"
 #include "funcs.h"
 
 

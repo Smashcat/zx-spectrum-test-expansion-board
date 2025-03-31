@@ -24,3 +24,10 @@
 #define lkMask   0b0011111111100000
 #define bkMask   0b0000000000001111
 
+#define SCREEN_WIDTH_CELLS      32
+#define SCREEN_HEIGHT_CELLS     24
+
+#define MAX_TILE_LAYERS         3
+#define TILE_LAYER_WIDTH        64
+#define TILE_LAYER_HEIGHT       64
+#define TILE_LAYER_ATTR_HEIGHT  128

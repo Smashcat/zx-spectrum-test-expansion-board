@@ -5,10 +5,7 @@ GameVar gv;
 volatile uint32_t frameRendered=0;
 int dma_chan;
 dma_channel_config dmaBlitCfg;
-int vPos=0;
-int vDir=1;
-int vLPos=0;
-int vLDir=1;
+
 void gameLoop(void)
 {
     gpio_init(PIN_LED);
@@ -22,14 +19,19 @@ void gameLoop(void)
     channel_config_set_read_increment(&dmaBlitCfg, true);
     channel_config_set_write_increment(&dmaBlitCfg, true);
 
-    const int numSprites=512;
+    const int numSprites=1;
     Sprite s[numSprites];
     for(int n=0;n<numSprites;n++){
-        s[n].x=rand()%255;
-        s[n].y=rand()%192;
+        s[n].x=(n==0?10:rand()%255);
+        s[n].y=(n==0?168:rand()%192);
         s[n].defIX=0;
         s[n].groupBits=1;
     };
+
+    initLayers();
+    setTileDefSet(0,tiles1Def);
+    setLayerPos(0,0,0);
+    drawIntNumToLayer(0,123456,0b01000111,0b00000111,16,22,6);
 
     while(eroneousAddr==0){
         // Wait for core0 to wake us
@@ -41,38 +43,19 @@ void gameLoop(void)
         if(frameRendered>50){
             safeBankBlit(writeBank,resetBank[0]);
 
-            for(int n=0;n<32;n+=2){
-                setAttrDirect((vPos*32)+n,0b01110101);
-                setAttrDirect(((47-vPos)*32)+n+1,0b01011010);
-            }
-            for(int n=0;n<256;n++){
-                setDispDirect((vLPos*32)+n,0b10101010);
-                setDispDirect(((184-vLPos)*32)+n,0xf0);
-            }
-
-            vPos+=vDir;
-            if(vPos==47){
-                vDir=-1;
-            }else if(vPos==0){
-                vDir=1;
-            }
-
-            vLPos+=vLDir;
-            if(vLPos==184){
-                vLDir=-1;
-            }else if(vLPos==0){
-                vLDir=1;
-            }
             int spritesToDraw=(frameRendered-50);
             if(spritesToDraw>numSprites){
                 spritesToDraw=numSprites;
             }
             for(int n=0;n<spritesToDraw;n++){
                 drawSprite(s[n]);
-                if(--s[n].x==-32){
-                    s[n].x=255;
+                if((frameRendered%1)==0){
+                    if(--s[n].x==-32){
+                        s[n].x=255;
+                    }
                 }
             }
+            blitLayerToScreen(0);
             tf=(tf?false:true);
             gpio_put(PIN_LED,tf);
             flipBank=1;

@@ -2,41 +2,56 @@
 
 header("Content-type: text/plain");
 
-$file="zxSprites/sheet1.png";
-$width=8;
+$file="sheet1";
+
 $isColor=true;
 $charHeight=24;
+$charWidth=0;
 
 // Pallet colors
 $bgCol=1;
 $borderCol=0;
 $fgCol=2;
+$useRev=0;
 
 if(isset($_GET['file']))
 	$file=$_GET['file'];
 
+	$constName=$file;
+
+$file="zxSprites/".$file.".png";
 if(isset($_GET['color']))
 	$isColor=true;
 
 if(isset($_GET['charHeight']))
 	$charHeight=intval($_GET['charHeight']);
 
+if(isset($_GET['charWidth']))
+	$charWidth=intval($_GET['charWidth']);
+
+if(isset($_GET['useRev']))
+	$useRev=intval($_GET['useRev']);
+
 $invert=(isset($_GET['invert'])?true:false);
 
-$im = imagecreatefrompng($file);
+$im=imagecreatefrompng($file);
 $width=imagesx($im);
+if($charWidth==0){
+	$charWidth=$width;
+}
+
 $height=imagesy($im);
 $break=$width;
 
 if(isset($_GET['break']))
 	$break=intval($_GET['break']);
 
-$totalChars=ceil($height/$charHeight);
-
+$charCols=($width/$charWidth);
+$totalChars=ceil(($height/$charHeight)*$charCols);
 
 // Show details of image, and preview
 
-print "Strip Width:  $width\nStrip Height: $height\nChar Height:  $charHeight\nTotal Chars:  $totalChars\n\n";
+print "Strip Width:  $width\nStrip Height: $height\nChar Width:  $charWidth\nChar Height:  $charHeight\nTotal Chars:  $totalChars\n\n";
 
 $previewHeight=$height;
 if($previewHeight>24)
@@ -44,39 +59,49 @@ if($previewHeight>24)
 
 $rawData=array();
 
-for($y=0;$y<$height;$y++){
-	for($x=0;$x<$width;$x++){
-		$rgb=imagecolorat($im, $x, $y);
-		$rawData[]=$rgb;
-		if($y<$previewHeight){
-			switch($rgb){
-				case $bgCol:
-					print "  ";
-					break;
-				case $fgCol:
-					print "XX";
-					break;
-				case $borderCol:
-					print "::";
-					break;
-				default:
-					print "??";
+for($y=0;$y<$height;$y+=$charHeight){
+	for($col=0;$col<$charCols;$col++){
+		$start=$col*$charWidth;
+		$end=$start+$charWidth;
+		for($subY=$y;$subY<$y+$charHeight;$subY++){
+			for($x=$start;$x<$end;$x++){
+				$rgb=imagecolorat($im, $x, $subY);
+				$rawData[]=$rgb;
+				if($y<$previewHeight){
+					switch($rgb){
+						case $bgCol:
+							print "  ";
+							break;
+						case $fgCol:
+							print "XX";
+							break;
+						case $borderCol:
+							print "::";
+							break;
+						default:
+							print "??";
+					}
+				}
+			}	// x
+
+			if($y<$previewHeight){
+				print "\n";
+				if( ($y%$charHeight) == ($charHeight-1) ){
+					print "\n";
+				}
 			}
-		}
-	}
-	if($y<$previewHeight){
-		print "\n";
-		if( ($y%$charHeight) == ($charHeight-1) ){
-			print "\n";
-		}
-	}
-}
 
-extractData($rawData,array($fgCol),$width,$charHeight,"spriteDef");
-extractData($rawData,array($bgCol),$width,$charHeight,"maskDef");
+		} // subY
 
-function extractData($d,$fgCols,$cHeight,$width,$aName){
+	} // col
 
+} // y
+
+extractData($rawData,array($fgCol),$charWidth,$charHeight,$constName."Def");
+extractData($rawData,array($bgCol),$charWidth,$charHeight,$constName."MaskDef");
+
+function extractData($d,$fgCols,$cWidth,$cHeight,$aName){
+	global $useRev;
 	$bitReverse=array(
 		0x00, 0x80, 0x40, 0xC0, 0x20, 0xA0, 0x60, 0xE0,
 		0x10, 0x90, 0x50, 0xD0, 0x30, 0xB0, 0x70, 0xF0,
@@ -111,6 +136,9 @@ function extractData($d,$fgCols,$cHeight,$width,$aName){
 		0x0F, 0x8F, 0x4F, 0xCF, 0x2F, 0xAF, 0x6F, 0xEF,
 		0x1F, 0x9F, 0x5F, 0xDF, 0x3F, 0xBF, 0x7F, 0xFF
 	);
+
+	$bytesWidth=$cWidth/8;
+	$bytesPerGlyph=$bytesWidth*$cHeight;
 	$row=0;
 	$bytesPrinted=0;
 	$blocksPrinted=0;
@@ -136,30 +164,40 @@ function extractData($d,$fgCols,$cHeight,$width,$aName){
 		}
 
 		$outStr.=sprintf("0b%08b,",$byte);
-		$revByte[$revByteIX++]=$bitReverse[$byte];
+		if($useRev){
+			$revByte[$revByteIX++]=$bitReverse[$byte];
+		}
 		++$bytesPrinted;
 
-		if(($bytesPrinted%4)==0){
-			for($bt=3;$bt>-1;$bt--){
-				$revStr.=sprintf("0b%08b,",$revByte[$bt]);
+		if(($bytesPrinted%$bytesWidth)==0){
+			if($useRev){
+				for($bt=3;$bt>-1;$bt--){
+					$revStr.=sprintf("0b%08b,",$revByte[$bt]);
+				}
+				$revByteIX=0;
 			}
-			$revByteIX=0;
-			if(($bytesPrinted%96)==4){
+			if(($bytesPrinted%$bytesPerGlyph)==$bytesWidth){
 				$outStr.=" // $blocksPrinted\n\t";
-				$revStr.=" // $blocksPrinted\n\t";
+				if($useRev){
+					$revStr.=" // $blocksPrinted\n\t";
+				}
 				++$blocksPrinted;
-			}else if(($bytesPrinted%96)==0){
+			}else if(($bytesPrinted%$bytesPerGlyph)==0){
 				$outStr.="\n\n\t";
-				$revStr.="\n\n\t";
+				if($useRev){
+					$revStr.="\n\n\t";
+				}
 			}else{
 				$outStr.="\n\t";
-				$revStr.="\n\t";
+				if($useRev){
+					$revStr.="\n\t";
+				}
 			}
 			++$row;
 		}
 	}
 
-	print "\n\nconst uint8_t ".$aName."[".(($totalBits/8)*2)."] __attribute__((aligned(4))) = {\n\t";
+	print "\n\nconst uint8_t ".$aName."[".(($totalBits/8)*($useRev?2:1))."] __attribute__((aligned(4))) = {\n\t";
 	print $outStr;
 	print $revStr;
 	print "\n};\n";
