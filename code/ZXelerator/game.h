@@ -1,5 +1,8 @@
 #pragma once 
 
+#include <stdint.h>
+#include <stdbool.h>
+
 #include "hardware/sync.h"
 #include "hardware/dma.h"
 

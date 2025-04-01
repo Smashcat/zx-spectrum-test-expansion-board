@@ -2,6 +2,7 @@
 
 #include "defs.h"
 #include <stdint.h>
+#include <stdbool.h>
 #include "shared.h"
 #include "displayMemoryOffsets.h"
 
@@ -14,7 +15,7 @@ typedef struct TileLayer {
     uint8_t tileMap[(TILE_LAYER_WIDTH*TILE_LAYER_HEIGHT)];
     // Attribute definitions in cells within this layer (bi-color, so 8x4 pixel blocks). If "flash bit" (7) set, then will not update current attr under the tile on this layer"
     uint8_t attrMap[(TILE_LAYER_WIDTH*TILE_LAYER_ATTR_HEIGHT)];
-    // Pointer to the tile definitions to use for this layer
+    // Pointer to the tile definitions to use for this layer (mask defs are always tileDefPtr+(8*256))
     const uint8_t *tileDefPtr;
 } TileLayer;
 
@@ -59,6 +60,6 @@ void setLayerPos(int layerIX,int x, int y);
 /// @param setRef pointer to the array of tile data
 void setTileDefSet(int layerIX, const uint8_t *setRef);
 
-/// @brief Draws the layer to the back buffer, ready to display on the screen, the includes the mask data
+/// @brief Draws the layer to the render buffer, ready to display on the screen
 /// @param layerIX The layer to draw
-void blitLayerToScreen(int layerIX);
+void blitLayerToRenderBuffer(int layerIX);

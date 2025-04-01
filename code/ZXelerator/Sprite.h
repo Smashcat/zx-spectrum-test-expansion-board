@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "shared.h"
 #include "displayMemoryOffsets.h"
 #include "spriteDefs.h"

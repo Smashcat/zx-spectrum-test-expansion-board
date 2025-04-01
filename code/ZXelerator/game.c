@@ -30,8 +30,8 @@ void gameLoop(void)
 
     initLayers();
     setTileDefSet(0,tiles1Def);
+    safeBankBlit(writeBank,resetBank[0]);
     setLayerPos(0,0,0);
-    drawIntNumToLayer(0,123456,0b01000111,0b00000111,16,22,6);
 
     while(eroneousAddr==0){
         // Wait for core0 to wake us
@@ -41,7 +41,13 @@ void gameLoop(void)
         // For now just keep copying the default ASM - title image
         
         if(frameRendered>50){
-            safeBankBlit(writeBank,resetBank[0]);
+            initScratchBuffers(true);
+        
+            for(int n=0;n<24;n++){
+                drawIntNumToLayer(0,frameRendered,0b01010111,0b00001111,n,n,2);
+            }
+            blitLayerToRenderBuffer(0);
+            blitRenderBuffer();
 
             int spritesToDraw=(frameRendered-50);
             if(spritesToDraw>numSprites){
@@ -55,7 +61,6 @@ void gameLoop(void)
                     }
                 }
             }
-            blitLayerToScreen(0);
             tf=(tf?false:true);
             gpio_put(PIN_LED,tf);
             flipBank=1;
