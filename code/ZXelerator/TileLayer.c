@@ -19,21 +19,24 @@ void initLayers(void){
 
 void blitRawToLayer(int layerIX, const uint8_t *tileDefs, const uint8_t *attrDefs, int x, int y, int len)
 {
-    const int offset=(y*TILE_LAYER_WIDTH)+x;
-    uint8_t *tP=tileLayer[layerIX].tileMap+offset;
-    uint8_t *aP=tileLayer[layerIX].attrMap+(offset*2);
+    const int tOffset=(y*TILE_LAYER_WIDTH)+x;
+    const int aOffset=(y*TILE_LAYER_WIDTH*2)+x;
+    uint8_t *tP=tileLayer[layerIX].tileMap+tOffset;
+    uint8_t *aP=tileLayer[layerIX].attrMap+aOffset;
     while(len--){
         *tP++=*tileDefs++;
-        *aP++=*attrDefs++;
-        *aP++=*attrDefs++;
+        *aP=*attrDefs++;
+        *(aP+TILE_LAYER_WIDTH)=*attrDefs++;
+        ++aP;
     }
 }
 
 void drawTxtToLayer(int layerIX, const uint8_t *s, uint8_t colorTop, uint8_t colorBottom, int x, int y)
 {
-    const int offset=(y*TILE_LAYER_WIDTH)+x;
-    uint8_t *tP=tileLayer[layerIX].tileMap+offset;
-    uint8_t *aP=tileLayer[layerIX].attrMap+(offset*2);
+    const int tOffset=(y*TILE_LAYER_WIDTH)+x;
+    const int aOffset=(y*TILE_LAYER_WIDTH*2)+x;
+    uint8_t *tP=tileLayer[layerIX].tileMap+tOffset;
+    uint8_t *aP=tileLayer[layerIX].attrMap+aOffset;
     while(*s){
         *tP=*s++;
         *aP=colorTop;
@@ -105,6 +108,7 @@ void blitLayerToRenderBuffer(int layerIX)
         srcStartX=((-((tL->x+7)/8) % 64) + 64) % 64;
     }
 
+    // Get scratch buffers ready
     initScratchBuffers(false);
 
     uint8_t *spr=scratchPixRam;
@@ -121,6 +125,7 @@ void blitLayerToRenderBuffer(int layerIX)
         for(int destCol=0;destCol<SCREEN_WIDTH_CELLS;destCol++){
             int tileDef=*(tileData+yOff+srcCol);
             *spr++=*(tDef+(tileDef*8));
+            *smr++=*(tDef+(tileDef*8)+(256*8));
             if(++srcCol==TILE_LAYER_WIDTH){
                 srcCol=0;
             }
@@ -133,10 +138,11 @@ void blitLayerToRenderBuffer(int layerIX)
         }
     }
 
-    srcRow=srcStartY;
+    srcRow=((srcStartY*8)+srcRowOffY)/4;
+
     const uint8_t *am=tL->attrMap;
     
-    uint8_t *raP=renderAttrBuffer;
+    uint8_t *destAttrBuffer=renderAttrBuffer;
     for(int destRow=0;destRow<(SCREEN_HEIGHT_CELLS*2);destRow++){
         // Go through 32 cols for each pixel row, picking up the correct char defs for the 8x8 cell, and scan-line offset
         int srcCol=srcStartX;
@@ -144,9 +150,9 @@ void blitLayerToRenderBuffer(int layerIX)
         for(int destCol=0;destCol<SCREEN_WIDTH_CELLS;destCol++){
             uint8_t col=*(am+yOff+srcCol);
             if((col&0x80)==0){
-                *raP=col;
+                *destAttrBuffer=col;
             }
-            ++raP;
+            ++destAttrBuffer;
             if(++srcCol==TILE_LAYER_WIDTH){
                 srcCol=0;
             }
@@ -155,6 +161,6 @@ void blitLayerToRenderBuffer(int layerIX)
             srcRow=0;
         }
     }
-//TODO Fix attributes 8,9, and 16,17 being reversed horizontally on screen
+
     blitScratchToRenderBuffer();
 }

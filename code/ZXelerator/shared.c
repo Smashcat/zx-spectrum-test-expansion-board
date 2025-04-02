@@ -28,7 +28,7 @@ void initScratchBuffers(bool includeRenderBuffer)
     uint32_t *mP=(uint32_t *)scratchMaskRam;
     for(int n=0;n<numBlits;n++){
         *pP++=0;
-        *mP++=0xff;
+        *mP++=0xffffffff;
     }
     if(!includeRenderBuffer){
         return;

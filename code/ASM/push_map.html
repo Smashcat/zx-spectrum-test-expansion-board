@@ -543,10 +543,10 @@
             if(n<23){
                 asmTxt+=",";
             }
-            attrOffset[asrcPos+lb]=codeIX;
-            attrOffset[asrcPos+hb]=codeIX+1;
-            attrOffset[asrcPos+8+lb]=codeIX+2;
-            attrOffset[asrcPos+8+hb]=codeIX+3;
+            attrOffset[asrcPos+8+lb]=codeIX;
+            attrOffset[asrcPos+8+hb]=codeIX+1;
+            attrOffset[asrcPos+lb]=codeIX+2;
+            attrOffset[asrcPos+hb]=codeIX+3;
             asrcPos+=64;
             codeIX+=4;
         }
