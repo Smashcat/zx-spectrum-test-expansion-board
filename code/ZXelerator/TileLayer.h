@@ -3,6 +3,9 @@
 #include "defs.h"
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdlib.h>
+#include "pico/stdlib.h"
+#include "pico.h"
 #include "shared.h"
 #include "displayMemoryOffsets.h"
 

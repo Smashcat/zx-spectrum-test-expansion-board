@@ -63,7 +63,7 @@ void gameLoop(void)
     channel_config_set_read_increment(&dmaBlitCfg, true);
     channel_config_set_write_increment(&dmaBlitCfg, true);
 
-    const int numSprites=200;
+    const int numSprites=128;
     Sprite s[numSprites];
     for(int n=0;n<numSprites;n++){
         s[n].x=(n==0?10:rand()%255);
@@ -78,13 +78,13 @@ void gameLoop(void)
     setTileDefSet(0,tiles1Def);
     setTileDefSet(1,tiles1Def);
     setTileDefSet(2,tiles1Def);
-
-    drawTxtToLayer(0,"Test  text",0b01000110,0b00000101,11,22);
+    setTileDefSet(3,tiles1Def);
 
     for(int xPos=0;xPos<32;xPos+=8){
         for(int yPos=0;yPos<32;yPos+=8){
             for(int n=0;n<8;n++){
                 blitRawToLayer(1,bowser+(n*8),bowserCol+(n*16),xPos,yPos+n,8);
+                blitRawToLayer(3,bowser+(n*8),bowserCol+(n*16),xPos,yPos+n,8);
             }
         }
     }
@@ -94,6 +94,10 @@ void gameLoop(void)
         blitRawToLayer(2,scoreBorder+(n*7),scoreColor+(n*14),25,n,7);
     }
 
+    drawTxtToLayer(2,"xShift: 00",0b01000110,0b00000101,22,5);
+    drawTxtToLayer(2,"xStart: 00",0b01000110,0b00000101,22,6);
+    drawTxtToLayer(2,"Keyboard:",0b01000110,0b00000101,0,5);
+
     setLayerPos(0,0,0);
     setLayerPos(1,0,0);
     setLayerPos(2,0,0);
@@ -101,6 +105,9 @@ void gameLoop(void)
     int lYPos=0;
     int lYDir=1;
     int l1YPos=0;
+    int l2YPos=0;
+    float spinOffX=0;
+    float spinOffY=0;
     while(eroneousAddr==0){
         // Wait for core0 to wake us
         __wfe(); // Wait for event
@@ -111,11 +118,11 @@ void gameLoop(void)
         if(frameRendered>50){
             initScratchBuffers(true);
 
-
             for(int n=0;n<24;n++){
-                drawIntNumToLayer(0,frameRendered,0b01010111,0b00001111,n,n,8);
+                drawIntNumToLayer(0,frameRendered,0x57,0x0f,n,n,8);
             }
-            setLayerPos(0,8,lYPos);
+        
+            setLayerPos(0,lYPos,4);
             lYPos+=lYDir;
             if(lYPos==16){
                 lYDir=-1;
@@ -123,11 +130,23 @@ void gameLoop(void)
                 lYDir=1;
             }
 
-            setLayerPos(1,0,l1YPos);
-            l1YPos-=2;
+            setLayerPos(1,sin(((float)frameRendered)/10.0)*50,l1YPos);
+            l1YPos-=4;
             if(l1YPos==-64){
                 l1YPos=0;
             }
+
+            setLayerPos(3,sin(((float)frameRendered)/17.0)*25,l2YPos);
+            l2YPos+=2;
+            if(l2YPos==2){
+                l2YPos=-62;
+            }
+
+            for(int n=0;n<8;n++){
+                drawIntNumToLayer(2,keyboardScan[n],0x57,0x0f,0,n+7,3);
+            }
+
+            blitLayerToRenderBuffer(3);
             blitLayerToRenderBuffer(1);
             blitLayerToRenderBuffer(0);
             blitLayerToRenderBuffer(2);
@@ -138,13 +157,17 @@ void gameLoop(void)
                 spritesToDraw=numSprites;
             }
             for(int n=0;n<spritesToDraw;n++){
-                drawSprite(s[n]);
-                if((frameRendered%1)==0){
-                    if(--s[n].x==-32){
-                        s[n].x=255;
-                    }
+                if(n<64){
+                    s[n].x=118+(sin((spinOffX+(n*0.05)))*100.0);
+                }else{
+                    s[n].x=118-(sin((spinOffX+(n*0.05)))*100.0);
                 }
+                s[n].y=84+(cos((spinOffY+(n*0.05)))*60.0);
+                drawSprite(s[n]);
             }
+            spinOffX+=0.04;
+            spinOffY+=0.15;
+
             tf=(tf?false:true);
             gpio_put(PIN_LED,tf);
             flipBank=1;

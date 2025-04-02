@@ -69,7 +69,6 @@ void releaseReset(void){
     gpio_put(PIN_RESET,true);    // release RESET    
 }
 
-/* Remember, DEBUG settings are on!!!! */
 void __not_in_flash_func(handleZ80Read)(void){
     uint32_t bank1SwapCnt=0;
     uint32_t keyScanCnt=0;
@@ -91,7 +90,7 @@ void __not_in_flash_func(handleZ80Read)(void){
             
             if((address>>8)==0x3f){
                 --keyScanCnt;
-                keyboardScan[keyScanCnt]=(uint8_t)(address&0xff);
+                keyboardScan[keyScanCnt]=(~(uint8_t)(address&0xff))&0x1f;
             }
 
         // Z80 is about to read the first bank, for the top half of the screen (chasing the beam) - this is just before the halt instruction, so there is plenty of time to flip buffers

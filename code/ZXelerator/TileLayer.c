@@ -2,7 +2,6 @@
 
 TileLayer tileLayer[MAX_TILE_LAYERS];
 
-
 void initLayers(void){
     for(int n=0;n<MAX_TILE_LAYERS;n++){
         tileLayer[n].x=500;
@@ -74,6 +73,9 @@ void setTileDefSet(int layerIX, const uint8_t *setRef)
     tileLayer[layerIX].tileDefPtr=setRef;
 }
 
+//__not_in_flash_func(
+//    void blitLayerToRenderBuffer(int layerIX)
+//)
 void blitLayerToRenderBuffer(int layerIX)
 {
     const TileLayer *tL=tileLayer+layerIX;
@@ -108,6 +110,11 @@ void blitLayerToRenderBuffer(int layerIX)
         srcStartX=((-((tL->x+7)/8) % 64) + 64) % 64;
     }
 
+    if(layerIX==0){
+        drawIntNumToLayer(2,leftShift,0x4f,0x5f,30,5,2);
+        drawIntNumToLayer(2,srcStartX,0x4f,0x5f,30,6,2);
+    }
+
     // Get scratch buffers ready
     initScratchBuffers(false);
 
@@ -130,6 +137,31 @@ void blitLayerToRenderBuffer(int layerIX)
                 srcCol=0;
             }
         }
+
+        // Now shift pixels left if necessary
+
+        if(leftShift){
+            int tileDef=*(tileData+yOff+srcCol);
+            uint8_t carry=*(tDef+(tileDef*8));
+            uint8_t carryM=*(tDef+(tileDef*8)+(256*8));
+            const int ramOff=(destRow*SCREEN_WIDTH_CELLS)+31;
+            uint8_t *rotP=scratchPixRam+ramOff;
+            uint8_t *rotM=scratchMaskRam+ramOff;
+            for (int x=31;x>=0;x--){  // Process right-to-left
+                uint8_t current=*rotP;
+                uint8_t rotated=(current<<leftShift) | (carry>>(8-leftShift));
+                *rotP=rotated;
+                carry=current;
+                --rotP;
+
+                current=*rotM;
+                rotated=(current<<leftShift) | (carryM>>(8-leftShift));
+                *rotM=rotated;
+                carryM=current;
+                --rotM;
+            }
+        }
+
         if(++srcRowOffY==8){
             srcRowOffY=0;
             if(++srcRow==TILE_LAYER_HEIGHT){
@@ -138,10 +170,17 @@ void blitLayerToRenderBuffer(int layerIX)
         }
     }
 
-    srcRow=((srcStartY*8)+srcRowOffY)/4;
 
+    // Now draw attributes directly to the render buffer. Any attribute 
+    // color with flashing bit set means (don't update this cell)
+    srcRow=((srcStartY*8)+srcRowOffY)/4;
     const uint8_t *am=tL->attrMap;
-    
+    if(leftShift>3){
+        if(++srcStartX==TILE_LAYER_WIDTH){
+            srcStartX=0;
+        }
+        
+    }
     uint8_t *destAttrBuffer=renderAttrBuffer;
     for(int destRow=0;destRow<(SCREEN_HEIGHT_CELLS*2);destRow++){
         // Go through 32 cols for each pixel row, picking up the correct char defs for the 8x8 cell, and scan-line offset
