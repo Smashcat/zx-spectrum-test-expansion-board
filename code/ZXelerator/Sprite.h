@@ -1,10 +1,12 @@
 #pragma once
 
+#include "defs.h"
 #include <stdint.h>
 #include <stdbool.h>
 #include "shared.h"
 #include "displayMemoryOffsets.h"
 #include "spriteDefs.h"
+
 
 /// @brief Structure containing data for a single Sprite object
 typedef struct Sprite {
@@ -18,6 +20,8 @@ typedef struct Sprite {
     int16_t     y;
     // The sprite definition base index currently pointed to by this sprite
     int16_t     defIX;
+    // The sprite frame, relative to the base defIX
+    int16_t     frame;
     // Tile layer this sprite appears over (-1=sprite not shown, 0=appears over back-most layer, 1=appears over layer 1, 2=appears over layer 2)
     int16_t    layer;
     // Float position in X axis
@@ -30,4 +34,47 @@ typedef struct Sprite {
     float       yDir;
 } Sprite;
 
-void drawSprite(Sprite s);
+extern Sprite *spriteList;
+extern int totalSprites;
+
+void initSprites(int numSprites);
+void deleteSprites(void);
+
+static inline void setSpriteDir(int ix, float xDir, float yDir)
+{
+    Sprite *s=spriteList+ix;
+    s->xDir=xDir;
+    s->yDir=yDir;
+}
+
+static inline void setSpritePos(int ix, float x, float y)
+{
+    Sprite *s=spriteList+ix;
+    s->x=x;
+    s->y=y;
+    s->xF=x;
+    s->yF=y;
+}
+
+static inline void setSpriteLayer(int ix, int l){
+    if(l>MAX_TILE_LAYERS){
+        l=MAX_TILE_LAYERS;
+    }
+    spriteList[ix].layer=l;
+}
+
+static inline void setSpriteDef(int ix, int d)
+{
+    spriteList[ix].defIX=d;
+}
+
+static inline void setSpriteGroups(int ix, uint32_t gB, uint32_t cGB)
+{
+    Sprite *s=spriteList+ix;
+    s->groupBits=gB;
+    s->collideGroupBits=cGB;
+}
+
+void drawSprite(int ix);
+
+void blitSpritesToRenderBuffer(int ix);

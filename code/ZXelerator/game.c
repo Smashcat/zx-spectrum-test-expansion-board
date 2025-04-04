@@ -63,44 +63,51 @@ void gameLoop(void)
     channel_config_set_read_increment(&dmaBlitCfg, true);
     channel_config_set_write_increment(&dmaBlitCfg, true);
 
-    const int numSprites=128;
-    Sprite s[numSprites];
+    const int numSprites=100;
+    initSprites(numSprites);
     for(int n=0;n<numSprites;n++){
-        s[n].x=(n==0?10:rand()%255);
-        s[n].y=(n==0?168:32+(rand()%150));
-        s[n].defIX=0;
-        s[n].groupBits=1;
+        setSpritePos(n,(n==0?10:rand()%255),(n==0?168:32+(rand()%150)));
+        setSpriteDef(n,0);
+        setSpriteGroups(n,0,1);
+        setSpriteLayer(n,1);
     };
 
+    // Reset the ASM buffer, this contains the "title image" data by default
     safeBankBlit(writeBank,resetBank[0]);
 
     initLayers();
-    setTileDefSet(0,tiles1Def);
-    setTileDefSet(1,tiles1Def);
-    setTileDefSet(2,tiles1Def);
-    setTileDefSet(3,tiles1Def);
+
+    const int hudLayer=0;
+    const int frameCounterLayer=1;
+    const int frontBowserLayer=2;
+    const int backBowserLayer=3;
+
+    setTileDefSet(frameCounterLayer,tiles1Def);
+    setTileDefSet(frontBowserLayer,tiles1Def);
+    setTileDefSet(hudLayer,tiles1Def);
+    setTileDefSet(backBowserLayer,tiles1Def);
 
     for(int xPos=0;xPos<32;xPos+=8){
         for(int yPos=0;yPos<32;yPos+=8){
             for(int n=0;n<8;n++){
-                blitRawToLayer(1,bowser+(n*8),bowserCol+(n*16),xPos,yPos+n,8);
-                blitRawToLayer(3,bowser+(n*8),bowserCol+(n*16),xPos,yPos+n,8);
+                blitRawToLayer(frontBowserLayer,bowser+(n*8),bowserCol+(n*16),xPos,yPos+n,8);
+                blitRawToLayer(backBowserLayer,bowser+(n*8),bowserCol+(n*16),xPos,yPos+n,8);
             }
         }
     }
 
     for(int n=0;n<4;n++){
-        blitRawToLayer(2,scoreBorder+(n*7),scoreColor+(n*14),0,n,7);
-        blitRawToLayer(2,scoreBorder+(n*7),scoreColor+(n*14),25,n,7);
+        blitRawToLayer(hudLayer,scoreBorder+(n*7),scoreColor+(n*14),0,n,7);
+        blitRawToLayer(hudLayer,scoreBorder+(n*7),scoreColor+(n*14),25,n,7);
     }
 
-    drawTxtToLayer(2,"xShift: 00",0b01000110,0b00000101,22,5);
-    drawTxtToLayer(2,"xStart: 00",0b01000110,0b00000101,22,6);
-    drawTxtToLayer(2,"Keyboard:",0b01000110,0b00000101,0,5);
+    drawTxtToLayer(hudLayer,"xShift: 00",0b01000110,0b00000101,22,5);
+    drawTxtToLayer(hudLayer,"xStart: 00",0b01000110,0b00000101,22,6);
+    drawTxtToLayer(hudLayer,"Keyboard:",0b01000110,0b00000101,0,5);
 
-    setLayerPos(0,0,0);
-    setLayerPos(1,0,0);
-    setLayerPos(2,0,0);
+    setLayerPos(frameCounterLayer,0,0);
+    setLayerPos(frontBowserLayer,0,0);
+    setLayerPos(hudLayer,0,0);
 
     int lYPos=0;
     int lYDir=1;
@@ -119,10 +126,10 @@ void gameLoop(void)
             initScratchBuffers(true);
 
             for(int n=0;n<24;n++){
-                drawIntNumToLayer(0,frameRendered,0x57,0x0f,n,n,8);
+                drawIntNumToLayer(frameCounterLayer,frameRendered,0x57,0x0f,n,n,8);
             }
         
-            setLayerPos(0,lYPos,4);
+            setLayerPos(frameCounterLayer,lYPos,4);
             lYPos+=lYDir;
             if(lYPos==16){
                 lYDir=-1;
@@ -130,43 +137,59 @@ void gameLoop(void)
                 lYDir=1;
             }
 
-            setLayerPos(1,sin(((float)frameRendered)/10.0)*50,l1YPos);
+            setLayerPos(frontBowserLayer,sin(((float)frameRendered)/10.0)*50,l1YPos);
             l1YPos-=4;
             if(l1YPos==-64){
                 l1YPos=0;
             }
 
-            setLayerPos(3,sin(((float)frameRendered)/17.0)*25,l2YPos);
+            setLayerPos(backBowserLayer,sin(((float)frameRendered)/17.0)*25,l2YPos);
             l2YPos+=2;
             if(l2YPos==2){
                 l2YPos=-62;
             }
 
             for(int n=0;n<8;n++){
-                drawIntNumToLayer(2,keyboardScan[n],0x57,0x0f,0,n+7,3);
+                drawIntNumToLayer(hudLayer,keyboardScan[n],0x57,0x0f,0,n+7,3);
             }
-
-            blitLayerToRenderBuffer(3);
-            blitLayerToRenderBuffer(1);
-            blitLayerToRenderBuffer(0);
-            blitLayerToRenderBuffer(2);
-            blitRenderBuffer();
 
             int spritesToDraw=(frameRendered-100);
             if(spritesToDraw>numSprites){
                 spritesToDraw=numSprites;
             }
-            for(int n=0;n<spritesToDraw;n++){
+            for(int n=1;n<spritesToDraw;n++){
+                setSpriteGroups(n,1,1);
                 if(n<64){
-                    s[n].x=118+(sin((spinOffX+(n*0.05)))*100.0);
+                    setSpritePos(n,118+(sin((spinOffX+(n*0.15)))*100.0),84+(cos((spinOffY+(n*0.15)))*60.0));
                 }else{
-                    s[n].x=118-(sin((spinOffX+(n*0.05)))*100.0);
+                    setSpritePos(n,118-(sin((spinOffX+(n*0.15)))*100.0),84+(cos((spinOffY+(n*0.15)))*60.0));
                 }
-                s[n].y=84+(cos((spinOffY+(n*0.05)))*60.0);
-                drawSprite(s[n]);
             }
             spinOffX+=0.04;
             spinOffY+=0.15;
+
+            setSpriteGroups(0,1,1);
+            if((keyboardScan[6]&0x01)){
+                setSpritePos(0,spriteList[0].x-2,spriteList[0].y);
+                if(--spriteList[0].frame<0){
+                    spriteList[0].frame=7;
+                }
+            }
+            if((keyboardScan[6]&0x04)){
+                setSpritePos(0,spriteList[0].x+2,spriteList[0].y);
+                if(++spriteList[0].frame==8){
+                    spriteList[0].frame=0;
+                }
+            }
+            if((keyboardScan[5]&0x02)){
+                setSpritePos(0,spriteList[0].x,spriteList[0].y-2);
+            }
+            if((keyboardScan[6]&0x02)){
+                setSpritePos(0,spriteList[0].x,spriteList[0].y+2);
+            }
+            drawIntNumToLayer(hudLayer,spriteList[0].x&0x07,0b01000110,0b00000101,30,5,2);
+            drawIntNumToLayer(hudLayer,spriteList[0].x>>3,0b01000110,0b00000101,30,6,2);
+            compositeScene();
 
             tf=(tf?false:true);
             gpio_put(PIN_LED,tf);

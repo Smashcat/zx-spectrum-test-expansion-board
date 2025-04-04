@@ -15,6 +15,7 @@
 #include "tileDefs.h"
 #include "Sprite.h"
 #include "TileLayer.h"
+#include "Compositor.h"
 #include "funcs.h"
 
 

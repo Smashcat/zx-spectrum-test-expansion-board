@@ -41,7 +41,7 @@ void blitRawToLayer(int layerIX, const uint8_t *tileDefs, const uint8_t *attrDef
 /// @param colorBottom The attribute to use under bottom half of string
 /// @param x X tile position within layer to start drawing string
 /// @param y y tile position within layer to start drawing string
-void drawTxtToLayer(int layerIX, const uint8_t *s, uint8_t colorTop, uint8_t colorBottom, int x, int y);
+void drawTxtToLayer(int layerIX, const char *s, uint8_t colorTop, uint8_t colorBottom, int x, int y);
 
 /// @brief Draw a number to the layer
 /// @param layerIX The layer to update

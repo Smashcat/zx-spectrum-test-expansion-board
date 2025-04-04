@@ -30,7 +30,7 @@ void blitRawToLayer(int layerIX, const uint8_t *tileDefs, const uint8_t *attrDef
     }
 }
 
-void drawTxtToLayer(int layerIX, const uint8_t *s, uint8_t colorTop, uint8_t colorBottom, int x, int y)
+void drawTxtToLayer(int layerIX, const char *s, uint8_t colorTop, uint8_t colorBottom, int x, int y)
 {
     const int tOffset=(y*TILE_LAYER_WIDTH)+x;
     const int aOffset=(y*TILE_LAYER_WIDTH*2)+x;
@@ -179,7 +179,6 @@ void blitLayerToRenderBuffer(int layerIX)
         if(++srcStartX==TILE_LAYER_WIDTH){
             srcStartX=0;
         }
-        
     }
     uint8_t *destAttrBuffer=renderAttrBuffer;
     for(int destRow=0;destRow<(SCREEN_HEIGHT_CELLS*2);destRow++){
@@ -200,6 +199,8 @@ void blitLayerToRenderBuffer(int layerIX)
             srcRow=0;
         }
     }
+
+    // Finally, add sprites that are on the same layer. First we draw sprites that do not check for collisions, then sprites that do
 
     blitScratchToRenderBuffer();
 }

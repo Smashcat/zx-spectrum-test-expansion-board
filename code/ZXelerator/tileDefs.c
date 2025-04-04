@@ -1,6 +1,6 @@
 #include "tileDefs.h"
 
- uint8_t tiles1Def[4096] __attribute__((aligned(4))) = {
+ const uint8_t tiles1Def[4096] __attribute__((aligned(4))) = {
 	0b00000000, // 0
 	0b00000000,
 	0b00000000,

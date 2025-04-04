@@ -79,8 +79,11 @@ void __not_in_flash_func(handleZ80Read)(void){
     enableROMOutput();
     gpio_put(PIN_RESET,true);   // lift reset
     while(true){
-        uint32_t address=pio_sm_get_blocking(pio,addr_data_sm);
-        pio_sm_put_blocking(pio,addr_data_sm,*(readPtr+address)); // if ROMCS off then direction of Data chip is input so they do not interfere
+        while((pio->fstat & (1u << (PIO_FSTAT_RXEMPTY_LSB + addr_data_sm))) != 0);
+        uint32_t address=pio->rxf[addr_data_sm];
+        //uint32_t address=pio_sm_get_blocking(pio,addr_data_sm);
+        pio->txf[addr_data_sm] = *(readPtr+address);
+        //pio_sm_put_blocking(pio,addr_data_sm,*(readPtr+address)); // if ROMCS off then direction of Data chip is input so they do not interfere
         writeOK=1;
         if((address==0x3fff) && (keyScanCnt==0)) {       // Z80 is about to send 8 scan codes from keys
             keyScanCnt=8;
@@ -95,7 +98,7 @@ void __not_in_flash_func(handleZ80Read)(void){
 
         // Z80 is about to read the first bank, for the top half of the screen (chasing the beam) - this is just before the halt instruction, so there is plenty of time to flip buffers
         }else if(address==0x3ffe){  
-            haltCD=1;
+            haltCD=2;
         }else if(haltCD>0){
 
             if(--haltCD==0){
