@@ -13,10 +13,10 @@ void setupIO(void){
     gpio_set_dir(PIN_RESET,GPIO_OUT);
     gpio_put(PIN_RESET,false);    // initially not in RESET, as we need to wait for at least one memory access so that the PIO will work correctly
     //
-    gpio_init(PIN_USER);
-    gpio_set_dir(PIN_USER,GPIO_OUT);
-    gpio_put(PIN_USER,true); // button active when connected to ground
-    gpio_set_irq_enabled_with_callback(PIN_USER,GPIO_IRQ_EDGE_FALL,true,&resetButton);  // when user button pressed, interrupt code and run resetButton routine
+    //gpio_init(PIN_USER);
+    //gpio_set_dir(PIN_USER,GPIO_OUT);
+    //gpio_put(PIN_USER,true); // button active when connected to ground
+    //gpio_set_irq_enabled_with_callback(PIN_USER,GPIO_IRQ_EDGE_FALL,true,&resetButton);  // when user button pressed, interrupt code and run resetButton routine
     //
     gpio_init(PIN_ROMCS);
     gpio_set_dir(PIN_ROMCS,GPIO_OUT);
@@ -81,9 +81,7 @@ void __not_in_flash_func(handleZ80Read)(void){
     while(true){
         while((pio->fstat & (1u << (PIO_FSTAT_RXEMPTY_LSB + addr_data_sm))) != 0);
         uint32_t address=pio->rxf[addr_data_sm];
-        //uint32_t address=pio_sm_get_blocking(pio,addr_data_sm);
         pio->txf[addr_data_sm] = *(readPtr+address);
-        //pio_sm_put_blocking(pio,addr_data_sm,*(readPtr+address)); // if ROMCS off then direction of Data chip is input so they do not interfere
         writeOK=1;
         if((address==0x3fff) && (keyScanCnt==0)) {       // Z80 is about to send 8 scan codes from keys
             keyScanCnt=8;
@@ -143,8 +141,8 @@ void __not_in_flash_func(handleZ80Read)(void){
 //   gpio - which gpio called this routine
 //   events - the compressed storage
 // ---------------------------------------------------------------------------
+/*
 void resetButton(uint gpio,uint32_t events) {
-    uint32_t address;         
     busy_wait_us_32(100000);    // litle wait to help with button bounce
     gpio_put(PIN_RESET,false); // put Spectrum in RESET state                      
     // wait for button release and check held for 1second to switch ROM otherwise just reset
@@ -160,6 +158,7 @@ void resetButton(uint gpio,uint32_t events) {
     busy_wait_us_32(100000);    // wait 100ms before lifting RESET       
     gpio_put(PIN_RESET,true);   // lift reset    
 }
+*/
 
 void enableROMOutput(void){
     //gpio_put(PIN_RESET,true);   // release reset    

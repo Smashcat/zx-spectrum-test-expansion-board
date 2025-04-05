@@ -18,6 +18,6 @@ void setupIO(void);
 void setupPIO(void);
 void releaseReset(void);
 void handleZ80Read(void);
-void resetButton(uint gpio,uint32_t events);
+//void resetButton(uint gpio,uint32_t events);
 void copyBank(uint8_t *dest, const uint8_t *src);
 void enableROMOutput(void);

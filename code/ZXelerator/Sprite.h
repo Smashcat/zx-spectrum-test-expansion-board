@@ -6,6 +6,7 @@
 #include "shared.h"
 #include "displayMemoryOffsets.h"
 #include "spriteDefs.h"
+#include "palette.h"
 
 
 /// @brief Structure containing data for a single Sprite object
@@ -24,6 +25,8 @@ typedef struct Sprite {
     int16_t     frame;
     // Tile layer this sprite appears over (-1=sprite not shown, 0=appears over back-most layer, 1=appears over layer 1, 2=appears over layer 2)
     int16_t    layer;
+    // The palette this sprite will use (palettes are 6 bytes, with each byte being the attribute for a 24x4 row of the sprite, top to bottom)
+    int16_t     paletteIX;
     // Float position in X axis
     float       xF;
     // Float position in Y axis
@@ -66,6 +69,11 @@ static inline void setSpriteLayer(int ix, int l){
 static inline void setSpriteDef(int ix, int d)
 {
     spriteList[ix].defIX=d;
+}
+
+static inline void setSpritePalette(int ix, int p)
+{
+    spriteList[ix].paletteIX=p;
 }
 
 static inline void setSpriteGroups(int ix, uint32_t gB, uint32_t cGB)

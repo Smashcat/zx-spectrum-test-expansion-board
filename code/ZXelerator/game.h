@@ -13,6 +13,7 @@
 #include "myTypes.h"
 #include "shared.h"
 #include "tileDefs.h"
+#include "palette.h"
 #include "Sprite.h"
 #include "TileLayer.h"
 #include "Compositor.h"

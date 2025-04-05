@@ -26,6 +26,7 @@
 
 #define SCREEN_WIDTH_CELLS      32
 #define SCREEN_HEIGHT_CELLS     24
+#define ATTR_HEIGHT_CELLS       48
 
 #define MAX_TILE_LAYERS         4
 #define TILE_LAYER_WIDTH        64

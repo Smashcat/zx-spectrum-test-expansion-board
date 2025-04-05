@@ -67,7 +67,7 @@ void drawSprite(int ix)
 void blitSpritesToRenderBuffer(int layerIX)
 {
     bool initedBuffers=false;
-    for(int n=0;n<totalSprites;n++){
+    for(int n=totalSprites-1;n>-1;n--){
         Sprite *s=spriteList+n;
         // If sprite has no group bits, it's not active, if it's not in this layer, it's not shown
         // Also if it's not on screen, it's not shown
@@ -113,10 +113,34 @@ void blitSpritesToRenderBuffer(int layerIX)
                     *(rP+xS+3)&=(uint8_t)(mask32);
                     *(rP+xS+3)|=(uint8_t)(src32);
                 }
+
             }
             rP+=SCREEN_WIDTH_CELLS;
             ++sDef;
             ++mDef;
+        }
+
+        const int startY=(s->y>>2);
+        uint8_t *aP=renderAttrBuffer+(startY*SCREEN_WIDTH_CELLS);
+        const uint8_t *apSrc=palette[s->paletteIX];
+        for(int y=startY;y<startY+6;y++){
+            const uint8_t apS=*apSrc;
+            if(y>-1 && y<ATTR_HEIGHT_CELLS && ((apS&0x80)==0)){
+                if(xS>-1){
+                    *(aP+xS)=apS;
+                }
+                if(xS>-2 && xS<31){
+                    *(aP+xS+1)=apS;
+                }
+                if(xS>-3 && xS<30){
+                    *(aP+xS+2)=apS;
+                }
+                if(xS>-4 && xS<29  && (shiftRight>3)){
+                    *(aP+xS+3)=apS;
+                }
+            }
+            ++apSrc;
+            aP+=SCREEN_WIDTH_CELLS;
         }
     }
 }

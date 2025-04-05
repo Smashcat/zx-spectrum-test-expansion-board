@@ -68,6 +68,7 @@ void gameLoop(void)
     for(int n=0;n<numSprites;n++){
         setSpritePos(n,(n==0?10:rand()%255),(n==0?168:32+(rand()%150)));
         setSpriteDef(n,0);
+        setSpritePalette(n,(n==0?1:2));
         setSpriteGroups(n,0,1);
         setSpriteLayer(n,1);
     };
@@ -171,21 +172,23 @@ void gameLoop(void)
             setSpriteGroups(0,1,1);
             if((keyboardScan[6]&0x01)){
                 setSpritePos(0,spriteList[0].x-2,spriteList[0].y);
+                setSpriteDef(0,0);
                 if(--spriteList[0].frame<0){
                     spriteList[0].frame=7;
                 }
             }
             if((keyboardScan[6]&0x04)){
                 setSpritePos(0,spriteList[0].x+2,spriteList[0].y);
+                setSpriteDef(0,8);
                 if(++spriteList[0].frame==8){
                     spriteList[0].frame=0;
                 }
             }
             if((keyboardScan[5]&0x02)){
-                setSpritePos(0,spriteList[0].x,spriteList[0].y-2);
+                setSpritePos(0,spriteList[0].x,spriteList[0].y-4);
             }
             if((keyboardScan[6]&0x02)){
-                setSpritePos(0,spriteList[0].x,spriteList[0].y+2);
+                setSpritePos(0,spriteList[0].x,spriteList[0].y+4);
             }
             drawIntNumToLayer(hudLayer,spriteList[0].x&0x07,0b01000110,0b00000101,30,5,2);
             drawIntNumToLayer(hudLayer,spriteList[0].x>>3,0b01000110,0b00000101,30,6,2);
@@ -204,6 +207,9 @@ void gameLoop(void)
 void setState(GameState newGS)
 {
     switch(newGS){
+
+        default:
+        break;
     }
     gs=newGS;
     resetStateVars();
