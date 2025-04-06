@@ -37,11 +37,17 @@ void drawTxtToLayer(int layerIX, const char *s, uint8_t colorTop, uint8_t colorB
     uint8_t *tP=tileLayer[layerIX].tileMap+tOffset;
     uint8_t *aP=tileLayer[layerIX].attrMap+aOffset;
     while(*s){
-        *tP=*s++;
-        *aP=colorTop;
-        *(aP+TILE_LAYER_WIDTH)=colorBottom;
+        *tP=*s;
+        if(*s && *s!=32){
+            *aP=colorTop;
+            *(aP+TILE_LAYER_WIDTH)=colorBottom;
+        }else{
+            *aP=0x80;
+            *(aP+TILE_LAYER_WIDTH)=0x80;
+        }
         ++tP;
         ++aP;
+        ++s;
     }
 }
 
@@ -76,7 +82,7 @@ void setTileDefSet(int layerIX, const uint8_t *setRef)
 //__not_in_flash_func(
 //    void blitLayerToRenderBuffer(int layerIX)
 //)
-void blitLayerToRenderBuffer(int layerIX)
+void blitLayerToScratchBuffers(int layerIX)
 {
     const TileLayer *tL=tileLayer+layerIX;
     if(tL->tileDefPtr==NULL){
@@ -200,7 +206,4 @@ void blitLayerToRenderBuffer(int layerIX)
         }
     }
 
-    // Finally, add sprites that are on the same layer. First we draw sprites that do not check for collisions, then sprites that do
-
-    blitScratchToRenderBuffer();
 }

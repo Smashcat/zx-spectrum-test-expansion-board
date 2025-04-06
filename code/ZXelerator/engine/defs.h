@@ -3,6 +3,10 @@
 #define PROG_NAME   "ZXelerator"
 #define VERSION_NUM "v0.1"
 
+#define MAX_TILE_LAYERS         4
+#define MAX_PARTICLES           500
+#define MAX_SPRITES             500
+
 // ---------------------------------------------------------------------------
 // gpio pins
 // ---------------------------------------------------------------------------
@@ -26,9 +30,10 @@
 
 #define SCREEN_WIDTH_CELLS      32
 #define SCREEN_HEIGHT_CELLS     24
-#define ATTR_HEIGHT_CELLS       48
+#define ATTR_HEIGHT_PIXELS      4
+#define SCREEN_HEIGHT_LINES     (SCREEN_HEIGHT_CELLS*8)
+#define ATTR_HEIGHT_CELLS       (SCREEN_HEIGHT_LINES/ATTR_HEIGHT_PIXELS)
 
-#define MAX_TILE_LAYERS         4
 #define TILE_LAYER_WIDTH        64
 #define TILE_LAYER_HEIGHT       64
-#define TILE_LAYER_ATTR_HEIGHT  128
+#define TILE_LAYER_ATTR_HEIGHT  (TILE_LAYER_HEIGHT*2)

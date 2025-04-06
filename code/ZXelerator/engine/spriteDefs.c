@@ -1,7 +1,7 @@
 
 #include "spriteDefs.h"
 
-const uint8_t spriteDef[1536] __attribute__((aligned(4))) = {
+const uint8_t sprite24x24Def[1536] __attribute__((aligned(4))) = {
 	0b00000000,0b00000000,0b00000000,0b00000000, // 0
 	0b00000000,0b01111100,0b00110000,0b00000000,
 	0b00000001,0b11111111,0b00000000,0b00000000,
@@ -406,7 +406,7 @@ const uint8_t spriteDef[1536] __attribute__((aligned(4))) = {
 };
 
 
-const uint8_t maskDef[1536] __attribute__((aligned(4))) = {
+const uint8_t mask24x24Def[1536] __attribute__((aligned(4))) = {
 	0b11111111,0b00000001,0b10000111,0b11111111, // 0
 	0b11111100,0b00000000,0b00000011,0b11111111,
 	0b11110000,0b00000000,0b00000011,0b11111111,

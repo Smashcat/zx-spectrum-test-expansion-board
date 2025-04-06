@@ -63,6 +63,6 @@ void setLayerPos(int layerIX,int x, int y);
 /// @param setRef pointer to the array of tile data
 void setTileDefSet(int layerIX, const uint8_t *setRef);
 
-/// @brief Draws the layer to the render buffer, ready to display on the screen
+/// @brief Draws the layer to the scratch buffers, ready to move to the render buffer
 /// @param layerIX The layer to draw
-void blitLayerToRenderBuffer(int layerIX);
+void blitLayerToScratchBuffers(int layerIX);

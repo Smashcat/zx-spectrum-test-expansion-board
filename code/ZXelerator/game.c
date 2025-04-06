@@ -66,10 +66,10 @@ void gameLoop(void)
     const int numSprites=100;
     initSprites(numSprites);
     for(int n=0;n<numSprites;n++){
-        setSpritePos(n,(n==0?10:rand()%255),(n==0?168:32+(rand()%150)));
-        setSpriteDef(n,0);
+        setSpritePos(n,(n==0?10:500),(n==0?168:500));
+        setSpriteSize(n,SIZE_24X24);
+        setSpriteDef(n,sprite24x24Def,mask24x24Def);
         setSpritePalette(n,(n==0?1:2));
-        setSpriteGroups(n,0,1);
         setSpriteLayer(n,1);
     };
 
@@ -151,7 +151,11 @@ void gameLoop(void)
             }
 
             for(int n=0;n<8;n++){
-                drawIntNumToLayer(hudLayer,keyboardScan[n],0x57,0x0f,0,n+7,3);
+                if(keyboardScan[n]&0x1f){
+                    const char *kName=keyScanToStr(n);
+                    drawTxtToLayer(hudLayer,"     ",0x57,0x0f,0,7);
+                    drawTxtToLayer(hudLayer,kName,0x57,0x0f,0,7);
+                }
             }
 
             int spritesToDraw=(frameRendered-100);
@@ -159,7 +163,6 @@ void gameLoop(void)
                 spritesToDraw=numSprites;
             }
             for(int n=1;n<spritesToDraw;n++){
-                setSpriteGroups(n,1,1);
                 if(n<64){
                     setSpritePos(n,118+(sin((spinOffX+(n*0.15)))*100.0),84+(cos((spinOffY+(n*0.15)))*60.0));
                 }else{
@@ -169,27 +172,30 @@ void gameLoop(void)
             spinOffX+=0.04;
             spinOffY+=0.15;
 
-            setSpriteGroups(0,1,1);
-            if((keyboardScan[6]&0x01)){
+            if(keyDown(KEY_A)){
                 setSpritePos(0,spriteList[0].x-2,spriteList[0].y);
-                setSpriteDef(0,0);
+                setSpriteDef(0,sprite24x24Def,mask24x24Def);
                 if(--spriteList[0].frame<0){
                     spriteList[0].frame=7;
                 }
             }
-            if((keyboardScan[6]&0x04)){
+
+            if(keyDown(KEY_D)){
                 setSpritePos(0,spriteList[0].x+2,spriteList[0].y);
-                setSpriteDef(0,8);
+                setSpriteDef(0,sprite24x24Def+(96*8),mask24x24Def+(96*8));
                 if(++spriteList[0].frame==8){
                     spriteList[0].frame=0;
                 }
             }
-            if((keyboardScan[5]&0x02)){
+
+            if(keyDown(KEY_W)){
                 setSpritePos(0,spriteList[0].x,spriteList[0].y-4);
             }
-            if((keyboardScan[6]&0x02)){
+
+            if(keyDown(KEY_S)){
                 setSpritePos(0,spriteList[0].x,spriteList[0].y+4);
             }
+
             drawIntNumToLayer(hudLayer,spriteList[0].x&0x07,0b01000110,0b00000101,30,5,2);
             drawIntNumToLayer(hudLayer,spriteList[0].x>>3,0b01000110,0b00000101,30,6,2);
             compositeScene();

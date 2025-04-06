@@ -44,7 +44,22 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(ZXelerator ZXelerator.c funcs.c game.c resetData.c shared.c spriteDefs.c displayMemoryOffsets.c Sprite.c tileDefs.c TileLayer.c Compositor.c palette.c)
+add_executable(
+    ZXelerator 
+    ZXelerator.c 
+    engine/funcs.c 
+    engine/resetData.c 
+    engine/shared.c 
+    engine/spriteDefs.c 
+    engine/displayMemoryOffsets.c 
+    engine/Sprite.c 
+    engine/tileDefs.c 
+    engine/TileLayer.c 
+    engine/Compositor.c 
+    engine/palette.c 
+    engine/inputDevice.c
+    game.c 
+)
 
 pico_set_program_name(ZXelerator "ZXelerator")
 pico_set_program_version(ZXelerator "0.1")
@@ -66,8 +81,10 @@ target_link_libraries(
 )
 
 # Add the standard include files to the build
-target_include_directories(ZXelerator PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}
+target_include_directories(
+    ZXelerator PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+    ${CMAKE_CURRENT_LIST_DIR}/engine
 )
 
 pico_add_extra_outputs(ZXelerator)

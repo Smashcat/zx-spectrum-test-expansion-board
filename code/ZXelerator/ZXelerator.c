@@ -1,6 +1,6 @@
 
 #include "pico/multicore.h"
-#include "funcs.h"
+#include "engine/funcs.h"
 #include "game.h"
 
 int main() {
