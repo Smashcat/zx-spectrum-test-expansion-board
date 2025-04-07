@@ -14,5 +14,6 @@
 #include "tileDefs.h"
 #include "Sprite.h"
 #include "TileLayer.h"
+#include "particles.h"
 
 void compositeScene(void);

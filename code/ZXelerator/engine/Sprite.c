@@ -34,53 +34,53 @@ void setSpriteSize(int ix, SpriteSize st){
     s->size=st;
     switch(st){
         case SIZE_8X4:
-        s->width=1;
+        s->width=8;
         s->height=4;
         break;
         case SIZE_8X8:
-        s->width=1;
+        s->width=8;
         s->height=8;
         break;
         case SIZE_8X12:
-        s->width=1;
+        s->width=8;
         s->height=12;
         break;
         case SIZE_8X16:
-        s->width=1;
+        s->width=8;
         s->height=16;
         break;
 
         case SIZE_16X8:
-        s->width=2;
+        s->width=16;
         s->height=8;
         break;
         case SIZE_16X12:
-        s->width=2;
+        s->width=16;
         s->height=12;
         break;
         case SIZE_16X16:
-        s->width=2;
+        s->width=16;
         s->height=16;
         break;
         case SIZE_16X24:
-        s->width=2;
+        s->width=16;
         s->height=24;
         break;
         
         case SIZE_24X24:
-        s->width=3;
+        s->width=24;
         s->height=24;
         break;
         case SIZE_24X32:
-        s->width=3;
+        s->width=24;
         s->height=32;
         break;
         case SIZE_24X48:
-        s->width=3;
+        s->width=24;
         s->height=48;
         break;
         case SIZE_24X64:
-        s->width=3;
+        s->width=24;
         s->height=64;
         break;
     }
@@ -88,34 +88,28 @@ void setSpriteSize(int ix, SpriteSize st){
 
 void blitSpritesToRenderBuffer(int layerIX)
 {
-    bool initedBuffers=false;
     for(int n=totalSprites-1;n>-1;n--){
         Sprite *s=spriteList+n;
         // If sprite is not in this layer, it's not shown
         // Also if it's not within the visible screen, it's not shown
         if(
             (s->layer!=layerIX) || 
-            (s->y>191) || 
-            (s->y<-23) || 
-            (s->x<-23) || 
-            (s->x>255)
+            (s->y>=SCREEN_HEIGHT_LINES) || 
+            (s->y<=-(s->height)) || 
+            (s->x<=-(s->width)) || 
+            (s->x>=SCREEN_WIDTH_PIXELS)
         ){
             continue;
         }
 
-        if(!initedBuffers){
-            initScratchBuffers(false);
-            initedBuffers=true;
-        }
-
         switch(s->width){
-            case 1:
+            case 8:
                 blitSprite8ToRenderBuffer(s);
                 break;
-            case 2:
+            case 16:
                 blitSprite16ToRenderBuffer(s);
                 break;
-            case 3:
+            case 24:
                 blitSprite24ToRenderBuffer(s);
                 break;
         }

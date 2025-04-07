@@ -121,9 +121,6 @@ void blitLayerToScratchBuffers(int layerIX)
         drawIntNumToLayer(2,srcStartX,0x4f,0x5f,30,6,2);
     }
 
-    // Get scratch buffers ready
-    initScratchBuffers(false);
-
     uint8_t *spr=scratchPixRam;
     uint8_t *smr=scratchMaskRam;
     const uint8_t *tileData=tL->tileMap;

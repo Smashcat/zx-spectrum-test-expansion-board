@@ -58,6 +58,7 @@ add_executable(
     engine/Compositor.c 
     engine/palette.c 
     engine/inputDevice.c
+    engine/particles.c
     game.c 
 )
 

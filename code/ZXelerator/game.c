@@ -63,6 +63,9 @@ void gameLoop(void)
     channel_config_set_read_increment(&dmaBlitCfg, true);
     channel_config_set_write_increment(&dmaBlitCfg, true);
 
+    initParticles(1000);
+    setGravity(0.2);
+
     const int numSprites=100;
     initSprites(numSprites);
     for(int n=0;n<numSprites;n++){
@@ -125,6 +128,17 @@ void gameLoop(void)
         
         if(frameRendered>50){
             initScratchBuffers(true);
+
+            if(particlesAlive==0){
+                startParticles(
+                    0,
+                    128,96,
+                    1000,
+                    0,2*M_PI,
+                    0.5,3.9,
+                    20,45   // min,max age
+                );            
+            }
 
             for(int n=0;n<24;n++){
                 drawIntNumToLayer(frameCounterLayer,frameRendered,0x57,0x0f,n,n,8);

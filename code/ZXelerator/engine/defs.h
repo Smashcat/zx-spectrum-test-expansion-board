@@ -4,8 +4,9 @@
 #define VERSION_NUM "v0.1"
 
 #define MAX_TILE_LAYERS         4
-#define MAX_PARTICLES           500
+#define MAX_PARTICLES           1000
 #define MAX_SPRITES             500
+#define MAX_FALL_SPEED          6.0
 
 // ---------------------------------------------------------------------------
 // gpio pins
@@ -31,6 +32,7 @@
 #define SCREEN_WIDTH_CELLS      32
 #define SCREEN_HEIGHT_CELLS     24
 #define ATTR_HEIGHT_PIXELS      4
+#define SCREEN_WIDTH_PIXELS     (SCREEN_WIDTH_CELLS*8)
 #define SCREEN_HEIGHT_LINES     (SCREEN_HEIGHT_CELLS*8)
 #define ATTR_HEIGHT_CELLS       (SCREEN_HEIGHT_LINES/ATTR_HEIGHT_PIXELS)
 
