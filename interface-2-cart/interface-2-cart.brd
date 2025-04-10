@@ -321,6 +321,12 @@
 <vertex x="31.6865" y="15.875"/>
 </polygon>
 <wire x1="31.6865" y1="16.256" x2="31.8135" y2="16.129" width="0.1524" layer="21"/>
+<polygon width="0.1524" layer="21">
+<vertex x="10.922" y="35.7505"/>
+<vertex x="10.668" y="36.0045"/>
+<vertex x="10.668" y="35.4965"/>
+</polygon>
+<wire x1="10.668" y1="35.8775" x2="10.795" y2="35.7505" width="0.1524" layer="21"/>
 </plain>
 <libraries>
 <library name="zxs_i2_rom_edge_connector" urn="urn:adsk.eagle:library:47393026">

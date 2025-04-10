@@ -184,8 +184,6 @@
             r+="\tld hl,"+(displayData[dIX-2]+(displayData[dIX-1]<<8))+"\t; byte addr "+h(dOff)+", code offset "+h(codeIX+3)+"\n" + 
                 "\tpush hl\t; offset "+h(codeIX+3+1)+"\n";
             dIX-=2;
-//            dispOffset[dOff-2+lb]=(codeIX+1+dispAddrAdd);
-//            dispOffset[dOff-2+hb]=(codeIX+2+dispAddrAdd);
             dispOffset[offOff-2+lb]=(codeIX+1+dispAddrAdd);
             dispOffset[offOff-2+hb]=(codeIX+2+dispAddrAdd);
             offOff-=2;
@@ -203,21 +201,28 @@
         clockOff+=10;
         attrPos-=2;
         let dWord=testWord+((testWord<<8)|0x40);
-        let srcPos=766;
+        let srcPos=((32*23)*2)+30;
         let asrcPos=(srcPos+(23*32));
         let lineIX=0;
-
+        //let rSrcPos=
+console.log("Len="+attrData.length);
         for(let n=0;n<768/2;n++){
+if(n<10){
+    console.log(srcPos+"="+h(attrData[srcPos]+(attrData[srcPos+1]<<8)));
+}
             asmTxt+="\tld hl,"+(attrData[srcPos]+(attrData[srcPos+1]<<8))+"\t; src offset "+(attrPos-0)+", code offset "+h(codeIX+3)+"\n" + 
                     "\tpush hl\t\t; code offset "+h(codeIX+4)+"\n";
+
+            srcPos-=2;
+
             attrOffset[asrcPos+lb]=(codeIX+1);
             attrOffset[asrcPos+hb]=(codeIX+2);
             asrcPos-=2;
             if(++lineIX==16){
                 asrcPos-=32;
                 lineIX=0;
+                srcPos-=32;
             }
-            srcPos-=2;
             clockOff+=21;
             codeIX+=4;
             attrPos-=2;
@@ -374,6 +379,7 @@
     function getAttr16bc(ix){
         let r1=attrData[ix];
         let r2=attrData[ix+1];
+        /*  Was used to produce yellow/red alternating lines in original title screen (Enraptured)
         if((r1&0b00000111)==0b00000010){
             r1&=0b11111000;
             r1|=0b00000110;
@@ -390,6 +396,7 @@
             r2&=0b11000111;
             r2|=0b00110000;
         }
+        */
         return r1+(r2<<8);
     }
 
@@ -400,7 +407,8 @@
         const tW=screenTestByte+(screenTestByte<<8);
         const ix=biColorIX*32;
         clockOff=-144*6;
-        const attrDataIX=ix;
+        const attrDataIX=(ix*2)+32; // attr data now has interleaved bi-color lines
+
         asmTxt+="\n\t; attr draw "+biColorIX+", code offset "+h(codeIX)+"\n"+
                 "\tld sp,attr8and16vals+"+(biColorIX*4)+"\n"+           // 3
 
@@ -664,6 +672,8 @@
 
         // Even frame is top, chasing the beam. Odd frame is bottom, racing the beam
         let showEvenFrame=false;
+        // If true, add code so that it actually runs in the emulator
+        let testFrame=false;
         if(showEvenFrame){
 
                 // We only store the stack pointer if we're being called - the code is re-entrant for the bottom half of the frame
@@ -684,14 +694,15 @@
                 addBlitsToDiv(0,0,203,0,0b10101111);  // Odd render (39 attr blits) 241
 
                 // simulate jump back to start of ROM render address, so Pico can swap the buffer fill command list
-                addJmpToDiv();
-/*
-                blockAttrBlit(0b00001110);  // Odd render (39 attr blits)
-                clockOff=-144*49;
-                frameIX=1;
-                biColorIX=0;
-                addBlitsToDiv(203,0,65,0,0b11001100);  // Odd render (39 attr blits)
-*/
+                if(!testFrame){
+                    addJmpToDiv();
+                }else{
+                    blockAttrBlit(0b00001110);  // Odd render (39 attr blits)
+                    clockOff=-144*49;
+                    frameIX=1;
+                    biColorIX=0;
+                    addBlitsToDiv(203,0,65,0,0b11001100);  // Odd render (39 attr blits)
+                }
 
         }else{
 
@@ -706,23 +717,25 @@
 
                 // Delays simulate the blits from the even frame, so we can just render the odd frame to check timings
                 // Only for testing in emulator!
-                /*
-                setChaseDelay(5000);
-                setChaseDelay(5000);
-                setChaseDelay(5000);
-                setChaseDelay(5000);
-                setChaseDelay(5000);
-                setChaseDelay(5000);
-                setChaseDelay(5000);
-                setChaseDelay(5000);
-                setChaseDelay(5000);
-                setChaseDelay(5000);
-                setChaseDelay(5000);
-                setChaseDelay(5000);
-                setChaseDelay(5000);
-                setChaseDelay(1050);
-                setChaseDelay((224*7)+114);
-                */
+                if(testFrame){
+                    asmTxt+="\tld (spBackupAddr),sp\n\n";
+                    codeIX+=4;
+                    setChaseDelay(5000);
+                    setChaseDelay(5000);
+                    setChaseDelay(5000);
+                    setChaseDelay(5000);
+                    setChaseDelay(5000);
+                    setChaseDelay(5000);
+                    setChaseDelay(5000);
+                    setChaseDelay(5000);
+                    setChaseDelay(5000);
+                    setChaseDelay(5000);
+                    setChaseDelay(5000);
+                    setChaseDelay(5000);
+                    setChaseDelay(5000);
+                    setChaseDelay(1050);
+                    setChaseDelay((224*7)+114);
+                }
                 blockAttrBlit(0b00001110);
                 clockOff=-144*49;
                 frameIX=1;
@@ -741,7 +754,7 @@
                 addBicolorLine(0b00101000);
 
                 // Add the audio command list up to end of frame
-                addAudioList(0x00,700);
+                addAudioList(0x00,850); // was 850
 
         }
 
