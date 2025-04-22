@@ -11,7 +11,7 @@ void setupIO(void){
     // -------------------------------
     gpio_init(PIN_RESET);
     gpio_set_dir(PIN_RESET,GPIO_OUT);
-    gpio_put(PIN_RESET,false);    // initially not in RESET, as we need to wait for at least one memory access so that the PIO will work correctly
+    gpio_put(PIN_RESET,true);    // initially not in RESET, as we need to wait for at least one memory access so that the PIO will work correctly
     //
     //gpio_init(PIN_USER);
     //gpio_set_dir(PIN_USER,GPIO_OUT);
@@ -26,6 +26,12 @@ void setupIO(void){
     gpio_set_dir(PIN_LED,GPIO_OUT);
     gpio_put(PIN_LED,false);
 
+//while(1){
+//    gpio_put(PIN_LED,true);
+//    busy_wait_ms(1000);
+//    gpio_put(PIN_LED,false);
+//    busy_wait_ms(1000);
+//}
     // Initialise the ASM data banks
     for(int n=0;n<3;n++){
         copyBank(ram[n][0],resetBank[0]);
@@ -164,7 +170,14 @@ void enableROMOutput(void){
     //gpio_put(PIN_RESET,true);   // release reset    
     //busy_wait_ms(2800);    // wait 1000ms before lifting RESET           
     gpio_put(PIN_RESET,false);   // set reset    
-    gpio_put(PIN_ROMCS,true);   // turn on ROMCS  
+
+//TODO fix!
+// Due to a design fuckup, this needs to be LOW to enable the output buffer to work, but that also has the effect of disabling the /ROMCS line doh!
+#ifdef BUGGED_BOARD
+    gpio_put(PIN_ROMCS,false);   // turn off ROMCS  on PCB
+#else
+gpio_put(PIN_ROMCS,true);   // turn on ROMCS  
+#endif
     busy_wait_ms(800);    // wait 1000ms before lifting RESET           
 }
 

@@ -63,17 +63,24 @@ void gameLoop(void)
     channel_config_set_read_increment(&dmaBlitCfg, true);
     channel_config_set_write_increment(&dmaBlitCfg, true);
 
-    initParticles(1000);
-    setGravity(0.2);
+    const int fullDemo=1;
 
-    const int numSprites=100;
+    if(fullDemo){
+        initParticles(1000);
+        setGravity(0.2);
+    }
+
+    const int numSprites=(fullDemo?100:1);
     initSprites(numSprites);
     for(int n=0;n<numSprites;n++){
-        setSpritePos(n,(n==0?10:500),(n==0?168:500));
+        setSpritePos(n,(n==0?116:500),(n==0?84:500));
         setSpriteSize(n,SIZE_24X24);
         setSpriteDef(n,sprite24x24Def,mask24x24Def);
         setSpritePalette(n,(n==0?1:2));
         setSpriteLayer(n,1);
+        if(n==0){
+            setSpriteScale(n,4.5,3);
+        }
     };
 
     // Reset the ASM buffer, this contains the "title image" data by default
@@ -86,16 +93,19 @@ void gameLoop(void)
     const int frontBowserLayer=2;
     const int backBowserLayer=3;
 
-    setTileDefSet(frameCounterLayer,tiles1Def);
-    setTileDefSet(frontBowserLayer,tiles1Def);
     setTileDefSet(hudLayer,tiles1Def);
-    setTileDefSet(backBowserLayer,tiles1Def);
 
-    for(int xPos=0;xPos<32;xPos+=8){
-        for(int yPos=0;yPos<32;yPos+=8){
-            for(int n=0;n<8;n++){
-                blitRawToLayer(frontBowserLayer,bowser+(n*8),bowserCol+(n*16),xPos,yPos+n,8);
-                blitRawToLayer(backBowserLayer,bowser+(n*8),bowserCol+(n*16),xPos,yPos+n,8);
+    if(fullDemo){
+        setTileDefSet(frameCounterLayer,tiles1Def);
+        setTileDefSet(frontBowserLayer,tiles1Def);
+        setTileDefSet(backBowserLayer,tiles1Def);
+
+        for(int xPos=0;xPos<32;xPos+=8){
+            for(int yPos=0;yPos<32;yPos+=8){
+                for(int n=0;n<8;n++){
+                    blitRawToLayer(frontBowserLayer,bowser+(n*8),bowserCol+(n*16),xPos,yPos+n,8);
+                    blitRawToLayer(backBowserLayer,bowser+(n*8),bowserCol+(n*16),xPos,yPos+n,8);
+                }
             }
         }
     }
@@ -117,6 +127,11 @@ void gameLoop(void)
     int lYDir=1;
     int l1YPos=0;
     int l2YPos=0;
+
+    float pSpriteScaleX=1;
+    float pSpriteScaleY=1;
+    float pSpriteScaleXInt=0.05;
+    float pSpriteScaleYInt=-0.07;
     float spinOffX=0;
     float spinOffY=0;
     while(eroneousAddr==0){
@@ -129,7 +144,8 @@ void gameLoop(void)
         if(frameRendered>50){
             initScratchBuffers(true);
 
-            if(particlesAlive==0){
+            if((particlesAlive==0) && (fullDemo)){
+
                 startParticles(
                     0,
                     128,96,
@@ -138,6 +154,7 @@ void gameLoop(void)
                     0.5,3.9,
                     20,45   // min,max age
                 );            
+
             }
 
             for(int n=0;n<24;n++){
@@ -210,6 +227,14 @@ void gameLoop(void)
                 setSpritePos(0,spriteList[0].x,spriteList[0].y+4);
             }
 
+            setSpriteScale(0,pSpriteScaleX,pSpriteScaleY);
+            pSpriteScaleX+=pSpriteScaleXInt;
+            if(pSpriteScaleX>=6){pSpriteScaleXInt=-0.05;}
+            if(pSpriteScaleX<=0.140){pSpriteScaleXInt=0.05;}
+            pSpriteScaleY+=pSpriteScaleYInt;
+            if(pSpriteScaleY>=6){pSpriteScaleYInt=-0.07;}
+            if(pSpriteScaleY<=0.140){pSpriteScaleYInt=0.07;}
+        
             drawIntNumToLayer(hudLayer,spriteList[0].x&0x07,0b01000110,0b00000101,30,5,2);
             drawIntNumToLayer(hudLayer,spriteList[0].x>>3,0b01000110,0b00000101,30,6,2);
             compositeScene();

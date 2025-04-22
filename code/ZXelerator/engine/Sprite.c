@@ -2,6 +2,8 @@
 
 Sprite *spriteList=NULL;
 int totalSprites=0;
+uint8_t pixLineBuffer[256] __attribute__((aligned(4)));
+uint8_t maskLineBuffer[256] __attribute__((aligned(4)));
 
 void initSprites(int numSprites)
 {
@@ -16,6 +18,7 @@ void initSprites(int numSprites)
         s->y=0;
         s->defPtr=NULL;
         s->frame=0;
+        s->isScaled=0;
     }
 }
 
@@ -31,7 +34,6 @@ void deleteSprites(void)
 
 void setSpriteSize(int ix, SpriteSize st){
     Sprite *s=spriteList+ix;
-    s->size=st;
     switch(st){
         case SIZE_8X4:
         s->width=8;
@@ -84,6 +86,11 @@ void setSpriteSize(int ix, SpriteSize st){
         s->height=64;
         break;
     }
+    s->size=st;
+    s->scaledWidth=s->width;
+    s->scaledHeight=s->height;
+    s->isScaled=0;
+    s->bytesPerRow = (s->width==24?4:(s->width >> 3));  // 24bit wide sprites actually span 4 bytes for faster 32-bit aligned reads
 }
 
 void blitSpritesToRenderBuffer(int layerIX)
@@ -95,23 +102,27 @@ void blitSpritesToRenderBuffer(int layerIX)
         if(
             (s->layer!=layerIX) || 
             (s->y>=SCREEN_HEIGHT_LINES) || 
-            (s->y<=-(s->height)) || 
-            (s->x<=-(s->width)) || 
+            (s->y<=-(s->scaledHeight)) || 
+            (s->x<=-(s->scaledWidth)) || 
             (s->x>=SCREEN_WIDTH_PIXELS)
         ){
             continue;
         }
 
-        switch(s->width){
-            case 8:
-                blitSprite8ToRenderBuffer(s);
-                break;
-            case 16:
-                blitSprite16ToRenderBuffer(s);
-                break;
-            case 24:
-                blitSprite24ToRenderBuffer(s);
-                break;
+        if(s->isScaled){
+            blitSpriteScaledToRenderBuffer(s);
+        }else{
+            switch(s->width){
+                case 8:
+                    blitSprite8ToRenderBuffer(s);
+                    break;
+                case 16:
+                    blitSprite16ToRenderBuffer(s);
+                    break;
+                case 24:
+                    blitSprite24ToRenderBuffer(s);
+                    break;
+            }
         }
     }
 }
@@ -275,5 +286,100 @@ void blitSprite24ToRenderBuffer(Sprite *s)
         }
         ++apSrc;
         aP+=SCREEN_WIDTH_CELLS;
+    }
+}
+
+void blitSpriteScaledToRenderBuffer(Sprite *s)
+{
+    const int lineBufferLen = 256;
+    const int sHeight=s->scaledHeight;
+    const int sWidth=s->scaledWidth;
+    const int sY=s->y;
+    const int bpr=s->bytesPerRow;
+    const int xS=s->x>>3;                                                  // Character cell to start in is the xPos/8
+    const int dstStartBitPos=7-(s->x&0x07);
+    const uint8_t *sDefBase=(uint8_t *)s->defPtr+(s->frame*s->height*s->bytesPerRow);       // Point to start of sprite foreground data
+    const uint8_t *mDefBase=(uint8_t *)s->maskPtr+(s->frame*s->height*s->bytesPerRow);      // Point to start of sprite mask data
+    const uint8_t *apSrc=palette[s->paletteIX];
+    const int endLine=(sY+sHeight>SCREEN_HEIGHT_LINES?SCREEN_HEIGHT_LINES:sY+sHeight);
+    const int sWidthChars=(sWidth>>3)+1;
+
+    U32u8 xAdd,yAdd;
+    yAdd.u32 = 0;
+    uint8_t lByte = 255;
+    uint8_t *rP=(uint8_t *)renderBuffer+(sY*SCREEN_WIDTH_CELLS);
+    uint8_t *aP=renderAttrBuffer+((sY/ATTR_HEIGHT_PIXELS)*SCREEN_WIDTH_CELLS);
+    int attrCountDown=1;
+
+    memset(pixLineBuffer,0,lineBufferLen);
+    memset(maskLineBuffer,0xff,lineBufferLen);
+    for(int y=s->y;y<endLine;y++){
+        if(y>-1){
+            if(lByte!=yAdd.u8[2]){
+                lByte = yAdd.u8[2];
+                int dstBitPos=dstStartBitPos;
+                xAdd.u32=0;
+                const uint8_t *src=sDefBase+((int)yAdd.u8[2] * bpr);
+                const uint8_t *mSrc=mDefBase+((int)yAdd.u8[2] * bpr);
+                int srcBitPos=7;
+                int plbIX=0;
+                pixLineBuffer[plbIX]=0;
+                maskLineBuffer[plbIX]=0xff;
+                for (int x = 0; x < sWidth; x++) {
+                    if(*src&(1<<srcBitPos)){
+                        pixLineBuffer[plbIX]|=(1<<dstBitPos);
+                    }
+                    if((*mSrc&(1<<srcBitPos))==0){
+                        maskLineBuffer[plbIX]&=~(1<<dstBitPos);
+                    }
+                    if(--dstBitPos<0){
+                        ++plbIX;
+                        pixLineBuffer[plbIX]=0;
+                        maskLineBuffer[plbIX]=0xff;
+                        dstBitPos+=8;
+                    }
+                    xAdd.u32 += s->scaledWidthAdder.u32;
+                    if (xAdd.u8[2] > 0) {
+                        srcBitPos -= xAdd.u8[2];
+                        xAdd.u8[2] = 0;
+                        if (srcBitPos < 0) {
+                            srcBitPos += 8;
+                            ++src;
+                            ++mSrc;
+                        }
+                    }
+                }
+            }
+
+            yAdd.u32 += s->scaledHeightAdder.u32;
+            for(int lIX=0;lIX<sWidthChars;lIX++){
+                int dstChar=lIX+xS;
+                if(dstChar>-1 && dstChar<SCREEN_WIDTH_CELLS){
+                    *(rP+dstChar)&=maskLineBuffer[lIX];
+                    *(rP+dstChar)|=pixLineBuffer[lIX];
+                }
+            }
+
+            // Add attributes if flash bit not set - only once every 4 rows of pixels - always draw on last line to ensure we cover the bottom row of the sprite
+            if(--attrCountDown==0){
+                uint8_t c=*(apSrc+(yAdd.u8[2]>>2));
+                if( (c&0x80)==0 ){
+                    for(int lIX=0;lIX<sWidthChars;lIX++){
+                        int dstChar=lIX+xS;
+                        if(dstChar>-1 && dstChar<SCREEN_WIDTH_CELLS){
+                            *(aP+dstChar)=c;
+                        }
+                    }
+                }
+                aP+=SCREEN_WIDTH_CELLS;
+                if(endLine-y>3){
+                    attrCountDown=4;                    
+                }else{
+                    attrCountDown=endLine-y;
+                }
+            }
+            rP+=SCREEN_WIDTH_CELLS;
+
+        }
     }
 }

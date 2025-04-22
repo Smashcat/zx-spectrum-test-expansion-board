@@ -9,6 +9,12 @@
 #include "shared.h"
 #include "displayMemoryOffsets.h"
 
+/// @brief The layer's type, LT_TILE is a tilemap, LT_BITMAP holds a bitmap image
+typedef enum LayerType {
+    LT_TILE,
+    LT_BITMAP
+} LayerType;
+
 typedef struct TileLayer {
     // X position, relative to screen in pixels (if over 254, or under -511 layer not drawn)
     int16_t x;
@@ -20,10 +26,31 @@ typedef struct TileLayer {
     uint8_t attrMap[(TILE_LAYER_WIDTH*TILE_LAYER_ATTR_HEIGHT)];
     // Pointer to the tile definitions to use for this layer (mask defs are always tileDefPtr+(8*256))
     const uint8_t *tileDefPtr;
+    // This layer's type
+    LayerType layerType;
+
+    const uint8_t *bitmapDefPtr;
+    const uint8_t *attrDefPtr;
+    int bitmapCharWidth;
+    int bitmapHeight;
+
 } TileLayer;
 
 /// @brief Initialise all tile layers, setting them off of screen, clearing tiles to zero, with attributes set to white ink on black background
 void initLayers(void);
+
+/// @brief Change the layer's type
+/// @param layerIX The layer to update
+/// @param lt The layer type
+void setLayerType(int layerIX, LayerType lt);
+
+/// @brief Sets up the bitmap data for a layer set to LT_BITMAP
+/// @param layerIX The layer to update
+/// @param bitmapData The array of bitmap pixel data
+/// @param attrData The array of attribute data (it's 1/4 the size of the bitmap data, as colour resolution is 8x4 and pixel resolution is 8x1)
+/// @param width The width of the bitmap in bytes
+/// @param height The height of the bitmap in pixels
+void setBitmap(int layerIX, const uint8_t *bitmapData, const uint8_t *attrData, int width, int height);
 
 /// @brief Directly blit data to the layer - handy for quickly setting up level data etc
 /// @param layerIX The layer to update
@@ -66,3 +93,7 @@ void setTileDefSet(int layerIX, const uint8_t *setRef);
 /// @brief Draws the layer to the scratch buffers, ready to move to the render buffer
 /// @param layerIX The layer to draw
 void blitLayerToScratchBuffers(int layerIX);
+
+/// @brief Draws the bitmap layer to the scratch buffers, ready to move to the render buffer. Bitmaps wrap in both axis
+/// @param layerIX The layer to draw
+void blitBitmapLayerToScratchBuffers(layerIX);

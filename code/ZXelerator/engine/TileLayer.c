@@ -4,16 +4,34 @@ TileLayer tileLayer[MAX_TILE_LAYERS];
 
 void initLayers(void){
     for(int n=0;n<MAX_TILE_LAYERS;n++){
-        tileLayer[n].x=500;
-        tileLayer[n].y=0;
-        tileLayer[n].tileDefPtr=NULL;
+        TileLayer *t=tileLayer+n;
+        t->x=500;
+        t->y=0;
+        t->tileDefPtr=NULL;
+        t->bitmapDefPtr=NULL;
+        t->attrDefPtr=NULL;
+        t->layerType=LT_TILE;
         for(int i=0;i<(TILE_LAYER_WIDTH*TILE_LAYER_HEIGHT);i++){
-            tileLayer[n].tileMap[i]=0;
+            t->tileMap[i]=0;
         }
         for(int i=0;i<(TILE_LAYER_WIDTH*TILE_LAYER_ATTR_HEIGHT);i++){
-            tileLayer[n].attrMap[i]=7+(1<<7);   // High bit set = do not update attr when drawing the pixels under this attr block
+            t->attrMap[i]=7+(1<<7);   // High bit set = do not update attr when drawing the pixels under this attr block
         }
     }
+}
+
+void setLayerType(int layerIX, LayerType lt)
+{
+    tileLayer[layerIX].layerType=lt;
+}
+
+void setBitmap(int layerIX, const uint8_t *bitmapData, const uint8_t *attrData, int width, int height)
+{
+    TileLayer *t=tileLayer+layerIX;
+    t->bitmapDefPtr=bitmapData;
+    t->attrDefPtr=attrData;
+    t->bitmapCharWidth=width;
+    t->bitmapHeight=height;
 }
 
 void blitRawToLayer(int layerIX, const uint8_t *tileDefs, const uint8_t *attrDefs, int x, int y, int len)
@@ -85,6 +103,10 @@ void setTileDefSet(int layerIX, const uint8_t *setRef)
 void blitLayerToScratchBuffers(int layerIX)
 {
     const TileLayer *tL=tileLayer+layerIX;
+    if(tL->layerType==LT_BITMAP){
+        blitBitmapLayerToScratchBuffers(layerIX);
+    }
+
     if(tL->tileDefPtr==NULL){
         return;
     }
@@ -116,18 +138,14 @@ void blitLayerToScratchBuffers(int layerIX)
         srcStartX=((-((tL->x+7)/8) % 64) + 64) % 64;
     }
 
-    if(layerIX==0){
-        drawIntNumToLayer(2,leftShift,0x4f,0x5f,30,5,2);
-        drawIntNumToLayer(2,srcStartX,0x4f,0x5f,30,6,2);
-    }
-
     uint8_t *spr=scratchPixRam;
     uint8_t *smr=scratchMaskRam;
     const uint8_t *tileData=tL->tileMap;
     int srcRow=srcStartY;
 
     // We now go through the 192 rows of the destination array, wrapping the X and Y src positions as needed
-    for(int destRow=0;destRow<(SCREEN_HEIGHT_CELLS*8);destRow++){
+    for(int destRow=0;destRow<SCREEN_HEIGHT_LINES;destRow++){
+
         // Go through 32 cols for each pixel row, picking up the correct char defs for the 8x8 cell, and scan-line offset
         const uint8_t *tDef=tL->tileDefPtr+srcRowOffY; // Current line offset added, for quicker lookup
         int yOff=srcRow*TILE_LAYER_WIDTH;
@@ -171,8 +189,8 @@ void blitLayerToScratchBuffers(int layerIX)
                 srcRow=0;
             }
         }
-    }
 
+    }
 
     // Now draw attributes directly to the render buffer. Any attribute 
     // color with flashing bit set means (don't update this cell)
@@ -183,6 +201,7 @@ void blitLayerToScratchBuffers(int layerIX)
             srcStartX=0;
         }
     }
+
     uint8_t *destAttrBuffer=renderAttrBuffer;
     for(int destRow=0;destRow<(SCREEN_HEIGHT_CELLS*2);destRow++){
         // Go through 32 cols for each pixel row, picking up the correct char defs for the 8x8 cell, and scan-line offset
@@ -203,4 +222,23 @@ void blitLayerToScratchBuffers(int layerIX)
         }
     }
 
+}
+
+void blitBitmapLayerToScratchBuffers(layerIX)
+{
+    const TileLayer *tL=tileLayer+layerIX;
+    if(tL->attrDefPtr==NULL || tL->bitmapDefPtr==NULL){
+        return; // Nothing to draw...
+    }
+
+    // If layer is off screen, don't draw it
+    if(
+        (tL->x<=-(SCREEN_WIDTH_PIXELS+tL->bitmapCharWidth)*8) ||
+        (tL->x>=SCREEN_WIDTH_PIXELS) ||
+        (tL->y<=-(SCREEN_HEIGHT_LINES+tL->bitmapHeight)) ||
+        (tL->y>=SCREEN_HEIGHT_LINES) 
+    ){
+        return;
+    }
+    //TODO finish this!
 }

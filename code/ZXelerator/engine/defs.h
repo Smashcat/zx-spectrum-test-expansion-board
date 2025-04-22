@@ -1,5 +1,7 @@
 #pragma once
 
+//#define BUGGED_BOARD            1
+
 #define PROG_NAME   "ZXelerator"
 #define VERSION_NUM "v0.1"
 
@@ -13,14 +15,23 @@
 // ---------------------------------------------------------------------------
 #define PIN_A0      0   // GPIO 0-13 for A0-A13
 #define PIN_D0      14  // GPIO 14-21 for D0-D7
-#define PIN_LED     25  // Default LED pin for Pico (not W)
+#ifdef BUGGED_BOARD
+#define PIN_LED     22
+#else
+#define PIN_LED     25  // Default LED pin for Pico (not W) - was (25 on breadboard) (22 on PCB)
+#endif
 //                  3         2         1   
 //                 10987654321098765432109876543210
 #define MASK_LED 0b00000010000000000000000000000000
 
 //
-#define PIN_RESET   28  // GPIO to control RESET of Spectrum 
-#define PIN_USER    22  // User input GPIO (v1.1 PCB this is 22)
+#ifdef BUGGED_BOARD
+#define PIN_RESET   29
+#else
+#define PIN_RESET   28  // GPIO to control RESET of Spectrum - 28 on breadboard (29 on PCB)
+#endif
+
+#define PIN_USER    22  // User input GPIO (v1.1 PCB this is 22) - no longer used
 #define PIN_ROMRQ   26  // ROM Request
 #define PIN_ROMCS   27  // ROMCS
 //
