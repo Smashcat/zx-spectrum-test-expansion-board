@@ -23,7 +23,7 @@ uint8_t renderAttrBuffer[SCREEN_WIDTH_CELLS*SCREEN_HEIGHT_CELLS*2] __attribute__
 void initScratchBuffers(bool includeRenderBuffer)
 {
     // Initialise the scratch buffers
-    const int numBlits=(SCREEN_WIDTH_CELLS*SCREEN_HEIGHT_CELLS*8)/4;
+    const int numBlits=(SCREEN_WIDTH_CELLS*SCREEN_HEIGHT_LINES)/4;
     uint32_t *pP=(uint32_t *)scratchPixRam;
     uint32_t *mP=(uint32_t *)scratchMaskRam;
     for(int n=0;n<numBlits;n++){
@@ -40,14 +40,14 @@ void initScratchBuffers(bool includeRenderBuffer)
     }
 
     pP=(uint32_t *)renderAttrBuffer;
-    for(int n=0;n<(SCREEN_WIDTH_CELLS*SCREEN_HEIGHT_CELLS*2)/4;n++){
+    for(int n=0;n<(SCREEN_WIDTH_CELLS*ATTR_HEIGHT_CELLS)/4;n++){
         *pP++=0x07070707;   // dim white on black background for testing - will be black on black
     }
 }
 
 void blitScratchToRenderBuffer(void)
 {
-    const int numBlits=(SCREEN_WIDTH_CELLS*SCREEN_HEIGHT_CELLS*8)/4;
+    const int numBlits=(SCREEN_WIDTH_CELLS*SCREEN_HEIGHT_LINES)/4;
     const uint32_t *pP=(uint32_t *)scratchPixRam;
     const uint32_t *mP=(uint32_t *)scratchMaskRam;
     uint32_t *rP=(uint32_t *)renderBuffer;
@@ -62,7 +62,7 @@ void blitScratchToRenderBuffer(void)
 
 void blitRenderBuffer(void)
 {
-    const int numBlits=(SCREEN_WIDTH_CELLS*SCREEN_HEIGHT_CELLS*8);
+    const int numBlits=(SCREEN_WIDTH_CELLS*SCREEN_HEIGHT_LINES);
     uint8_t *rP=(uint8_t *)renderBuffer;
     uint16_t *doP=(uint16_t *)dispOffset;
     for(int n=0;n<numBlits;n++){

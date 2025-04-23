@@ -103,7 +103,7 @@ void setTileDefSet(int layerIX, const uint8_t *setRef)
 void blitLayerToScratchBuffers(int layerIX)
 {
     const TileLayer *tL=tileLayer+layerIX;
-    if(tL->layerType==LT_BITMAP){
+    if(tL->layerType!=LT_TILE){
         blitBitmapLayerToScratchBuffers(layerIX);
     }
 
@@ -114,9 +114,9 @@ void blitLayerToScratchBuffers(int layerIX)
     // If layer is off screen, don't draw it
     if(
         (tL->x<=-TILE_LAYER_WIDTH*8*2) ||
-        (tL->x>=SCREEN_WIDTH_CELLS*8) ||
+        (tL->x>=SCREEN_WIDTH_PIXELS) ||
         (tL->y<=-TILE_LAYER_HEIGHT*8*2) ||
-        (tL->y>=SCREEN_HEIGHT_CELLS*8) 
+        (tL->y>=SCREEN_HEIGHT_LINES) 
     ){
         return;
     }
@@ -125,17 +125,17 @@ void blitLayerToScratchBuffers(int layerIX)
     int srcStartY=0;
     int srcRowOffY=(8-(tL->y&0x07))&0x07;
     if(tL->y<0){
-        srcStartY=((-(tL->y/8) % 64) + 64) % 64;
+        srcStartY=((-(tL->y/8) % TILE_LAYER_HEIGHT) + TILE_LAYER_HEIGHT) % TILE_LAYER_HEIGHT;
     }else{
-        srcStartY=((-((tL->y+7)/8) % 64) + 64) % 64;
+        srcStartY=((-((tL->y+7)/8) % TILE_LAYER_HEIGHT) + TILE_LAYER_HEIGHT) % TILE_LAYER_HEIGHT;
     }
 
     int srcStartX=0;
     const int leftShift=(8-(tL->x&0x07))&0x07;
     if(tL->x<0){
-        srcStartX=((-(tL->x/8) % 64) + 64) % 64;
+        srcStartX=((-(tL->x/8) % TILE_LAYER_WIDTH) + TILE_LAYER_WIDTH) % TILE_LAYER_WIDTH;
     }else{
-        srcStartX=((-((tL->x+7)/8) % 64) + 64) % 64;
+        srcStartX=((-((tL->x+7)/8) % TILE_LAYER_WIDTH) + TILE_LAYER_WIDTH) % TILE_LAYER_WIDTH;
     }
 
     uint8_t *spr=scratchPixRam;
@@ -224,7 +224,7 @@ void blitLayerToScratchBuffers(int layerIX)
 
 }
 
-void blitBitmapLayerToScratchBuffers(layerIX)
+void blitBitmapLayerToScratchBuffers(int layerIX)
 {
     const TileLayer *tL=tileLayer+layerIX;
     if(tL->attrDefPtr==NULL || tL->bitmapDefPtr==NULL){

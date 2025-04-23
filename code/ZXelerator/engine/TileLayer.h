@@ -9,31 +9,34 @@
 #include "shared.h"
 #include "displayMemoryOffsets.h"
 
-/// @brief The layer's type, LT_TILE is a tilemap, LT_BITMAP holds a bitmap image
+/// @brief The layer's type, LT_TILE is a tilemap, LT_BITMAP holds a bitmap image. LT_BITMAP_WRAP allows the bitmap to repeat when exceeding its dimensions while scrolling (tilemaps always wrap)
 typedef enum LayerType {
     LT_TILE,
-    LT_BITMAP
+    LT_BITMAP,
+    LT_BITMAP_WRAP
 } LayerType;
 
 typedef struct TileLayer {
-    // X position, relative to screen in pixels (if over 254, or under -511 layer not drawn)
+    /// @brief X position, relative to screen in pixels (if over 254, or under -511 layer not drawn)
     int16_t x;
-    // Y position, relative to screen in pixels (if over 191, or under -383 layer not drawn)
+    /// @brief Y position, relative to screen in pixels (if over 191, or under -383 layer not drawn)
     int16_t y;
-    // Tile definitions in cells within this layer
+    /// @brief Tile definitions in cells within this layer
     uint8_t tileMap[(TILE_LAYER_WIDTH*TILE_LAYER_HEIGHT)];
-    // Attribute definitions in cells within this layer (bi-color, so 8x4 pixel blocks). If "flash bit" (7) set, then will not update current attr under the tile on this layer"
+    /// @brief Attribute definitions in cells within this layer (bi-color, so 8x4 pixel blocks). If "flash bit" (7) set, then will not update current attr under the tile on this layer"
     uint8_t attrMap[(TILE_LAYER_WIDTH*TILE_LAYER_ATTR_HEIGHT)];
-    // Pointer to the tile definitions to use for this layer (mask defs are always tileDefPtr+(8*256))
+    /// @brief Pointer to the tile definitions to use for this layer (mask defs are always tileDefPtr+(8*256))
     const uint8_t *tileDefPtr;
-    // This layer's type
-    LayerType layerType;
-
+    /// @brief Pointer to the bitmap to use for the layer (if layerType is set to LT_BITMAP)
     const uint8_t *bitmapDefPtr;
+    /// @brief Pointer to the attribute data to use for the layer (if layerType is set to LT_BITMAP)
     const uint8_t *attrDefPtr;
+    /// @brief Width of the bitmap in bytes
     int bitmapCharWidth;
+    /// @brief Height of the bitmap in pixels
     int bitmapHeight;
-
+    /// @brief This layer's type (tilemap or bitmap)
+    LayerType layerType;
 } TileLayer;
 
 /// @brief Initialise all tile layers, setting them off of screen, clearing tiles to zero, with attributes set to white ink on black background
@@ -96,4 +99,4 @@ void blitLayerToScratchBuffers(int layerIX);
 
 /// @brief Draws the bitmap layer to the scratch buffers, ready to move to the render buffer. Bitmaps wrap in both axis
 /// @param layerIX The layer to draw
-void blitBitmapLayerToScratchBuffers(layerIX);
+void blitBitmapLayerToScratchBuffers(int layerIX);
