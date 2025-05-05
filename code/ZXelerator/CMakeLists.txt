@@ -54,11 +54,13 @@ add_executable(
     engine/displayMemoryOffsets.c 
     engine/Sprite.c 
     engine/tileDefs.c 
+    engine/bitmapData.c
     engine/TileLayer.c 
     engine/Compositor.c 
     engine/palette.c 
     engine/inputDevice.c
     engine/particles.c
+    gameFunc.c
     game.c 
 )
 

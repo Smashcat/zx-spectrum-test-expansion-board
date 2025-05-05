@@ -6,7 +6,7 @@
 #include "myTypes.h"
 #include "displayMemoryOffsets.h"
 
-extern uint8_t ram[3][2][0x2f00] __attribute__((aligned(4)));
+extern uint8_t ram[TOTAL_RAMBANKS][2][0x2f00] __attribute__((aligned(4)));
 extern volatile uint32_t readBank, writeBank;
 extern volatile uint32_t frameDisplayed;
 extern volatile int flipBank;

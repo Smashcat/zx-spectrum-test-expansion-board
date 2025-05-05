@@ -2,8 +2,8 @@
 
 Sprite *spriteList=NULL;
 int totalSprites=0;
-uint8_t pixLineBuffer[256] __attribute__((aligned(4)));
-uint8_t maskLineBuffer[256] __attribute__((aligned(4)));
+static uint8_t pixLineBuffer[256] __attribute__((aligned(4)));
+static uint8_t maskLineBuffer[256] __attribute__((aligned(4)));
 
 void initSprites(int numSprites)
 {
@@ -76,6 +76,10 @@ void setSpriteSize(int ix, SpriteSize st){
         case SIZE_24X32:
         s->width=24;
         s->height=32;
+        break;
+        case SIZE_24X40:
+        s->width=24;
+        s->height=40;
         break;
         case SIZE_24X48:
         s->width=24;

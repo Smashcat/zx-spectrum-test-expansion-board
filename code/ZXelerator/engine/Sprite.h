@@ -23,6 +23,7 @@ typedef enum SpriteSize {
 
     SIZE_24X24,
     SIZE_24X32,
+    SIZE_24X40,
     SIZE_24X48,
     SIZE_24X64
 } SpriteSize;

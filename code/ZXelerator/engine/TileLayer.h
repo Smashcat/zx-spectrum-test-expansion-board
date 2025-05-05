@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <memory.h>
 #include "pico/stdlib.h"
 #include "pico.h"
 #include "shared.h"
@@ -51,9 +52,7 @@ void setLayerType(int layerIX, LayerType lt);
 /// @param layerIX The layer to update
 /// @param bitmapData The array of bitmap pixel data
 /// @param attrData The array of attribute data (it's 1/4 the size of the bitmap data, as colour resolution is 8x4 and pixel resolution is 8x1)
-/// @param width The width of the bitmap in bytes
-/// @param height The height of the bitmap in pixels
-void setBitmap(int layerIX, const uint8_t *bitmapData, const uint8_t *attrData, int width, int height);
+void setLayerBitmap(int layerIX, const uint8_t *bitmapData, const uint8_t *attrData);
 
 /// @brief Directly blit data to the layer - handy for quickly setting up level data etc
 /// @param layerIX The layer to update

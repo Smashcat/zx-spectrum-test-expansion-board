@@ -10,9 +10,23 @@ $charWidth=0;
 
 // Pallet colors
 $bgCol=1;
-$borderCol=0;
-$fgCol=2;
+$borderCol=2;
+$fgCol=0;
 $useRev=0;
+
+
+
+if(isset($_GET['fgCol'])){
+	$fgCol=intval($_GET['fgCol']);
+}
+
+if(isset($_GET['bgCol'])){
+	$bgCol=intval($_GET['bgCol']);
+}
+
+if(isset($_GET['borderCol'])){
+	$borderCol=intval($_GET['borderCol']);
+}
 
 if(isset($_GET['file']))
 	$file=$_GET['file'];
@@ -52,6 +66,7 @@ $totalChars=ceil(($height/$charHeight)*$charCols);
 // Show details of image, and preview
 
 print "Strip Width:  $width\nStrip Height: $height\nChar Width:  $charWidth\nChar Height:  $charHeight\nTotal Chars:  $totalChars\n\n";
+print "FG index: $fgCol\nBG index: $bgCol\nMK index: $borderCol\n\n";
 
 $previewHeight=$height;
 if($previewHeight>24)

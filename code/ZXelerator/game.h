@@ -13,15 +13,24 @@
 #include "engine/myTypes.h"
 #include "engine/shared.h"
 #include "engine/tileDefs.h"
+#include "engine/bitmapData.h"
 #include "engine/palette.h"
 #include "engine/Sprite.h"
 #include "engine/TileLayer.h"
 #include "engine/Compositor.h"
 #include "engine/inputDevice.h"
 #include "engine/funcs.h"
+#include "gameFunc.h"
 
+extern GameVar gv;
 
+/// @brief Perform initialisation and start the main game code loop (or test code loop)
 void gameLoop(void);
+
+/// @brief Runs continuously at 25fps - should never exit.
+/// @param  
+void gameUpdateLoop(void);
+
 void setState(GameState newGS);
 void resetStateVars();
 

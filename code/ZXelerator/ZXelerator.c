@@ -3,7 +3,14 @@
 #include "engine/funcs.h"
 #include "game.h"
 
+#include "pico/stdlib.h"
+#include "hardware/clocks.h"
+#include "hardware/pll.h"
+#include "hardware/vreg.h"
+
+
 int main() {
+    
     setupIO();
     setupPIO();
     sleep_ms(1200);

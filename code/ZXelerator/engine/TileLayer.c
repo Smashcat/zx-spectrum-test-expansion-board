@@ -1,6 +1,7 @@
 #include "TileLayer.h"
 
 TileLayer tileLayer[MAX_TILE_LAYERS];
+static uint8_t pixLineBuffer[260] __attribute__((aligned(4)));
 
 void initLayers(void){
     for(int n=0;n<MAX_TILE_LAYERS;n++){
@@ -25,13 +26,13 @@ void setLayerType(int layerIX, LayerType lt)
     tileLayer[layerIX].layerType=lt;
 }
 
-void setBitmap(int layerIX, const uint8_t *bitmapData, const uint8_t *attrData, int width, int height)
+void setLayerBitmap(int layerIX, const uint8_t *bitmapData, const uint8_t *attrData)
 {
     TileLayer *t=tileLayer+layerIX;
-    t->bitmapDefPtr=bitmapData;
+    t->bitmapDefPtr=bitmapData+4;
     t->attrDefPtr=attrData;
-    t->bitmapCharWidth=width;
-    t->bitmapHeight=height;
+    t->bitmapCharWidth=bitmapData[0];
+    t->bitmapHeight=bitmapData[1];
 }
 
 void blitRawToLayer(int layerIX, const uint8_t *tileDefs, const uint8_t *attrDefs, int x, int y, int len)
@@ -226,6 +227,7 @@ void blitLayerToScratchBuffers(int layerIX)
 
 void blitBitmapLayerToScratchBuffers(int layerIX)
 {
+    const int lineBufferLen=260;
     const TileLayer *tL=tileLayer+layerIX;
     if(tL->attrDefPtr==NULL || tL->bitmapDefPtr==NULL){
         return; // Nothing to draw...
@@ -240,5 +242,63 @@ void blitBitmapLayerToScratchBuffers(int layerIX)
     ){
         return;
     }
-    //TODO finish this!
+    
+    int srcY=0;
+    int srcX=0;
+    int dstWidth=tL->bitmapCharWidth;
+    int dstHeight=tL->bitmapHeight;
+    int dstXChar=(tL->x/8);
+    int dstXOff=(tL->x&0x07);
+    int dstY=tL->y;
+
+    if(dstY<0){
+        dstY=0;
+        srcY=-tL->y;
+        dstHeight-=srcY;
+    }
+
+    if(dstXChar<0){
+        dstXChar=0;
+        srcX=-(tL->x/8);
+        dstWidth-=srcX;
+    }
+
+    if((dstXChar+dstWidth)>SCREEN_WIDTH_CELLS){
+        dstWidth=(SCREEN_WIDTH_CELLS-dstXChar);
+    }
+
+    if((dstY+dstHeight)>SCREEN_HEIGHT_LINES){
+        dstHeight=(SCREEN_HEIGHT_LINES-dstY);
+    }
+
+    memset(pixLineBuffer,0,lineBufferLen);
+    const uint8_t *srcP=tL->bitmapDefPtr+(tL->bitmapCharWidth*srcY)+srcX;
+    const uint8_t *srcAP=tL->attrDefPtr+(tL->bitmapCharWidth*(srcY/ATTR_HEIGHT_PIXELS))+srcX;
+
+    uint8_t *spr=scratchPixRam+(dstY*SCREEN_WIDTH_CELLS)+dstXChar;
+    uint8_t *rb=renderAttrBuffer+((dstY/ATTR_HEIGHT_PIXELS)*SCREEN_WIDTH_CELLS)+dstXChar;
+    int aLCnt=1;
+    for(int y=0;y<dstHeight;y++){
+        for(int x=0;x<dstWidth;x++){
+            *(spr+x)=*(srcP+x);
+        }
+        srcP+=tL->bitmapCharWidth;
+        spr+=SCREEN_WIDTH_CELLS;
+        if(--aLCnt==0){
+            aLCnt=dstHeight-y;
+            if(aLCnt>4){
+                aLCnt=4;
+            }
+            for(int x=0;x<dstWidth;x++){
+                uint8_t col=*(srcAP+x);
+                if((col&0x80)==0){
+                    *(rb+x)=col;
+                }
+            }
+            srcAP+=tL->bitmapCharWidth;
+            rb+=SCREEN_WIDTH_CELLS;
+        }
+    }
+
+
 }

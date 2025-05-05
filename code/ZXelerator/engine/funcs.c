@@ -6,7 +6,7 @@ PIO pio;
 uint addr_data_sm;
 
 void setupIO(void){
-        // -------------------------------
+    // -------------------------------
     // set-up user, romcs & reset gpio
     // -------------------------------
     gpio_init(PIN_RESET);
@@ -26,14 +26,8 @@ void setupIO(void){
     gpio_set_dir(PIN_LED,GPIO_OUT);
     gpio_put(PIN_LED,false);
 
-//while(1){
-//    gpio_put(PIN_LED,true);
-//    busy_wait_ms(1000);
-//    gpio_put(PIN_LED,false);
-//    busy_wait_ms(1000);
-//}
     // Initialise the ASM data banks
-    for(int n=0;n<3;n++){
+    for(int n=0;n<TOTAL_RAMBANKS;n++){
         copyBank(ram[n][0],resetBank[0]);
     }
 }
@@ -103,16 +97,17 @@ void __not_in_flash_func(handleZ80Read)(void){
         // Z80 is about to read the first bank, for the top half of the screen (chasing the beam) - this is just before the halt instruction, so there is plenty of time to flip buffers
         }else if(address==0x3ffe){  
             haltCD=2;
+
         }else if(haltCD>0){
 
             if(--haltCD==0){
                 currentSubBank=0;
                 
                 if(flipBank){
-                    if(++readBank==2){
+                    if(++readBank==TOTAL_RAMBANKS){
                         readBank=0;
                     }
-                    if(++writeBank==2){
+                    if(++writeBank==TOTAL_RAMBANKS){
                         writeBank=0;
                     }
                 }
@@ -127,13 +122,16 @@ void __not_in_flash_func(handleZ80Read)(void){
         // Z80 is about to read the second bank, for the bottom half of the screen (racing the beam)
         }else if(address==0x3ffd){  
             bank1SwapCnt=3; // We allow 3 more memory reads before swapping the bank, so the Z80 can read in the jump instruction following the request to swap banks
+
         }else if(bank1SwapCnt>0){
             if(--bank1SwapCnt==0){
                 currentSubBank=1;
                 readPtr=ram[readBank][currentSubBank];
             }
+
         }else if(address>0xffff){
             break;
+            
         }
 
     }

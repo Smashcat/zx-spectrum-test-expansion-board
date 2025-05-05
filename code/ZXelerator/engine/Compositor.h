@@ -12,6 +12,7 @@
 #include "myTypes.h"
 #include "shared.h"
 #include "tileDefs.h"
+#include "bitmapData.h"
 #include "Sprite.h"
 #include "TileLayer.h"
 #include "particles.h"
