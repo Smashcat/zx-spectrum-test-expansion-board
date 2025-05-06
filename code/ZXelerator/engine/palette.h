@@ -2,4 +2,4 @@
 
 #include <stdint.h>
 
-extern const uint8_t palette[][6];
+extern const uint8_t palette[][10];

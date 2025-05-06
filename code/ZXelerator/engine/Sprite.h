@@ -25,7 +25,9 @@ typedef enum SpriteSize {
     SIZE_24X32,
     SIZE_24X40,
     SIZE_24X48,
-    SIZE_24X64
+    SIZE_24X64,
+
+    SIZE_32X40
 } SpriteSize;
 
 /// @brief Used when performing fixed point math for faster scaling of sprites
@@ -36,10 +38,14 @@ typedef union U32u8 {
 
 /// @brief Structure containing data for a single Sprite object
 typedef struct Sprite {
-    // Integer position in X axis
+    // Integer position in X axis (centre of sprite)
     int16_t         x;
-    // Integer position in Y axis
+    // Integer position in Y axis (centre of sprite)
     int16_t         y;
+    // Offset x position to the left edge
+    int16_t         offX;
+    // Offset t position to the top edge
+    int16_t         offY;
     // The sprite definition base index currently pointed to by this sprite
     const uint8_t   *defPtr;
     // The sprite mask definition base index currently pointed to by this sprite
@@ -65,7 +71,7 @@ typedef struct Sprite {
     // The height of sprite (set when specifying the size above, just to speed up rendering really - should NEVER be set directly unless you're happy to deal with the consequences!)
     int16_t         height;
     // How many bytes are in the src data per row of the sprite (set when specifying the size above, just to speed up rendering really - should NEVER be set directly unless you're happy to deal with the consequences!)
-    int16_t    bytesPerRow;
+    int16_t         bytesPerRow;
     // If above zero, this is the scaling multiplier for the sprite (so 2.0 would double the width of the sprite when it's rendered)
     float           scaleX;
     // If above zero, this is the scaling multiplier for the sprite (so 2.0 would double the height of the sprite when it's rendered)
@@ -81,7 +87,8 @@ typedef struct Sprite {
     int16_t         scaledHeight;
     // Amount to add to src y offset when copying bytes to destination when rendering scaled sprite
     U32u8          scaledHeightAdder;
-
+    // Useful for staggering effects with sprites
+    int             delay;
 } Sprite;
 
 extern Sprite *spriteList;
@@ -108,6 +115,8 @@ static inline void setSpriteScale(int ix, float xScale, float yScale)
         s->scaledWidth=s->width;
         s->scaledHeight=s->height;
     }
+    s->offX=s->x-(s->scaledWidth/2);
+    s->offY=s->y-(s->scaledHeight/2);
 }
 
 static inline void setSpriteDir(int ix, float xDir, float yDir)
@@ -124,6 +133,9 @@ static inline void setSpritePos(int ix, float x, float y)
     s->y=y;
     s->xF=x;
     s->yF=y;
+    s->offX=s->x-(s->scaledWidth/2);
+    s->offY=s->y-(s->scaledHeight/2);
+
 }
 
 static inline void setSpriteLayer(int ix, int l){

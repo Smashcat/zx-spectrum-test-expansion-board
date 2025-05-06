@@ -25,3 +25,4 @@
 /// @brief Just a piece of test code to check rendering is working.
 /// @param  
 void demoLoop(void);
+void gameTitle(void);

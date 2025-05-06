@@ -76,6 +76,11 @@ void drawIntNumToLayer(int layerIX, int32_t num, uint8_t colorTop, uint8_t color
     const int aOffset=(y*TILE_LAYER_WIDTH*2)+x+(maxDigits-1);
     uint8_t *tP=tileLayer[layerIX].tileMap+tOffset;
     uint8_t *aP=tileLayer[layerIX].attrMap+aOffset;
+    if(num<0){
+        *(tP-(maxDigits-1))='-';
+        --maxDigits;
+        num=-num;
+    }
     while(maxDigits){
         *tP=(num%10)+'0';
         num/=10;
@@ -235,9 +240,9 @@ void blitBitmapLayerToScratchBuffers(int layerIX)
 
     // If layer is off screen, don't draw it
     if(
-        (tL->x<=-(SCREEN_WIDTH_PIXELS+tL->bitmapCharWidth)*8) ||
+        (tL->x<=-(tL->bitmapCharWidth*8)) ||
         (tL->x>=SCREEN_WIDTH_PIXELS) ||
-        (tL->y<=-(SCREEN_HEIGHT_LINES+tL->bitmapHeight)) ||
+        (tL->y<=-(tL->bitmapHeight)) ||
         (tL->y>=SCREEN_HEIGHT_LINES) 
     ){
         return;
@@ -248,19 +253,25 @@ void blitBitmapLayerToScratchBuffers(int layerIX)
     int dstWidth=tL->bitmapCharWidth;
     int dstHeight=tL->bitmapHeight;
     int dstXChar=(tL->x/8);
-    int dstXOff=(tL->x&0x07);
+    int rightShift=(tL->x&0x07)&0x07;
     int dstY=tL->y;
 
     if(dstY<0){
+        srcY=-dstY;
         dstY=0;
-        srcY=-tL->y;
         dstHeight-=srcY;
     }
 
-    if(dstXChar<0){
+    int add1=0;
+    if(tL->x<0){
+        srcX=-dstXChar;
         dstXChar=0;
-        srcX=-(tL->x/8);
         dstWidth-=srcX;
+        if(rightShift){
+            ++srcX;
+            --dstWidth;
+            add1=1;
+        }
     }
 
     if((dstXChar+dstWidth)>SCREEN_WIDTH_CELLS){
@@ -279,17 +290,37 @@ void blitBitmapLayerToScratchBuffers(int layerIX)
     uint8_t *rb=renderAttrBuffer+((dstY/ATTR_HEIGHT_PIXELS)*SCREEN_WIDTH_CELLS)+dstXChar;
     int aLCnt=1;
     for(int y=0;y<dstHeight;y++){
-        for(int x=0;x<dstWidth;x++){
-            *(spr+x)=*(srcP+x);
+        uint8_t carry=0;
+        if((rightShift>0) && (srcX>0)){
+            carry=*(srcP-1);
+            carry<<=(8-rightShift);
+        }
+        if(rightShift){
+            for(int x=0;x<dstWidth;x++){
+                uint8_t b=*(srcP+x);
+                uint8_t newCarry=b<<(8-rightShift);
+                b=(b>>rightShift)|carry;
+                carry=newCarry;
+                *(spr+x)=b;
+            }
+            if(add1){
+                *(spr+dstWidth)=carry;
+            }
+        }else{
+            for(int x=0;x<dstWidth;x++){
+                *(spr+x)=*(srcP+x);
+            }
         }
         srcP+=tL->bitmapCharWidth;
         spr+=SCREEN_WIDTH_CELLS;
+
         if(--aLCnt==0){
             aLCnt=dstHeight-y;
             if(aLCnt>4){
                 aLCnt=4;
             }
-            for(int x=0;x<dstWidth;x++){
+            const int attrWidth=(add1?dstWidth+1:dstWidth);
+            for(int x=0;x<attrWidth;x++){
                 uint8_t col=*(srcAP+x);
                 if((col&0x80)==0){
                     *(rb+x)=col;

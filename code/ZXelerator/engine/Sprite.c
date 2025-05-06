@@ -16,9 +16,12 @@ void initSprites(int numSprites)
         Sprite *s=spriteList+n;
         s->x=500;
         s->y=0;
+        s->offX=500;
+        s->offY=0;
         s->defPtr=NULL;
         s->frame=0;
         s->isScaled=0;
+        s->delay=0;
     }
 }
 
@@ -89,10 +92,17 @@ void setSpriteSize(int ix, SpriteSize st){
         s->width=24;
         s->height=64;
         break;
+
+        case SIZE_32X40:
+        s->width=32;
+        s->height=40;
+        break;
     }
     s->size=st;
     s->scaledWidth=s->width;
     s->scaledHeight=s->height;
+    s->offX=s->x-(s->scaledWidth/2);
+    s->offY=s->y-(s->scaledHeight/2);
     s->isScaled=0;
     s->bytesPerRow = (s->width==24?4:(s->width >> 3));  // 24bit wide sprites actually span 4 bytes for faster 32-bit aligned reads
 }
@@ -105,10 +115,10 @@ void blitSpritesToRenderBuffer(int layerIX)
         // Also if it's not within the visible screen, it's not shown
         if(
             (s->layer!=layerIX) || 
-            (s->y>=SCREEN_HEIGHT_LINES) || 
-            (s->y<=-(s->scaledHeight)) || 
-            (s->x<=-(s->scaledWidth)) || 
-            (s->x>=SCREEN_WIDTH_PIXELS)
+            (s->offY>=SCREEN_HEIGHT_LINES) || 
+            (s->offY<=-(s->scaledHeight)) || 
+            (s->offX<=-(s->scaledWidth)) || 
+            (s->offX>=SCREEN_WIDTH_PIXELS)
         ){
             continue;
         }
@@ -124,6 +134,7 @@ void blitSpritesToRenderBuffer(int layerIX)
                     blitSprite16ToRenderBuffer(s);
                     break;
                 case 24:
+                case 32:
                     blitSprite24ToRenderBuffer(s);
                     break;
             }
@@ -134,13 +145,13 @@ void blitSpritesToRenderBuffer(int layerIX)
 void blitSprite8ToRenderBuffer(Sprite *s)
 {
     const int spriteHeight=s->height;
-    const int xS=s->x>>3;                                           // Character cell to start in is the xPos/8
-    const int shiftRight=s->x&0x07;
+    const int xS=s->offX>>3;                                           // Character cell to start in is the xPos/8
+    const int shiftRight=s->offX&0x07;
     const uint8_t *sDef=(uint8_t *)s->defPtr+(s->frame*spriteHeight);       // Point to start of sprite foreground data
     const uint8_t *mDef=(uint8_t *)s->maskPtr+(s->frame*spriteHeight);      // Point to start of sprite mask data
-    uint8_t *rP=(uint8_t *)renderBuffer+(s->y*SCREEN_WIDTH_CELLS);
+    uint8_t *rP=(uint8_t *)renderBuffer+(s->offY*SCREEN_WIDTH_CELLS);
 
-    for(int y=s->y;y<s->y+spriteHeight;y++){
+    for(int y=s->offY;y<s->offY+spriteHeight;y++){
         if(y>-1 && y<SCREEN_HEIGHT_LINES){
             // Need to reverse the order of the bytes in the word so we can do a single shift operation
             uint16_t src16=  (*sDef<<8)>>shiftRight;
@@ -159,7 +170,7 @@ void blitSprite8ToRenderBuffer(Sprite *s)
         ++mDef;
     }
 
-    const int startY=(s->y/ATTR_HEIGHT_PIXELS);
+    const int startY=(s->offY/ATTR_HEIGHT_PIXELS);
     uint8_t *aP=renderAttrBuffer+(startY*SCREEN_WIDTH_CELLS);
     const uint8_t *apSrc=palette[s->paletteIX];
     for(int y=startY;y<startY+(spriteHeight/ATTR_HEIGHT_PIXELS);y++){
@@ -180,13 +191,13 @@ void blitSprite8ToRenderBuffer(Sprite *s)
 void blitSprite16ToRenderBuffer(Sprite *s)
 {
     const int spriteHeight=s->height;
-    const int xS=s->x>>3;                                           // Character cell to start in is the xPos/8
-    const int shiftRight=s->x&0x07;
+    const int xS=s->offX>>3;                                           // Character cell to start in is the xPos/8
+    const int shiftRight=s->offX&0x07;
     const uint16_t *sDef=(uint16_t *)s->defPtr+(s->frame*spriteHeight);       // Point to start of sprite foreground data
     const uint16_t *mDef=(uint16_t *)s->maskPtr+(s->frame*spriteHeight);      // Point to start of sprite mask data
-    uint8_t *rP=(uint8_t *)renderBuffer+(s->y*SCREEN_WIDTH_CELLS);
+    uint8_t *rP=(uint8_t *)renderBuffer+(s->offY*SCREEN_WIDTH_CELLS);
 
-    for(int y=s->y;y<s->y+spriteHeight;y++){
+    for(int y=s->offY;y<s->offY+spriteHeight;y++){
         if(y>-1 && y<SCREEN_HEIGHT_LINES){
             // Need to reverse the order of the bytes in the word so we can do a single shift operation
             uint32_t src32= *sDef;
@@ -211,7 +222,7 @@ void blitSprite16ToRenderBuffer(Sprite *s)
         ++mDef;
     }
 
-    const int startY=(s->y/ATTR_HEIGHT_PIXELS);
+    const int startY=(s->offY/ATTR_HEIGHT_PIXELS);
     uint8_t *aP=renderAttrBuffer+(startY*SCREEN_WIDTH_CELLS);
     const uint8_t *apSrc=palette[s->paletteIX];
     for(int y=startY;y<startY+(spriteHeight/ATTR_HEIGHT_PIXELS);y++){
@@ -235,13 +246,13 @@ void blitSprite16ToRenderBuffer(Sprite *s)
 void blitSprite24ToRenderBuffer(Sprite *s)
 {
     const int spriteHeight=s->height;
-    const int xS=s->x>>3;                                           // Character cell to start in is the xPos/8
-    const int shiftRight=s->x&0x07;
-    const uint32_t *sDef=(uint32_t *)s->defPtr+(s->frame*spriteHeight);       // Point to start of sprite foreground data
-    const uint32_t *mDef=(uint32_t *)s->maskPtr+(s->frame*spriteHeight);      // Point to start of sprite mask data
-    uint8_t *rP=(uint8_t *)renderBuffer+(s->y*SCREEN_WIDTH_CELLS);
+    const int xS=s->offX>>3;                                                    // Character cell to start in is the xPos/8
+    const int shiftRight=s->offX&0x07;
+    const uint32_t *sDef=(uint32_t *)s->defPtr+(s->frame*spriteHeight);         // Point to start of sprite foreground data
+    const uint32_t *mDef=(uint32_t *)s->maskPtr+(s->frame*spriteHeight);        // Point to start of sprite mask data
+    uint8_t *rP=(uint8_t *)renderBuffer+(s->offY*SCREEN_WIDTH_CELLS);
 
-    for(int y=s->y;y<s->y+spriteHeight;y++){
+    for(int y=s->offY;y<s->offY+spriteHeight;y++){
         if(y>-1 && y<SCREEN_HEIGHT_LINES){
             // Need to reverse the order of the bytes in the word so we can do a single shift operation
             uint32_t src32= ((*sDef<<24)+((*sDef&0x0000ff00)<<8)+((*sDef&0x00ff0000)>>8)+(*sDef>>24))>>shiftRight;
@@ -269,7 +280,7 @@ void blitSprite24ToRenderBuffer(Sprite *s)
         ++mDef;
     }
 
-    const int startY=(s->y/ATTR_HEIGHT_PIXELS);
+    const int startY=(s->offY/ATTR_HEIGHT_PIXELS);
     uint8_t *aP=renderAttrBuffer+(startY*SCREEN_WIDTH_CELLS);
     const uint8_t *apSrc=palette[s->paletteIX];
     for(int y=startY;y<startY+(spriteHeight/ATTR_HEIGHT_PIXELS);y++){
@@ -284,7 +295,7 @@ void blitSprite24ToRenderBuffer(Sprite *s)
             if(xS>-3 && xS<(SCREEN_WIDTH_CELLS-2)){
                 *(aP+xS+2)=apS;
             }
-            if(xS>-4 && xS<(SCREEN_WIDTH_CELLS-3)  && (shiftRight>0)){
+            if(xS>-4 && xS<(SCREEN_WIDTH_CELLS-3)  && ((shiftRight>0) || (s->width==32))){
                 *(aP+xS+3)=apS;
             }
         }
@@ -298,10 +309,10 @@ void blitSpriteScaledToRenderBuffer(Sprite *s)
     const int lineBufferLen = 256;
     const int sHeight=s->scaledHeight;
     const int sWidth=s->scaledWidth;
-    const int sY=s->y;
+    const int sY=s->offY;
     const int bpr=s->bytesPerRow;
-    const int xS=s->x>>3;                                                  // Character cell to start in is the xPos/8
-    const int dstStartBitPos=7-(s->x&0x07);
+    const int xS=s->offX>>3;                                                  // Character cell to start in is the xPos/8
+    const int dstStartBitPos=7-(s->offX&0x07);
     const uint8_t *sDefBase=(uint8_t *)s->defPtr+(s->frame*s->height*s->bytesPerRow);       // Point to start of sprite foreground data
     const uint8_t *mDefBase=(uint8_t *)s->maskPtr+(s->frame*s->height*s->bytesPerRow);      // Point to start of sprite mask data
     const uint8_t *apSrc=palette[s->paletteIX];
@@ -317,7 +328,7 @@ void blitSpriteScaledToRenderBuffer(Sprite *s)
 
     memset(pixLineBuffer,0,lineBufferLen);
     memset(maskLineBuffer,0xff,lineBufferLen);
-    for(int y=s->y;y<endLine;y++){
+    for(int y=s->offY;y<endLine;y++){
         if(y>-1){
             if(lByte!=yAdd.u8[2]){
                 lByte = yAdd.u8[2];

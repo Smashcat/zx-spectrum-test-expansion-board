@@ -221,3 +221,83 @@ void demoLoop(void){
         ++gv.frameRendered;
     }
 }
+
+void gameTitle(void)
+{
+    static const int titleSpritePosX[10]={
+        0+16,24+16,56+16,80+16, 112+16,128+16,152+16,168+16,196+16,224+16
+    };
+
+    if(gv.ix==0){
+        float sinIX=(float)(gv.iy+14)/10.0;
+        int yPos=(((sin(sinIX)+1)*250.0)/8);
+        yPos*=4;
+        setLayerPos(1,0,yPos);
+        ++gv.iy;
+        if(yPos==0){    // gv.iy is 32 here
+            gv.ix=1;
+            gv.iy=0;
+        }
+    }else if(gv.ix==1){
+        bool oneChanged=false;
+        for(int n=0;n<10;n++){
+            if(spriteList[n].delay>0){
+                --spriteList[n].delay;
+                oneChanged=true;
+            }else{
+                float scale=spriteList[n].scaleX;
+                if(scale<1.0){
+                    oneChanged=true;
+                    scale+=0.2;
+                    if(scale>1.0){
+                        scale=1.0;
+                    }
+                    setSpritePos(n,titleSpritePosX[n]-((1.0-scale)*15),161);
+                    setSpriteScale(n,scale,1.0);
+                }
+            }
+        }
+        if(!oneChanged && (++gv.iy==50)){
+            for(int n=0;n<10;n++){
+                spriteList[n].delay=(n*2);
+            }
+            gv.iy=0;
+            gv.ix=2;
+        }
+    }else if(gv.ix==2){
+        bool oneChanged=false;
+        for(int n=0;n<10;n++){
+            if(spriteList[n].delay>0){
+                --spriteList[n].delay;
+                oneChanged=true;
+            }else{
+                float scale=spriteList[n].scaleX;
+                if(scale>0.1){
+                    scale-=0.1;
+                    if(scale<0.05){
+                        scale=0.05;
+                        setSpritePos(n,300,300);
+                    }else{
+                        oneChanged=true;
+                        setSpritePos(n,titleSpritePosX[n]+((1.0-scale)*10),161);
+                    }
+                    setSpriteScale(n,scale,1.0);
+                }
+            }
+        }
+        if(!oneChanged){
+            gv.iy=38;
+            gv.ix=3;
+        }
+    }else if(gv.ix==3){
+        float sinIX=(float)(gv.iy+14)/10.0;
+        int yPos=(((sin(sinIX)+1)*250.0)/8);
+        yPos*=4;
+        setLayerPos(1,0,yPos);
+        ++gv.iy;
+        if(yPos>200){    // gv.iy is 32 here
+            setState(GS_title);
+        }
+    }
+
+}
