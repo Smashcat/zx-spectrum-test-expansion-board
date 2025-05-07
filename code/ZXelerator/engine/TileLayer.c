@@ -8,16 +8,22 @@ void initLayers(void){
         TileLayer *t=tileLayer+n;
         t->x=500;
         t->y=0;
+        t->globalAttr=0;
         t->tileDefPtr=NULL;
         t->bitmapDefPtr=NULL;
         t->attrDefPtr=NULL;
         t->layerType=LT_TILE;
-        for(int i=0;i<(TILE_LAYER_WIDTH*TILE_LAYER_HEIGHT);i++){
-            t->tileMap[i]=0;
-        }
-        for(int i=0;i<(TILE_LAYER_WIDTH*TILE_LAYER_ATTR_HEIGHT);i++){
-            t->attrMap[i]=7+(1<<7);   // High bit set = do not update attr when drawing the pixels under this attr block
-        }
+        clearLayerTiles(n);
+    }
+}
+
+void clearLayerTiles(int layerIX){
+    TileLayer *t=tileLayer+layerIX;
+    for(int i=0;i<(TILE_LAYER_WIDTH*TILE_LAYER_HEIGHT);i++){
+        t->tileMap[i]=0;
+    }
+    for(int i=0;i<(TILE_LAYER_WIDTH*TILE_LAYER_ATTR_HEIGHT);i++){
+        t->attrMap[i]=7+(1<<7);   // High bit set = do not update attr when drawing the pixels under this attr block
     }
 }
 
@@ -32,7 +38,10 @@ void setLayerBitmap(int layerIX, const uint8_t *bitmapData, const uint8_t *attrD
     t->bitmapDefPtr=bitmapData+4;
     t->attrDefPtr=attrData;
     t->bitmapCharWidth=bitmapData[0];
-    t->bitmapHeight=bitmapData[1];
+    t->bitmapHeight=(int)bitmapData[1]*8;
+    if(bitmapData[2]==0){
+        t->globalAttr=bitmapData[3];
+    }
 }
 
 void blitRawToLayer(int layerIX, const uint8_t *tileDefs, const uint8_t *attrDefs, int x, int y, int len)
@@ -68,6 +77,17 @@ void drawTxtToLayer(int layerIX, const char *s, uint8_t colorTop, uint8_t colorB
         ++aP;
         ++s;
     }
+}
+
+void setLayerTile(int layerIX, uint8_t tileDefIX, uint8_t colorTop, uint8_t colorBottom, int x, int y)
+{
+    const int tOffset=(y*TILE_LAYER_WIDTH)+x;
+    const int aOffset=(y*TILE_LAYER_WIDTH*2)+x;
+    uint8_t *tP=tileLayer[layerIX].tileMap+tOffset;
+    uint8_t *aP=tileLayer[layerIX].attrMap+aOffset;
+    *tP=tileDefIX;
+    *aP=colorTop;
+    *(aP+TILE_LAYER_WIDTH)=colorBottom;
 }
 
 void drawIntNumToLayer(int layerIX, int32_t num, uint8_t colorTop, uint8_t colorBottom, int x, int y, int maxDigits)
@@ -234,7 +254,7 @@ void blitBitmapLayerToScratchBuffers(int layerIX)
 {
     const int lineBufferLen=260;
     const TileLayer *tL=tileLayer+layerIX;
-    if(tL->attrDefPtr==NULL || tL->bitmapDefPtr==NULL){
+    if(tL->bitmapDefPtr==NULL){
         return; // Nothing to draw...
     }
 
@@ -320,13 +340,22 @@ void blitBitmapLayerToScratchBuffers(int layerIX)
                 aLCnt=4;
             }
             const int attrWidth=(add1?dstWidth+1:dstWidth);
-            for(int x=0;x<attrWidth;x++){
-                uint8_t col=*(srcAP+x);
+            if(tL->globalAttr>0){
+                const uint8_t col=tL->globalAttr;
                 if((col&0x80)==0){
-                    *(rb+x)=col;
+                    for(int x=0;x<attrWidth;x++){
+                        *(rb+x)=col;
+                    }
                 }
+            }else{
+                for(int x=0;x<attrWidth;x++){
+                    uint8_t col=*(srcAP+x);
+                    if((col&0x80)==0){
+                        *(rb+x)=col;
+                    }
+                }
+                srcAP+=tL->bitmapCharWidth;
             }
-            srcAP+=tL->bitmapCharWidth;
             rb+=SCREEN_WIDTH_CELLS;
         }
     }

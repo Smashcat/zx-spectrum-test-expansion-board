@@ -61,6 +61,7 @@ add_executable(
     engine/inputDevice.c
     engine/particles.c
     gameFunc.c
+    gameStrings.c
     game.c 
 )
 

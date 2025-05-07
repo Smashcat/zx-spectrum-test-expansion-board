@@ -38,10 +38,16 @@ typedef struct TileLayer {
     int bitmapHeight;
     /// @brief This layer's type (tilemap or bitmap)
     LayerType layerType;
+    /// @brief If no attribute map supplied when switching layer to a bitmap type, then this is used to set the global background when drawing the bitmap
+    uint8_t globalAttr;
 } TileLayer;
 
 /// @brief Initialise all tile layers, setting them off of screen, clearing tiles to zero, with attributes set to white ink on black background
 void initLayers(void);
+
+/// @brief Resets all tiles in layer to index 0, with transparent attributes
+/// @param layerIX 
+void clearLayerTiles(int layerIX);
 
 /// @brief Change the layer's type
 /// @param layerIX The layer to update
@@ -69,8 +75,17 @@ void blitRawToLayer(int layerIX, const uint8_t *tileDefs, const uint8_t *attrDef
 /// @param colorTop The attribute to use under top half of string
 /// @param colorBottom The attribute to use under bottom half of string
 /// @param x X tile position within layer to start drawing string
-/// @param y y tile position within layer to start drawing string
+/// @param y Y tile position within layer to start drawing string
 void drawTxtToLayer(int layerIX, const char *s, uint8_t colorTop, uint8_t colorBottom, int x, int y);
+
+/// @brief Set a single tile in a layer
+/// @param layerIX The layer to update
+/// @param tileDefIX The tile definition to use
+/// @param colorTop The attr to use for the top half of tile
+/// @param colorBottom The attr to use for the bottom half of tile
+/// @param x X tile position within layer
+/// @param y Y tile position within layer
+void setLayerTile(int layerIX, uint8_t tileDefIX, uint8_t colorTop, uint8_t colorBottom, int x, int y);
 
 /// @brief Draw a number to the layer
 /// @param layerIX The layer to update
@@ -99,3 +114,5 @@ void blitLayerToScratchBuffers(int layerIX);
 /// @brief Draws the bitmap layer to the scratch buffers, ready to move to the render buffer. Bitmaps wrap in both axis
 /// @param layerIX The layer to draw
 void blitBitmapLayerToScratchBuffers(int layerIX);
+
+extern TileLayer tileLayer[MAX_TILE_LAYERS];

@@ -69,11 +69,11 @@ void demoLoop(void){
     const int frontBowserLayer=2;
     const int backBowserLayer=3;
 
-    setTileDefSet(hudLayer,tiles1Def);
+    setTileDefSet(hudLayer,defaultTileDef);
 
-    setTileDefSet(frameCounterLayer,tiles1Def);
-    setTileDefSet(frontBowserLayer,tiles1Def);
-    setTileDefSet(backBowserLayer,tiles1Def);
+    setTileDefSet(frameCounterLayer,defaultTileDef);
+    setTileDefSet(frontBowserLayer,defaultTileDef);
+    setTileDefSet(backBowserLayer,defaultTileDef);
 
     for(int xPos=0;xPos<32;xPos+=8){
         for(int yPos=0;yPos<32;yPos+=8){
@@ -296,6 +296,40 @@ void gameTitle(void)
         setLayerPos(1,0,yPos);
         ++gv.iy;
         if(yPos>200){    // gv.iy is 32 here
+            gv.iy=0;
+            gv.ix=4;
+        }
+    }else if(gv.ix==4){
+        if(gv.iy<108){
+            gv.iy+=(gv.iy<40?4:(gv.iy<96?3:2));
+            setLayerPos(3,256-gv.iy,80);
+        }
+        setLayerPos(4,(sin((float)gv.iv/137)*100)-128,(sin((float)gv.iw/212)*100)-92);
+        gv.iv+=3;
+        gv.iw+=4;
+        if(++gv.iu==200){
+            gv.ix=5;
+            gv.iy=104;
+            gv.iw=0;
+            gv.iv=0;
+        }
+    }else if(gv.ix==5){
+        bool allDone=true;
+        if(tileLayer[4].y<192){
+            setLayerPos(4,tileLayer[4].x,tileLayer[4].y+gv.iw);
+            ++gv.iw;
+            allDone=false;
+        }
+        if(gv.iy>0){
+            ++gv.iv;
+            gv.iy-=gv.iv;
+            if(gv.iy<0){
+                gv.iy=0;
+            }
+            setLayerPos(3,256-gv.iy,80);
+            allDone=false;
+        }
+        if(allDone){
             setState(GS_title);
         }
     }

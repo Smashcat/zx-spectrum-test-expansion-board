@@ -46,23 +46,45 @@ void setState(GameState newGS)
 {
     switch(newGS){
         case GS_title:
-        setLayerPos(1,0,400);
-        setLayerType(1,LT_BITMAP);
-        setLayerBitmap(1,bitmap0,attr0);
+        {
+            // Layer 1 used for main title screen overlay bitmap
+            setLayerPos(1,0,400);
+            setLayerType(1,LT_BITMAP);
+            setLayerBitmap(1,titleScreenBitmap,titleScreenAttr);
 
-        setLayerPos(0,0,0);
-        setTileDefSet(0,tiles1Def);
-        // Title letter positions: 0,32,64,88, 112,128,152,168,196,224
-        initSprites(10);
-        for(int n=0;n<10;n++){
-            setSpritePos(n,300,300);
-            setSpriteSize(n,SIZE_32X40);
-            setSpriteDef(n,titleLettersDef,titleLettersMaskDef);
-            setSpritePalette(n,2);
-            setSpriteLayer(n,0);
-            spriteList[n].frame=n;
-            setSpriteScale(n,0.1,1);
-            spriteList[n].delay=(n*2);
+            // Layer 2 used for scrolling text
+            setLayerPos(2,0,0);
+            setTileDefSet(2,defaultTileDef);
+
+            // Layer 3 used for side big daddy graphic
+            setLayerPos(3,152+104,0);
+            setTileDefSet(3,sideDaddyTileDef);
+
+            // Layer 4 used for scrolling background image when showing instructions/story
+            setLayerPos(4,400,0);
+            setLayerType(4,LT_BITMAP);
+            setLayerBitmap(4,gameBackground0Bitmap,NULL);
+
+            int tDef=1;
+            for(int y=0;y<15;y++){
+                for(int x=0;x<14;x++){
+                    setLayerTile(3, tDef++, 0b01000111, 0b01000111, x, y);
+                }
+                tDef+=2;
+            }
+
+            // Title letter positions: 0,32,64,88, 112,128,152,168,196,224
+            initSprites(10);
+            for(int n=0;n<10;n++){
+                setSpritePos(n,300,300);
+                setSpriteSize(n,SIZE_32X40);
+                setSpriteDef(n,titleLettersDef,titleLettersMaskDef);
+                setSpritePalette(n,2);
+                setSpriteLayer(n,0);
+                spriteList[n].frame=n;
+                setSpriteScale(n,0.1,1);
+                spriteList[n].delay=(n*2);
+            }
         }
         break;
         default:
@@ -73,6 +95,7 @@ void setState(GameState newGS)
 }
 
 void resetStateVars(){
+    gv.iu=0;
     gv.iv=0;
     gv.iw=0;
     gv.ix=0;

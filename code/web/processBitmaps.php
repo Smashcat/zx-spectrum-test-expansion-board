@@ -78,9 +78,9 @@ function processBitmap($fName){
     imagedestroy($im);
 
     print "// file: $fName\n";
-    print "const uint8_t bitmap".$bitmapIX."[".($width*$height)."]={";
-    for($n=0;$n<($width*$height);$n++){
-        if(($n%$width)==0){
+    print "const uint8_t bitmap".$bitmapIX."[".(($width*$height)+4)."] __attribute__((aligned(4))) ={\n\t$width,\t// Bitmap width (bytes)\n\t$height,\t// bitmap height (pixels)\n\t$attrWidth,\t// attr width (bytes)\n\t$attrHeight,\t// attr height (blocks)";
+    for($n=4;$n<($width*$height)+4;$n++){
+        if((($n-4)%$width)==0){
             print "\n\t";
         }
         printf("0x%02X,",$data[$n]);
@@ -88,7 +88,7 @@ function processBitmap($fName){
     print "\n};\n\n";
 
     if($attrWidth>0){
-        print "const uint8_t attr".$bitmapIX."[".($attrWidth*$attrHeight)."]={";
+        print "const uint8_t attr".$bitmapIX."[".($attrWidth*$attrHeight)."] __attribute__((aligned(4))) ={";
         for($n=0;$n<($attrWidth*$attrHeight);$n++){
             if(($n%$width)==0){
                 print "\n\t";

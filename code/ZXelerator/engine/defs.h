@@ -6,7 +6,7 @@
 #define VERSION_NUM "v0.1"
 
 #define TOTAL_RAMBANKS          2
-#define MAX_TILE_LAYERS         4
+#define MAX_TILE_LAYERS         5
 #define MAX_PARTICLES           1000
 #define MAX_SPRITES             500
 #define MAX_FALL_SPEED          6.0

@@ -2,7 +2,7 @@
 
 header("Content-type: text/plain");
 
-$file="sheet1";
+$file="zxSprites/sheet1";
 
 $isColor=true;
 $charHeight=24;
@@ -13,7 +13,7 @@ $bgCol=1;
 $borderCol=2;
 $fgCol=0;
 $useRev=0;
-
+$addMask=1;
 
 
 if(isset($_GET['fgCol'])){
@@ -28,12 +28,16 @@ if(isset($_GET['borderCol'])){
 	$borderCol=intval($_GET['borderCol']);
 }
 
+if(isset($_GET['addMask'])){
+	$addMask=intval($_GET['addMask']);
+}
+
 if(isset($_GET['file']))
 	$file=$_GET['file'];
 
 	$constName=$file;
 
-$file="zxSprites/".$file.".png";
+$file="./".$file.".png";
 if(isset($_GET['color']))
 	$isColor=true;
 
@@ -112,8 +116,14 @@ for($y=0;$y<$height;$y+=$charHeight){
 
 } // y
 
+print "\n\nconst uint8_t ".$constName."Def"."[".($totalChars*($width/8)*$height*($addMask>0?2:1))."] __attribute__((aligned(4))) = {\n\n\t";
+print "/* Pixel data */\n\n\t";
 extractData($rawData,array($fgCol),$charWidth,$charHeight,$constName."Def");
-extractData($rawData,array($bgCol),$charWidth,$charHeight,$constName."MaskDef");
+if($addMask>0){
+	print "\n\t/* Mask data */\n\n\t";
+	extractData($rawData,array($bgCol),$charWidth,$charHeight,$constName."MaskDef");
+}
+print "\n};\n";
 
 function extractData($d,$fgCols,$cWidth,$cHeight,$aName){
 	global $useRev;
@@ -178,43 +188,45 @@ function extractData($d,$fgCols,$cWidth,$cHeight,$aName){
 			$byte|=$bit;
 		}
 
-		$outStr.=sprintf("0b%08b,",$byte);
+		++$bytesPrinted;
+
+		$splitWidth=$bytesWidth;
+		if($splitWidth>32){
+			$splitWidth=32;
+		}
+
+		
+		if(($bytesPrinted%$splitWidth)==0){
+			if(($bytesPrinted%$bytesPerGlyph)==$splitWidth){
+//				$outStr.=" /* ".sprintf("%-03u",$blocksPrinted)." */ ";
+				if($useRev){
+					$revStr.=" /* $blocksPrinted */ ";
+				}
+				++$blocksPrinted;
+			}
+		}
+
+		$outStr.=sprintf("0x%02X,",$byte);
 		if($useRev){
 			$revByte[$revByteIX++]=$bitReverse[$byte];
 		}
-		++$bytesPrinted;
 
-		if(($bytesPrinted%$bytesWidth)==0){
+		if(($bytesPrinted%$splitWidth)==0){
 			if($useRev){
 				for($bt=3;$bt>-1;$bt--){
-					$revStr.=sprintf("0b%08b,",$revByte[$bt]);
+					$revStr.=sprintf("0x%02X,",$revByte[$bt]);
 				}
 				$revByteIX=0;
 			}
-			if(($bytesPrinted%$bytesPerGlyph)==$bytesWidth){
-				$outStr.=" // $blocksPrinted\n\t";
-				if($useRev){
-					$revStr.=" // $blocksPrinted\n\t";
-				}
-				++$blocksPrinted;
-			}else if(($bytesPrinted%$bytesPerGlyph)==0){
-				$outStr.="\n\n\t";
-				if($useRev){
-					$revStr.="\n\n\t";
-				}
-			}else{
-				$outStr.="\n\t";
-				if($useRev){
-					$revStr.="\n\t";
-				}
+			$outStr.="\n\t";
+			if($useRev){
+				$revStr.="\n\t";
 			}
 			++$row;
 		}
 	}
 
-	print "\n\nconst uint8_t ".$aName."[".(($totalBits/8)*($useRev?2:1))."] __attribute__((aligned(4))) = {\n\t";
 	print $outStr;
 	print $revStr;
-	print "\n};\n";
 }
 
