@@ -45,9 +45,11 @@ typedef struct TileLayer {
 /// @brief Initialise all tile layers, setting them off of screen, clearing tiles to zero, with attributes set to white ink on black background
 void initLayers(void);
 
-/// @brief Resets all tiles in layer to index 0, with transparent attributes
-/// @param layerIX 
-void clearLayerTiles(int layerIX);
+/// @brief Resets rows of tiles in layer to index 0, with transparent attributes
+/// @param layerIX The tile layer to update
+/// @param fromY The first row to clear
+/// @param numRows The number of rows to clear
+void clearLayerLines(int layerIX, int fromY, int numRows);
 
 /// @brief Change the layer's type
 /// @param layerIX The layer to update

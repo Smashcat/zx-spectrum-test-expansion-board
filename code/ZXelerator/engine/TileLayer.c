@@ -13,17 +13,20 @@ void initLayers(void){
         t->bitmapDefPtr=NULL;
         t->attrDefPtr=NULL;
         t->layerType=LT_TILE;
-        clearLayerTiles(n);
+        clearLayerLines(n,0,TILE_LAYER_HEIGHT);
     }
 }
 
-void clearLayerTiles(int layerIX){
+void clearLayerLines(int layerIX, int fromY, int numRows){
     TileLayer *t=tileLayer+layerIX;
-    for(int i=0;i<(TILE_LAYER_WIDTH*TILE_LAYER_HEIGHT);i++){
-        t->tileMap[i]=0;
-    }
-    for(int i=0;i<(TILE_LAYER_WIDTH*TILE_LAYER_ATTR_HEIGHT);i++){
-        t->attrMap[i]=7+(1<<7);   // High bit set = do not update attr when drawing the pixels under this attr block
+    for(int y=fromY;y<fromY+numRows;y++){
+        int yStart=(y%TILE_LAYER_HEIGHT)*TILE_LAYER_WIDTH;
+        int ayStart=(y%TILE_LAYER_HEIGHT)*TILE_LAYER_WIDTH*2;
+        for(int x=0;x<TILE_LAYER_WIDTH;x++){
+            t->tileMap[yStart+x]=0;        // 0 should always be an empty tile
+            t->attrMap[ayStart+(x*2)]=1<<7;     // High bit set = do not update attr when drawing the pixels under this attr block
+            t->attrMap[ayStart+(x*2)+1]=1<<7;
+        }
     }
 }
 
@@ -60,8 +63,8 @@ void blitRawToLayer(int layerIX, const uint8_t *tileDefs, const uint8_t *attrDef
 
 void drawTxtToLayer(int layerIX, const char *s, uint8_t colorTop, uint8_t colorBottom, int x, int y)
 {
-    const int tOffset=(y*TILE_LAYER_WIDTH)+x;
-    const int aOffset=(y*TILE_LAYER_WIDTH*2)+x;
+    const int tOffset=((y%TILE_LAYER_HEIGHT)*TILE_LAYER_WIDTH)+x;
+    const int aOffset=((y%TILE_LAYER_HEIGHT)*TILE_LAYER_WIDTH*2)+x;
     uint8_t *tP=tileLayer[layerIX].tileMap+tOffset;
     uint8_t *aP=tileLayer[layerIX].attrMap+aOffset;
     while(*s){

@@ -298,6 +298,15 @@ void gameTitle(void)
         if(yPos>200){    // gv.iy is 32 here
             gv.iy=0;
             gv.ix=4;
+            initSprites(20);
+            for(int n=0;n<20;n++){
+                setSpritePos(n,n*10,-30);
+                setSpriteSize(n,SIZE_24X24);
+                setSpriteDef(n,spriteBubbleDef,spriteBubbleMaskDef);
+                setSpritePalette(n,0);
+                setSpriteLayer(n,4);
+                spriteList[n].frame=(n%3);
+            };
         }
     }else if(gv.ix==4){
         if(gv.iy<108){
@@ -307,18 +316,96 @@ void gameTitle(void)
         setLayerPos(4,(sin((float)gv.iv/137)*100)-128,(sin((float)gv.iw/212)*100)-92);
         gv.iv+=3;
         gv.iw+=4;
-        if(++gv.iu==200){
-            gv.ix=5;
-            gv.iy=104;
-            gv.iw=0;
-            gv.iv=0;
+    
+        if(gv.storyTextCurrentLineIX==gv.storyTextNextSectionAtLineIX){
+            if(gv.storyTextSectionIX<5){
+                gv.storyTextNextSectionAtLineIX=drawStorySection(2, gv.storyTextSectionIX, gv.storyTextCurrentLineIX);
+                int currentTextLines=(gv.storyTextNextSectionAtLineIX-gv.storyTextCurrentLineIX);
+                int botGap=(24-currentTextLines)/2;
+                gv.storyScrollCDStartLine=gv.storyTextCurrentLineIX+currentTextLines+botGap+2;
+                gv.storyTextNextSectionAtLineIX=gv.storyTextCurrentLineIX+currentTextLines+botGap+7;
+                ++gv.storyTextSectionIX;
+                if(gv.storyTextSectionIX==5){
+                    gv.storyTextNextSectionAtLineIX+=20;
+                    clearLayerLines(2,gv.storyTextNextSectionAtLineIX+40,30);
+                }
+            }else{
+                gv.ix=5;
+                gv.iy=104;
+                gv.iw=0;
+                gv.iv=0;
+            }
         }
+
+        if((gv.frameRendered%10)==0){
+            setLayerPos(0,0,(tileLayer[0].y==24*8?22*8:24*8));
+        }
+
+        if(gv.storyScrollCD==0){
+            const int linesPerFrame=4;
+            gv.storyTextCurrentSubLineIX+=linesPerFrame;
+            if(gv.storyTextCurrentSubLineIX>7){
+                gv.storyTextCurrentSubLineIX-=8;
+                ++gv.storyTextCurrentLineIX;
+                if(gv.storyTextCurrentLineIX==gv.storyScrollCDStartLine){
+                    gv.storyScrollCD=150;
+                }
+            }
+            int lPos=tileLayer[2].y;
+            lPos-=linesPerFrame;
+            if(lPos<-TILE_LAYER_HEIGHT*8){
+                lPos+=(TILE_LAYER_HEIGHT*8);
+            }
+            setLayerPos(2,0,lPos);
+        }else{
+            --gv.storyScrollCD;
+        }
+
+        if((rand()%100)>85){
+            int ix=(rand()%20);
+            for(int n=0;n<20;n++){
+                int six=(n+ix)%20;
+                if(spriteList[six].y<-29){
+                    setSpritePos(six,(308-gv.iy)+(10-six),130);
+                    spriteList[six].yDir=(((float)(rand()%100))/70.0)+1.5;
+                    spriteList[six].xDir=(((float)(rand()%200)-100)/500.0);
+                    break;
+                }
+            }
+        }
+
+        for(int n=0;n<20;n++){
+            if(spriteList[n].y>-30){
+                if((rand()%100)>90){
+                    spriteList[n].xDir=-spriteList[n].xDir;
+                }
+                setSpritePos(
+                    n,
+                    spriteList[n].xF + spriteList[n].xDir,
+                    spriteList[n].yF-spriteList[n].yDir
+                );
+            }
+        }
+
     }else if(gv.ix==5){
         bool allDone=true;
         if(tileLayer[4].y<192){
             setLayerPos(4,tileLayer[4].x,tileLayer[4].y+gv.iw);
             ++gv.iw;
             allDone=false;
+        }
+        for(int n=0;n<20;n++){
+            if(spriteList[n].y>-30){
+                allDone=false;
+                if((rand()%100)>90){
+                    spriteList[n].xDir=-spriteList[n].xDir;
+                }
+                setSpritePos(
+                    n,
+                    spriteList[n].xF + spriteList[n].xDir,
+                    spriteList[n].yF-spriteList[n].yDir
+                );
+            }
         }
         if(gv.iy>0){
             ++gv.iv;
@@ -329,9 +416,49 @@ void gameTitle(void)
             setLayerPos(3,256-gv.iy,80);
             allDone=false;
         }
+
+        if((gv.frameRendered%10)==0){
+            setLayerPos(0,0,(tileLayer[0].y==24*8?22*8:24*8));
+        }
+
         if(allDone){
+            tileLayer[0].y=24*8;
             setState(GS_title);
         }
     }
 
+}
+
+void drawBigTxtToLayer(int layerIX, const char *s, const uint8_t *colors, int x, int y)
+{
+    const int tOffset=((y%TILE_LAYER_HEIGHT)*TILE_LAYER_WIDTH)+x;
+    const int aOffset=((y%TILE_LAYER_HEIGHT)*TILE_LAYER_WIDTH*2)+x;
+    const int tOffset1=(((y+1)%TILE_LAYER_HEIGHT)*TILE_LAYER_WIDTH)+x;
+    const int aOffset1=(((y+1)%TILE_LAYER_HEIGHT)*TILE_LAYER_WIDTH*2)+x;
+    uint8_t *tP=tileLayer[layerIX].tileMap+tOffset;
+    uint8_t *aP=tileLayer[layerIX].attrMap+aOffset;
+    uint8_t *tP1=tileLayer[layerIX].tileMap+tOffset1;
+    uint8_t *aP1=tileLayer[layerIX].attrMap+aOffset1;
+    while(*s){
+        if(*s>='0' && *s<=']'){
+            *tP=(*s)+80;
+            *tP1=(*s)+80+48;
+            if(*s!=32){
+                *aP=colors[0];
+                *(aP+TILE_LAYER_WIDTH)=colors[1];
+                *aP1=colors[2];
+                *(aP1+TILE_LAYER_WIDTH)=colors[3];
+            }else{
+                *aP=0x80;
+                *(aP+TILE_LAYER_WIDTH)=0x80;
+                *aP1=0x80;
+                *(aP1+TILE_LAYER_WIDTH)=0x80;
+            }
+        }
+        ++tP;
+        ++aP;
+        ++tP1;
+        ++aP1;
+        ++s;
+    }
 }

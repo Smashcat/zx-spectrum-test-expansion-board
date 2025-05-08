@@ -20,9 +20,18 @@
 #include "engine/inputDevice.h"
 #include "engine/funcs.h"
 
+#include "gameStrings.h"
 #include "game.h"
 
 /// @brief Just a piece of test code to check rendering is working.
 /// @param  
 void demoLoop(void);
 void gameTitle(void);
+
+/// @brief Draw large font characters (8x16) to tilemap
+/// @param layerIX The layer index to draw to
+/// @param s The string (note only alphanumeric chars available and limited punctuation)
+/// @param colors 
+/// @param x 
+/// @param y 
+void drawBigTxtToLayer(int layerIX, const char *s, const uint8_t *colors, int x, int y);

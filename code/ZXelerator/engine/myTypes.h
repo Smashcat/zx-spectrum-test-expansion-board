@@ -20,12 +20,16 @@ typedef struct GameVar {
     int32_t ix;
     int32_t iy;
     int32_t iz;
-    int storyTextLineIX;
-
+    int storyTextSectionIX;
+    int storyTextNextSectionAtLineIX;
+    int storyTextCurrentLineIX;
+    int storyTextCurrentSubLineIX;
+    int storyScrollCDStartLine;
+    int storyScrollCD;
 
 } GameVar;
 
 typedef struct StoryEntry{
     const char title[16];
-    const char body[256];
+    const char body[512];
 } StoryEntry;

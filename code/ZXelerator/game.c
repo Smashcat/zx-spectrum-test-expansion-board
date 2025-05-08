@@ -47,6 +47,11 @@ void setState(GameState newGS)
     switch(newGS){
         case GS_title:
         {
+            // Layer 0 used for debugging
+            setLayerPos(0,0,24*8);
+            setTileDefSet(0,defaultTileDef);
+            drawTxtToLayer(0,"PRESS KEY TO PLAY!",0b01000110,0b1000010,7,0);
+
             // Layer 1 used for main title screen overlay bitmap
             setLayerPos(1,0,400);
             setLayerType(1,LT_BITMAP);
@@ -55,6 +60,14 @@ void setState(GameState newGS)
             // Layer 2 used for scrolling text
             setLayerPos(2,0,0);
             setTileDefSet(2,defaultTileDef);
+            clearLayerLines(2,0,TILE_LAYER_HEIGHT);
+            gv.storyTextCurrentLineIX=24;
+            gv.storyTextNextSectionAtLineIX=24;
+            gv.storyTextSectionIX=0;
+            gv.storyTextCurrentSubLineIX=0;
+            gv.storyScrollCDStartLine=0;
+            gv.storyScrollCD=0;
+        
 
             // Layer 3 used for side big daddy graphic
             setLayerPos(3,152+104,0);
