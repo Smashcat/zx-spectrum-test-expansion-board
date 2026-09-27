@@ -1,4 +1,6 @@
 #include "Sprite.h"
+#include <math.h>
+#include "pico.h"
 
 Sprite *spriteList=NULL;
 int totalSprites=0;
@@ -21,6 +23,10 @@ void initSprites(int numSprites)
         s->defPtr=NULL;
         s->frame=0;
         s->isScaled=0;
+        s->scaleX=1.0f;
+        s->scaleY=1.0f;
+        s->angle=0.0f;
+        s->isRotated=0;
         s->delay=0;
     }
 }
@@ -105,6 +111,57 @@ void setSpriteSize(int ix, SpriteSize st){
     s->offY=s->y-(s->scaledHeight/2);
     s->isScaled=0;
     s->bytesPerRow = (s->width==24?4:(s->width >> 3));  // 24bit wide sprites actually span 4 bytes for faster 32-bit aligned reads
+    if(s->isRotated){
+        updateSpriteTransform(s);
+    }
+}
+
+void setSpriteRotation(int ix, float angle)
+{
+    Sprite *s=spriteList+ix;
+    const float twoPi=2.0f*(float)M_PI;
+    angle=fmodf(angle,twoPi);
+    if(angle>(float)M_PI){
+        angle-=twoPi;
+    }else if(angle<-(float)M_PI){
+        angle+=twoPi;
+    }
+    s->angle=angle;
+    s->isRotated=(fabsf(angle)>0.0001f)?1:0;
+    if(s->isRotated){
+        updateSpriteTransform(s);
+    }else{
+        // Back to the unrotated renderers - restore the unrotated scaled size and position
+        setSpriteScale(ix,s->isScaled?s->scaleX:0.0f,s->isScaled?s->scaleY:0.0f);
+    }
+}
+
+void updateSpriteTransform(Sprite *s)
+{
+    const float sx=s->isScaled?s->scaleX:1.0f;
+    const float sy=s->isScaled?s->scaleY:1.0f;
+    const float c=cosf(s->angle);
+    const float sn=sinf(s->angle);
+
+    // Inverse of rotate then scale, so each screen pixel can be mapped back to a sprite pixel
+    s->fDudx=c/sx;
+    s->fDudy=sn/sx;
+    s->fDvdx=-sn/sy;
+    s->fDvdy=c/sy;
+    s->invDudx=FIXED16(s->fDudx);
+    s->invDudy=FIXED16(s->fDudy);
+    s->invDvdx=FIXED16(s->fDvdx);
+    s->invDvdy=FIXED16(s->fDvdy);
+
+    // Bounding box of the rotated sprite (plus a pixel of margin), used for clipping and culling
+    const float hw=(float)s->width*sx*0.5f;
+    const float hh=(float)s->height*sy*0.5f;
+    const int ex=(int)ceilf((fabsf(c)*hw)+(fabsf(sn)*hh))+1;
+    const int ey=(int)ceilf((fabsf(sn)*hw)+(fabsf(c)*hh))+1;
+    s->scaledWidth=ex*2;
+    s->scaledHeight=ey*2;
+    s->offX=s->x-ex;
+    s->offY=s->y-ey;
 }
 
 void blitSpritesToRenderBuffer(int layerIX)
@@ -123,7 +180,9 @@ void blitSpritesToRenderBuffer(int layerIX)
             continue;
         }
 
-        if(s->isScaled){
+        if(s->isRotated){
+            blitSpriteTransformedToRenderBuffer(s);
+        }else if(s->isScaled){
             blitSpriteScaledToRenderBuffer(s);
         }else{
             switch(s->width){
@@ -155,7 +214,7 @@ void blitSprite8ToRenderBuffer(Sprite *s)
         if(y>-1 && y<SCREEN_HEIGHT_LINES){
             // Need to reverse the order of the bytes in the word so we can do a single shift operation
             uint16_t src16=  (*sDef<<8)>>shiftRight;
-            uint16_t mask16=(((*mDef<<8)+0xff)>>shiftRight)|(0xffff<<(16-shiftRight));
+            uint16_t mask16=(((*mDef<<8)+0xff)>>shiftRight)|(0xffffu<<(16-shiftRight));
             if(xS>-1){
                 *(rP+xS)&=(uint8_t)(mask16>>8);
                 *(rP+xS)|=(uint8_t)(src16>>8);
@@ -203,7 +262,7 @@ void blitSprite16ToRenderBuffer(Sprite *s)
             uint32_t src32= *sDef;
             uint32_t mask32=*mDef;
             src32=  ((src32<<24)  |((src32&0xff00)<<8))>>shiftRight;
-            mask32= (((mask32<<24)|((mask32&0xff00)<<8)|0xffff)>>shiftRight)|(0xffffffff<<(32-shiftRight));
+            mask32= (((mask32<<24)|((mask32&0xff00)<<8)|0xffff)>>shiftRight)|(shiftRight?(0xffffffffu<<(32-shiftRight)):0);
             if(xS>-1){
                 *(rP+xS)&=(uint8_t)(mask32>>24);
                 *(rP+xS)|=(uint8_t)(src32>>24);
@@ -248,6 +307,7 @@ void blitSprite24ToRenderBuffer(Sprite *s)
     const int spriteHeight=s->height;
     const int xS=s->offX>>3;                                                    // Character cell to start in is the xPos/8
     const int shiftRight=s->offX&0x07;
+    const bool is32=(s->width==32);
     const uint32_t *sDef=(uint32_t *)s->defPtr+(s->frame*spriteHeight);         // Point to start of sprite foreground data
     const uint32_t *mDef=(uint32_t *)s->maskPtr+(s->frame*spriteHeight);        // Point to start of sprite mask data
     uint8_t *rP=(uint8_t *)renderBuffer+(s->offY*SCREEN_WIDTH_CELLS);
@@ -256,7 +316,7 @@ void blitSprite24ToRenderBuffer(Sprite *s)
         if(y>-1 && y<SCREEN_HEIGHT_LINES){
             // Need to reverse the order of the bytes in the word so we can do a single shift operation
             uint32_t src32= ((*sDef<<24)+((*sDef&0x0000ff00)<<8)+((*sDef&0x00ff0000)>>8)+(*sDef>>24))>>shiftRight;
-            uint32_t mask32=(((*mDef<<24)+((*mDef&0x0000ff00)<<8)+((*mDef&0x00ff0000)>>8)+(*mDef>>24))>>shiftRight)|(0xffffffff<<(32-shiftRight));
+            uint32_t mask32=(((*mDef<<24)+((*mDef&0x0000ff00)<<8)+((*mDef&0x00ff0000)>>8)+(*mDef>>24))>>shiftRight)|(shiftRight?(0xffffffffu<<(32-shiftRight)):0);
             if(xS>-1){
                 *(rP+xS)&=(uint8_t)(mask32>>24);
                 *(rP+xS)|=(uint8_t)(src32>>24);
@@ -272,6 +332,12 @@ void blitSprite24ToRenderBuffer(Sprite *s)
             if(xS>-4 && xS<(SCREEN_WIDTH_CELLS-3)){
                 *(rP+xS+3)&=(uint8_t)(mask32);
                 *(rP+xS+3)|=(uint8_t)(src32);
+            }
+            // 32 pixel wide sprites spill into a 5th byte when not character aligned - these are the bits shifted
+            // out of the right of the 32 bit word above (the last source byte is the top byte of the word)
+            if(is32 && shiftRight && xS>-5 && xS<(SCREEN_WIDTH_CELLS-4)){
+                *(rP+xS+4)&=(uint8_t)(((*mDef>>24)<<(8-shiftRight))|(0xffu>>shiftRight));
+                *(rP+xS+4)|=(uint8_t)((*sDef>>24)<<(8-shiftRight));
             }
 
         }
@@ -295,8 +361,11 @@ void blitSprite24ToRenderBuffer(Sprite *s)
             if(xS>-3 && xS<(SCREEN_WIDTH_CELLS-2)){
                 *(aP+xS+2)=apS;
             }
-            if(xS>-4 && xS<(SCREEN_WIDTH_CELLS-3)  && ((shiftRight>0) || (s->width==32))){
+            if(xS>-4 && xS<(SCREEN_WIDTH_CELLS-3)  && ((shiftRight>0) || is32)){
                 *(aP+xS+3)=apS;
+            }
+            if(xS>-5 && xS<(SCREEN_WIDTH_CELLS-4) && is32 && (shiftRight>0)){
+                *(aP+xS+4)=apS;
             }
         }
         ++apSrc;
@@ -322,13 +391,21 @@ void blitSpriteScaledToRenderBuffer(Sprite *s)
     U32u8 xAdd,yAdd;
     yAdd.u32 = 0;
     uint8_t lByte = 255;
-    uint8_t *rP=(uint8_t *)renderBuffer+(sY*SCREEN_WIDTH_CELLS);
-    uint8_t *aP=renderAttrBuffer+((sY/ATTR_HEIGHT_PIXELS)*SCREEN_WIDTH_CELLS);
+
+    // If the sprite starts above the screen, skip the source rows that are off screen, so drawing starts at the top
+    // line of the buffers (and not before them)
+    int firstLine=sY;
+    if(firstLine<0){
+        yAdd.u32=(uint32_t)(-firstLine)*s->scaledHeightAdder.u32;
+        firstLine=0;
+    }
+    uint8_t *rP=(uint8_t *)renderBuffer+(firstLine*SCREEN_WIDTH_CELLS);
+    uint8_t *aP=renderAttrBuffer+((firstLine/ATTR_HEIGHT_PIXELS)*SCREEN_WIDTH_CELLS);
     int attrCountDown=1;
 
     memset(pixLineBuffer,0,lineBufferLen);
     memset(maskLineBuffer,0xff,lineBufferLen);
-    for(int y=s->offY;y<endLine;y++){
+    for(int y=firstLine;y<endLine;y++){
         if(y>-1){
             if(lByte!=yAdd.u8[2]){
                 lByte = yAdd.u8[2];
@@ -395,6 +472,124 @@ void blitSpriteScaledToRenderBuffer(Sprite *s)
             }
             rP+=SCREEN_WIDTH_CELLS;
 
+        }
+    }
+}
+
+
+void __no_inline_not_in_flash_func(blitSpriteTransformedToRenderBuffer)(Sprite *s)
+{
+    const int w=s->width;
+    const int h=s->height;
+    const int bpr=s->bytesPerRow;
+    const uint8_t *sDef=s->defPtr+(s->frame*h*bpr);      // Point to start of sprite foreground data
+    const uint8_t *mDef=s->maskPtr+(s->frame*h*bpr);     // Point to start of sprite mask data
+    const uint8_t *apSrc=palette[s->paletteIX];
+    const int maxPaletteIX=(int)sizeof(palette[0])-1;
+    const int32_t limU=w<<16;
+    const int32_t limV=h<<16;
+    const int32_t du=s->invDudx;
+    const int32_t dv=s->invDvdx;
+
+    // Bounding box, clipped to the screen
+    int x0=s->offX;
+    int x1=s->offX+s->scaledWidth;
+    int y0=s->offY;
+    int y1=s->offY+s->scaledHeight;
+    if(x0<0){
+        x0=0;
+    }
+    if(x1>SCREEN_WIDTH_PIXELS){
+        x1=SCREEN_WIDTH_PIXELS;
+    }
+    if(y0<0){
+        y0=0;
+    }
+    if(y1>SCREEN_HEIGHT_LINES){
+        y1=SCREEN_HEIGHT_LINES;
+    }
+    if(x0>=x1 || y0>=y1){
+        return;
+    }
+
+    // Sprite position sampled at the centre of screen pixel (x0,y0), stepped along each line and down each row
+    const float centreU=(float)w*0.5f;
+    const float centreV=(float)h*0.5f;
+    const float relX=((float)x0+0.5f)-(float)s->x;
+    const float relY=((float)y0+0.5f)-(float)s->y;
+    int32_t rowU=FIXED16(centreU+(s->fDudx*relX)+(s->fDudy*relY));
+    int32_t rowV=FIXED16(centreV+(s->fDvdx*relX)+(s->fDvdy*relY));
+
+    uint8_t *rP=(uint8_t *)renderBuffer+(y0*SCREEN_WIDTH_CELLS);
+    uint32_t cellsUsed=0;   // One bit per character column the sprite drew solid pixels in, for the current attribute row
+
+    for(int y=y0;y<y1;y++){
+        // Only visit the pixels on this line that land inside the sprite
+        int start=0, end=x1-x0;
+        clipSpan(rowU,du,limU,&start,&end);
+        clipSpan(rowV,dv,limV,&start,&end);
+        if(start<end){
+            int32_t u=rowU+(start*du);
+            int32_t v=rowV+(start*dv);
+            int x=x0+start;
+            const int xEnd=x0+end;
+            while(x<xEnd){
+                // Build up to 8 pixels for this character cell, then combine with the render buffer using the mask
+                const int cell=x>>3;
+                const int cellEnd=((cell+1)*8<xEnd)?(cell+1)*8:xEnd;
+                uint32_t pix=0;
+                uint32_t keep=0xff;
+                for(;x<cellEnd;x++){
+                    const int32_t ui=u>>16;
+                    const int off=((v>>16)*bpr)+(ui>>3);
+                    const int sh=ui&7;
+                    const uint32_t bit=0x80>>(x&7);
+                    if((sDef[off]<<sh)&0x80){
+                        pix|=bit;
+                    }
+                    if(((mDef[off]<<sh)&0x80)==0){
+                        keep&=~bit;
+                    }
+                    u+=du;
+                    v+=dv;
+                }
+                rP[cell]=(uint8_t)((rP[cell]&keep)|pix);
+                if(keep!=0xff){
+                    cellsUsed|=1u<<cell;
+                }
+            }
+        }
+        rowU+=s->invDudy;
+        rowV+=s->invDvdy;
+        rP+=SCREEN_WIDTH_CELLS;
+
+        // At the end of each 8x4 attribute row, colour the cells the sprite covered, using the palette entry for
+        // the sprite row found at the centre of each cell (flash bit set means leave the cell alone)
+        if((((y&(ATTR_HEIGHT_PIXELS-1))==(ATTR_HEIGHT_PIXELS-1)) || (y==y1-1)) && cellsUsed){
+            const int cy=y/ATTR_HEIGHT_PIXELS;
+            uint8_t *aP=renderAttrBuffer+(cy*SCREEN_WIDTH_CELLS);
+            const float relCY=((float)((cy*ATTR_HEIGHT_PIXELS)+(ATTR_HEIGHT_PIXELS/2))+0.5f)-(float)s->y;
+            for(int cx=0;cx<SCREEN_WIDTH_CELLS;cx++){
+                if((cellsUsed&(1u<<cx))==0){
+                    continue;
+                }
+                const float relCX=((float)((cx*8)+4)+0.5f)-(float)s->x;
+                int srcRow=(int)floorf(centreV+(s->fDvdx*relCX)+(s->fDvdy*relCY));
+                if(srcRow<0){
+                    srcRow=0;
+                }else if(srcRow>=h){
+                    srcRow=h-1;
+                }
+                int pIX=srcRow/ATTR_HEIGHT_PIXELS;
+                if(pIX>maxPaletteIX){
+                    pIX=maxPaletteIX;
+                }
+                const uint8_t c=apSrc[pIX];
+                if((c&0x80)==0){
+                    aP[cx]=c;
+                }
+            }
+            cellsUsed=0;
         }
     }
 }

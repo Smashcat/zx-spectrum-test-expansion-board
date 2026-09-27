@@ -228,6 +228,12 @@ void gameTitle(void)
         0+16,24+16,56+16,80+16, 112+16,128+16,152+16,168+16,196+16,224+16
     };
 
+    // M switches to the Mode 7 test scene
+    if(keyDown(KEY_M)){
+        setState(GS_mode7Test);
+        return;
+    }
+
     if(gv.ix==0){
         float sinIX=(float)(gv.iy+14)/10.0;
         int yPos=(((sin(sinIX)+1)*250.0)/8);
@@ -461,4 +467,191 @@ void drawBigTxtToLayer(int layerIX, const char *s, const uint8_t *colors, int x,
         ++aP1;
         ++s;
     }
+}
+
+// ---------------------------------------------------------------------------
+// Mode 7 test scene
+// ---------------------------------------------------------------------------
+
+#define MODE7_HORIZON       56          // Screen line of the horizon
+#define MODE7_FOCAL         128.0f      // Projection distance (~90 degree field of view)
+#define MODE7_VIEW_DIST     1500.0f     // Floor further away than this is not drawn (it's just noise), the sky shows instead
+#define MODE7_SKY_V         180         // Row of the background bitmap shown at the top of the screen
+#define MODE7_HUD_LAYER     0
+#define MODE7_FLOOR_LAYER   3
+#define MODE7_SKY_LAYER     4
+#define MODE7_TWO_PI        6.2831853f
+
+// The floor tiles are built in RAM, as rotated layers read tile data in a scattered order, which is quicker
+// from SRAM than through the flash cache
+static uint8_t mode7Tiles[256*8*2];
+static LayerLineTransform mode7FloorLines[SCREEN_HEIGHT_LINES];
+static LayerLineTransform mode7SkyLines[SCREEN_HEIGHT_LINES];
+static float mode7CamX, mode7CamY, mode7Angle, mode7Speed, mode7Height, mode7Bank;
+static int mode7Frame;
+
+static void buildMode7Floor(void)
+{
+    // Tiles: 0 transparent, 1 solid ink, 2 kerb checker, 3 vertical dash, 4 horizontal dash, 5 solid paper
+    uint8_t *mask=mode7Tiles+(256*8);
+    memset(mode7Tiles,0,sizeof(mode7Tiles));
+    for(int r=0;r<8;r++){
+        mask[r]=0xff;
+        mode7Tiles[(1*8)+r]=0xff;
+        mode7Tiles[(2*8)+r]=(r&2)?0x33:0xcc;
+        mode7Tiles[(3*8)+r]=(r<4)?0x18:0x00;
+        mode7Tiles[(4*8)+r]=(r==3 || r==4)?0xf0:0x00;
+    }
+    setTileDefSet(MODE7_FLOOR_LAYER,mode7Tiles);
+
+    // Grass in two shades of green, with a grid of roads every 16 tiles (the map wraps, so the grid is endless)
+    for(int y=0;y<TILE_LAYER_HEIGHT;y++){
+        for(int x=0;x<TILE_LAYER_WIDTH;x++){
+            const int rx=x&15, ry=y&15;
+            const bool onV=(rx>=6 && rx<=8);
+            const bool onH=(ry>=6 && ry<=8);
+            uint8_t tile, attr;
+            if(onV && onH){
+                tile=5;
+                attr=0x47;
+            }else if(onV){
+                tile=(rx==7)?3:2;
+                attr=(rx==7)?0x47:0x7a;
+            }else if(onH){
+                tile=(ry==7)?4:2;
+                attr=(ry==7)?0x47:0x7a;
+            }else{
+                tile=1;
+                attr=(((x>>2)+(y>>2))&1)?0x44:0x04;
+            }
+            setLayerTile(MODE7_FLOOR_LAYER,tile,attr,attr,x,y);
+        }
+    }
+}
+
+static void updateMode7View(void)
+{
+    buildLayerPerspective(mode7FloorLines,mode7CamX,mode7CamY,mode7Angle,mode7Height,MODE7_HORIZON,MODE7_FOCAL);
+
+    // Leave out the far distance, and let the sky continue down to meet the floor
+    int floorStart=MODE7_HORIZON+(int)ceilf((mode7Height*MODE7_FOCAL)/MODE7_VIEW_DIST);
+    if(floorStart>SCREEN_HEIGHT_LINES){
+        floorStart=SCREEN_HEIGHT_LINES;
+    }
+    for(int y=0;y<floorStart;y++){
+        mode7FloorLines[y].enabled=0;
+    }
+
+    // The sky pans with the heading - one full turn scrolls exactly one bitmap width, so it wraps seamlessly
+    const float skyU=(mode7Angle/MODE7_TWO_PI)*512.0f;
+    for(int y=0;y<SCREEN_HEIGHT_LINES;y++){
+        LayerLineTransform *l=mode7SkyLines+y;
+        l->u=FIXED16(skyU+0.5f);
+        l->v=FIXED16((float)(y+MODE7_SKY_V)+0.5f);
+        l->dudx=FIXED16_ONE;
+        l->dvdx=0;
+        l->enabled=(y<floorStart)?1:0;
+    }
+}
+
+void setupMode7Test(void)
+{
+    initLayers();
+
+    // Sky - uses a line table too, so it wraps as it pans, and isn't drawn under the floor
+    setLayerType(MODE7_SKY_LAYER,LT_BITMAP_WRAP);
+    setLayerBitmap(MODE7_SKY_LAYER,gameBackground0Bitmap,NULL);
+    setLayerLineTransforms(MODE7_SKY_LAYER,mode7SkyLines);
+
+    buildMode7Floor();
+    setLayerLineTransforms(MODE7_FLOOR_LAYER,mode7FloorLines);
+
+    // Controls help, over everything else
+    setTileDefSet(MODE7_HUD_LAYER,defaultTileDef);
+    setLayerPos(MODE7_HUD_LAYER,0,0);
+    drawTxtToLayer(MODE7_HUD_LAYER,"O/P TURN Q/A SPEED W/S HEIGHT",0x45,0x47,1,22);
+    drawTxtToLayer(MODE7_HUD_LAYER,"SPACE: TITLE",0x45,0x47,10,23);
+
+    // Sprite 0 - player, banks when turning (rotation). Sprite 1 - spinning, pulsing letter (rotation and scale)
+    initSprites(2);
+    setSpriteSize(0,SIZE_24X24);
+    setSpriteDef(0,sprite24x24Def,mask24x24Def);
+    setSpritePalette(0,1);
+    setSpriteLayer(0,1);
+    setSpritePos(0,128,150);
+    setSpriteScale(0,1.5f,1.5f);
+
+    setSpriteSize(1,SIZE_32X40);
+    setSpriteDef(1,titleLettersDef,titleLettersMaskDef);
+    setSpritePalette(1,4);
+    setSpriteLayer(1,1);
+    setSpritePos(1,208,26);
+
+    // Start driving along a road
+    mode7CamX=(7*8)+4+256;
+    mode7CamY=256.0f;
+    mode7Angle=0.0f;
+    mode7Speed=2.0f;
+    mode7Height=24.0f;
+    mode7Bank=0.0f;
+    mode7Frame=0;
+    updateMode7View();
+}
+
+void mode7Test(void)
+{
+    if(keyDown(KEY_SPACE)){
+        setState(GS_title);
+        return;
+    }
+
+    float turn=0.0f;
+    if(keyDown(KEY_O)){
+        turn=-0.05f;
+    }
+    if(keyDown(KEY_P)){
+        turn=0.05f;
+    }
+    mode7Angle+=turn;
+    if(mode7Angle>=MODE7_TWO_PI){
+        mode7Angle-=MODE7_TWO_PI;
+    }else if(mode7Angle<0.0f){
+        mode7Angle+=MODE7_TWO_PI;
+    }
+    if(keyDown(KEY_Q) && mode7Speed<6.0f){
+        mode7Speed+=0.2f;
+    }
+    if(keyDown(KEY_A) && mode7Speed>-3.0f){
+        mode7Speed-=0.2f;
+    }
+    if(keyDown(KEY_W) && mode7Height<80.0f){
+        mode7Height+=1.0f;
+    }
+    if(keyDown(KEY_S) && mode7Height>8.0f){
+        mode7Height-=1.0f;
+    }
+
+    // Move forwards along the heading, keeping the camera within the (wrapping) 512x512 map
+    mode7CamX+=sinf(mode7Angle)*mode7Speed;
+    mode7CamY-=cosf(mode7Angle)*mode7Speed;
+    mode7CamX=fmodf(mode7CamX,512.0f);
+    mode7CamY=fmodf(mode7CamY,512.0f);
+    if(mode7CamX<0.0f){
+        mode7CamX+=512.0f;
+    }
+    if(mode7CamY<0.0f){
+        mode7CamY+=512.0f;
+    }
+    updateMode7View();
+
+    // Bank the player into turns, easing back when not turning
+    mode7Bank+=((turn*6.0f)-mode7Bank)*0.2f;
+    setSpriteRotation(0,mode7Bank);
+
+    // Spin and pulse the letter, changing letter every couple of seconds
+    ++mode7Frame;
+    spriteList[1].frame=(mode7Frame/50)%10;
+    const float pulse=0.8f+(0.3f*sinf((float)mode7Frame*0.1f));
+    setSpriteScale(1,pulse,pulse);
+    setSpriteRotation(1,(float)mode7Frame*0.08f);
 }

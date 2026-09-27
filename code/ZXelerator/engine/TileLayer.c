@@ -3,6 +3,9 @@
 TileLayer tileLayer[MAX_TILE_LAYERS];
 static uint8_t pixLineBuffer[260] __attribute__((aligned(4)));
 
+static void blitTileLayerTransformed(const TileLayer *tL);
+static void blitBitmapLayerTransformed(const TileLayer *tL);
+
 void initLayers(void){
     for(int n=0;n<MAX_TILE_LAYERS;n++){
         TileLayer *t=tileLayer+n;
@@ -13,6 +16,9 @@ void initLayers(void){
         t->bitmapDefPtr=NULL;
         t->attrDefPtr=NULL;
         t->layerType=LT_TILE;
+        t->pivotX=SCREEN_WIDTH_PIXELS/2;
+        t->pivotY=SCREEN_HEIGHT_LINES/2;
+        clearLayerTransform(n);
         clearLayerLines(n,0,TILE_LAYER_HEIGHT);
     }
 }
@@ -140,6 +146,11 @@ void blitLayerToScratchBuffers(int layerIX)
         return;
     }
 
+    if(tL->transformed || tL->lineTransforms){
+        blitTileLayerTransformed(tL);
+        return;
+    }
+
     // If layer is off screen, don't draw it
     if(
         (tL->x<=-TILE_LAYER_WIDTH*8*2) ||
@@ -176,6 +187,7 @@ void blitLayerToScratchBuffers(int layerIX)
     for(int destRow=0;destRow<SCREEN_HEIGHT_LINES;destRow++){
 
         // Go through 32 cols for each pixel row, picking up the correct char defs for the 8x8 cell, and scan-line offset
+        //TODO need to actually go through 33 cols, so that left shifting will scroll on the tile to the right of the display
         const uint8_t *tDef=tL->tileDefPtr+srcRowOffY; // Current line offset added, for quicker lookup
         int yOff=srcRow*TILE_LAYER_WIDTH;
         int srcCol=srcStartX;
@@ -259,6 +271,11 @@ void blitBitmapLayerToScratchBuffers(int layerIX)
     const TileLayer *tL=tileLayer+layerIX;
     if(tL->bitmapDefPtr==NULL){
         return; // Nothing to draw...
+    }
+
+    if(tL->transformed || tL->lineTransforms){
+        blitBitmapLayerTransformed(tL);
+        return;
     }
 
     // If layer is off screen, don't draw it
@@ -364,4 +381,305 @@ void blitBitmapLayerToScratchBuffers(int layerIX)
     }
 
 
+}
+
+
+// ---------------------------------------------------------------------------
+// Rotation, scaling and Mode 7 style line transforms
+// ---------------------------------------------------------------------------
+
+void setLayerTransform(int layerIX, float angle, float scaleX, float scaleY)
+{
+    TileLayer *t=tileLayer+layerIX;
+    // Negative scales mirror the layer, but avoid dividing by zero
+    if(fabsf(scaleX)<0.01f){
+        scaleX=(scaleX<0.0f)?-0.01f:0.01f;
+    }
+    if(fabsf(scaleY)<0.01f){
+        scaleY=(scaleY<0.0f)?-0.01f:0.01f;
+    }
+    t->angle=angle;
+    t->scaleX=scaleX;
+    t->scaleY=scaleY;
+
+    // Inverse of rotate then scale, so each screen pixel can be mapped back to a layer pixel
+    const float c=cosf(angle);
+    const float s=sinf(angle);
+    t->dudx=c/scaleX;
+    t->dudy=s/scaleX;
+    t->dvdx=-s/scaleY;
+    t->dvdy=c/scaleY;
+
+    const float e=0.00001f;
+    t->transformed=!(fabsf(t->dudx-1.0f)<e && fabsf(t->dudy)<e && fabsf(t->dvdx)<e && fabsf(t->dvdy-1.0f)<e);
+}
+
+void setLayerPivot(int layerIX, float x, float y)
+{
+    tileLayer[layerIX].pivotX=x;
+    tileLayer[layerIX].pivotY=y;
+}
+
+void clearLayerTransform(int layerIX)
+{
+    TileLayer *t=tileLayer+layerIX;
+    t->angle=0.0f;
+    t->scaleX=1.0f;
+    t->scaleY=1.0f;
+    t->dudx=1.0f;
+    t->dudy=0.0f;
+    t->dvdx=0.0f;
+    t->dvdy=1.0f;
+    t->transformed=false;
+    t->lineTransforms=NULL;
+}
+
+void setLayerLineTransforms(int layerIX, const LayerLineTransform *lines)
+{
+    tileLayer[layerIX].lineTransforms=lines;
+}
+
+void buildLayerPerspective(LayerLineTransform *lines, float camX, float camY, float angle, float camHeight, float horizonY, float focalLength)
+{
+    // Lines further away than this are left blank - they'd only show noise, and would overflow 16.16 fixed point
+    const float maxDist=8192.0f;
+    const float fwdX=sinf(angle);
+    const float fwdY=-cosf(angle);
+    const float rightX=cosf(angle);
+    const float rightY=sinf(angle);
+    const float left=0.5f-(float)(SCREEN_WIDTH_PIXELS/2);
+
+    for(int y=0;y<SCREEN_HEIGHT_LINES;y++){
+        LayerLineTransform *l=lines+y;
+        const float dy=((float)y+0.5f)-horizonY;
+        const float dist=(dy>0.0f)?(camHeight*focalLength)/dy:maxDist;
+        if(dist>=maxDist){
+            l->enabled=0;
+            continue;
+        }
+        // Layer pixels per screen pixel at this distance
+        const float scale=dist/focalLength;
+        const float centreX=camX+(fwdX*dist);
+        const float centreY=camY+(fwdY*dist);
+        l->u=FIXED16(centreX+(rightX*scale*left));
+        l->v=FIXED16(centreY+(rightY*scale*left));
+        l->dudx=FIXED16(rightX*scale);
+        l->dvdx=FIXED16(rightY*scale);
+        l->enabled=1;
+    }
+}
+
+/// @brief Get how a screen line samples the layer, either from the line table, or from the layer's rotation/scale
+/// @return False if the line should not be drawn
+static inline bool getLayerLine(const TileLayer *tL, int y, LayerLineTransform *lt)
+{
+    if(tL->lineTransforms){
+        *lt=tL->lineTransforms[y];
+        return lt->enabled!=0;
+    }
+    // The layer position at the pivot, then step back to the centre of screen pixel 0 on this line
+    const float dx=0.5f-tL->pivotX;
+    const float dy=((float)y+0.5f)-tL->pivotY;
+    const float pu=tL->pivotX-(float)tL->x;
+    const float pv=tL->pivotY-(float)tL->y;
+    lt->u=FIXED16(pu+(tL->dudx*dx)+(tL->dudy*dy));
+    lt->v=FIXED16(pv+(tL->dvdx*dx)+(tL->dvdy*dy));
+    lt->dudx=FIXED16(tL->dudx);
+    lt->dvdx=FIXED16(tL->dvdx);
+    lt->enabled=1;
+    return true;
+}
+
+static inline int32_t wrapFixed(int64_t p, int32_t lim)
+{
+    // 32 bit modulo uses the hardware divider - 64 bit is a slow software routine on the Cortex-M33
+    int32_t r=fitsInt32(p)?((int32_t)p%lim):(int32_t)(p%lim);
+    return (r<0)?r+lim:r;
+}
+
+static void __no_inline_not_in_flash_func(blitTileLayerTransformed)(const TileLayer *tL)
+{
+    const uint8_t *defs=tL->tileDefPtr;
+    const uint8_t *mDefs=defs+(256*8);
+    const uint8_t *map=tL->tileMap;
+    uint8_t *spr=scratchPixRam;
+    uint8_t *smr=scratchMaskRam;
+    LayerLineTransform lt;
+
+    // The tile map is 512x512 pixels and always wraps, so positions are simply masked (unsigned maths wraps negatives too)
+    for(int y=0;y<SCREEN_HEIGHT_LINES;y++){
+        if(!getLayerLine(tL,y,&lt)){
+            spr+=SCREEN_WIDTH_CELLS;
+            smr+=SCREEN_WIDTH_CELLS;
+            continue;
+        }
+        uint32_t u=(uint32_t)lt.u;
+        uint32_t v=(uint32_t)lt.v;
+        const uint32_t du=(uint32_t)lt.dudx;
+        const uint32_t dv=(uint32_t)lt.dvdx;
+
+        if(dv==0){
+            // Not rotated on this line, so it reads a single pixel row of the map, and neighbouring pixels usually
+            // share a tile, so only look up the tile when the column changes
+            const uint32_t vi=v>>16;
+            const uint8_t *rowMap=map+((vi&0x1f8)<<3);
+            const uint8_t *rowDefs=defs+(vi&7);
+            const uint8_t *rowMDefs=mDefs+(vi&7);
+            uint32_t lastCol=0xffffffff;
+            uint32_t pb=0, mb=0xff;
+            for(int cx=0;cx<SCREEN_WIDTH_CELLS;cx++){
+                uint32_t pix=0, msk=0;
+                for(int b=0;b<8;b++){
+                    const uint32_t ui=u>>16;
+                    const uint32_t col=(ui>>3)&(TILE_LAYER_WIDTH-1);
+                    if(col!=lastCol){
+                        lastCol=col;
+                        const uint32_t tileOff=(uint32_t)rowMap[col]<<3;
+                        pb=rowDefs[tileOff];
+                        mb=rowMDefs[tileOff];
+                    }
+                    const uint32_t sh=(~ui)&7;
+                    pix=(pix<<1)|((pb>>sh)&1);
+                    msk=(msk<<1)|((mb>>sh)&1);
+                    u+=du;
+                }
+                *spr++=(uint8_t)pix;
+                *smr++=(uint8_t)msk;
+            }
+        }else{
+            for(int cx=0;cx<SCREEN_WIDTH_CELLS;cx++){
+                uint32_t pix=0, msk=0;
+                for(int b=0;b<8;b++){
+                    const uint32_t ui=u>>16;
+                    const uint32_t vi=v>>16;
+                    const uint32_t tileOff=((uint32_t)map[((vi&0x1f8)<<3)|((ui>>3)&(TILE_LAYER_WIDTH-1))]<<3)|(vi&7);
+                    const uint32_t sh=(~ui)&7;
+                    pix=(pix<<1)|((defs[tileOff]>>sh)&1);
+                    msk=(msk<<1)|((mDefs[tileOff]>>sh)&1);
+                    u+=du;
+                    v+=dv;
+                }
+                *spr++=(uint8_t)pix;
+                *smr++=(uint8_t)msk;
+            }
+        }
+    }
+
+    // Attributes are sampled at the centre of each 8x4 screen cell. Flash bit set means don't change the cell
+    uint8_t *aP=renderAttrBuffer;
+    for(int cy=0;cy<ATTR_HEIGHT_CELLS;cy++){
+        if(getLayerLine(tL,(cy*ATTR_HEIGHT_PIXELS)+(ATTR_HEIGHT_PIXELS/2),&lt)){
+            for(int cx=0;cx<SCREEN_WIDTH_CELLS;cx++){
+                const uint32_t px=(cx*8)+4;
+                const uint32_t ui=((uint32_t)lt.u+(px*(uint32_t)lt.dudx))>>16;
+                const uint32_t vi=((uint32_t)lt.v+(px*(uint32_t)lt.dvdx))>>16;
+                const uint8_t col=tL->attrMap[(((vi>>2)&(TILE_LAYER_ATTR_HEIGHT-1))*TILE_LAYER_WIDTH)+((ui>>3)&(TILE_LAYER_WIDTH-1))];
+                if((col&0x80)==0){
+                    aP[cx]=col;
+                }
+            }
+        }
+        aP+=SCREEN_WIDTH_CELLS;
+    }
+}
+
+static void __no_inline_not_in_flash_func(blitBitmapLayerTransformed)(const TileLayer *tL)
+{
+    const int charWidth=tL->bitmapCharWidth;
+    const int32_t limU=(charWidth*8)<<16;
+    const int32_t limV=tL->bitmapHeight<<16;
+    const bool wrap=(tL->layerType==LT_BITMAP_WRAP);
+    const uint8_t *bmp=tL->bitmapDefPtr;
+    LayerLineTransform lt;
+
+    if(limU==0 || limV==0){
+        return;
+    }
+
+    // Bitmap layers have no mask - set pixels are ORed onto the layers behind, as with the untransformed renderer
+    for(int y=0;y<SCREEN_HEIGHT_LINES;y++){
+        if(!getLayerLine(tL,y,&lt)){
+            continue;
+        }
+        uint8_t *spr=scratchPixRam+(y*SCREEN_WIDTH_CELLS);
+
+        if(wrap){
+            // Keep the position inside the bitmap, which only needs a single add/subtract per pixel as long as
+            // the step is smaller than the bitmap
+            int32_t u=wrapFixed(lt.u,limU);
+            int32_t v=wrapFixed(lt.v,limV);
+            const int32_t du=lt.dudx%limU;
+            const int32_t dv=lt.dvdx%limV;
+            for(int cx=0;cx<SCREEN_WIDTH_CELLS;cx++){
+                uint32_t pix=0;
+                for(int b=0;b<8;b++){
+                    const int32_t ui=u>>16;
+                    const uint8_t src=bmp[((v>>16)*charWidth)+(ui>>3)];
+                    pix=(pix<<1)|((src>>((~ui)&7))&1);
+                    u+=du;
+                    if(u>=limU){
+                        u-=limU;
+                    }else if(u<0){
+                        u+=limU;
+                    }
+                    v+=dv;
+                    if(v>=limV){
+                        v-=limV;
+                    }else if(v<0){
+                        v+=limV;
+                    }
+                }
+                spr[cx]|=(uint8_t)pix;
+            }
+        }else{
+            // Only visit the pixels on this line that land inside the bitmap
+            int start=0, end=SCREEN_WIDTH_PIXELS;
+            clipSpan(lt.u,lt.dudx,limU,&start,&end);
+            clipSpan(lt.v,lt.dvdx,limV,&start,&end);
+            int32_t u=(int32_t)(lt.u+((int64_t)start*lt.dudx));
+            int32_t v=(int32_t)(lt.v+((int64_t)start*lt.dvdx));
+            int x=start;
+            while(x<end){
+                const int cell=x>>3;
+                const int cellEnd=((cell+1)*8<end)?(cell+1)*8:end;
+                uint32_t pix=0;
+                for(;x<cellEnd;x++){
+                    const int32_t ui=u>>16;
+                    const uint8_t src=bmp[((v>>16)*charWidth)+(ui>>3)];
+                    if((src<<(ui&7))&0x80){
+                        pix|=0x80>>(x&7);
+                    }
+                    u+=lt.dudx;
+                    v+=lt.dvdx;
+                }
+                spr[cell]|=(uint8_t)pix;
+            }
+        }
+    }
+
+    // Attributes are sampled at the centre of each 8x4 screen cell
+    if(tL->globalAttr==0 && tL->attrDefPtr==NULL){
+        return;
+    }
+    uint8_t *aP=renderAttrBuffer;
+    for(int cy=0;cy<ATTR_HEIGHT_CELLS;cy++){
+        if(getLayerLine(tL,(cy*ATTR_HEIGHT_PIXELS)+(ATTR_HEIGHT_PIXELS/2),&lt)){
+            for(int cx=0;cx<SCREEN_WIDTH_CELLS;cx++){
+                const int64_t px=(cx*8)+4;
+                int64_t u=lt.u+(px*lt.dudx);
+                int64_t v=lt.v+(px*lt.dvdx);
+                if(wrap){
+                    u=wrapFixed(u,limU);
+                    v=wrapFixed(v,limV);
+                }else if(u<0 || u>=limU || v<0 || v>=limV){
+                    continue;
+                }
+                const uint8_t col=(tL->globalAttr>0)?tL->globalAttr:tL->attrDefPtr[(((int32_t)(v>>16)>>2)*charWidth)+((int32_t)(u>>16)>>3)];
+                if((col&0x80)==0){
+                    aP[cx]=col;
+                }
+            }
+        }
+        aP+=SCREEN_WIDTH_CELLS;
+    }
 }

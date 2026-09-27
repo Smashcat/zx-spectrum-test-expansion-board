@@ -18,6 +18,7 @@
 #include "engine/TileLayer.h"
 #include "engine/Compositor.h"
 #include "engine/inputDevice.h"
+#include "engine/audio.h"
 #include "engine/funcs.h"
 
 #include "gameStrings.h"
@@ -27,6 +28,13 @@
 /// @param  
 void demoLoop(void);
 void gameTitle(void);
+
+/// @brief Set up the Mode 7 test scene (press M on the title screen): a perspective floor, wrapping sky and
+/// rotating/scaling sprites
+void setupMode7Test(void);
+
+/// @brief Per-frame update of the Mode 7 test scene. O/P turn, Q/A speed, W/S camera height, SPACE returns to the title
+void mode7Test(void);
 
 /// @brief Draw large font characters (8x16) to tilemap
 /// @param layerIX The layer index to draw to

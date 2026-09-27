@@ -60,6 +60,7 @@ add_executable(
     engine/palette.c 
     engine/inputDevice.c
     engine/particles.c
+    engine/audio.c
     gameFunc.c
     gameStrings.c
     game.c 

@@ -8,6 +8,7 @@
 #include "displayMemoryOffsets.h"
 #include "spriteDefs.h"
 #include "palette.h"
+#include "fixedMath.h"
 
 /// @brief Sizes can be set since not all sprites need to be the maximum size, for example a bullet does not need to be 24x24, and would be wasteful in terms of flash space and processing
 typedef enum SpriteSize {
@@ -89,10 +90,21 @@ typedef struct Sprite {
     U32u8          scaledHeightAdder;
     // Useful for staggering effects with sprites
     int             delay;
+    // Rotation in radians, clockwise on screen (set with setSpriteRotation)
+    float           angle;
+    // If not zero, sprite is rotated (and possibly scaled), and drawn with the transformed renderer
+    int16_t         isRotated;
+    // Inverse transform for rotated sprites - sprite pixels per screen pixel, as 16.16 fixed point for drawing...
+    int32_t         invDudx, invDudy, invDvdx, invDvdy;
+    // ...and float for placing attributes
+    float           fDudx, fDudy, fDvdx, fDvdy;
 } Sprite;
 
 extern Sprite *spriteList;
 extern int totalSprites;
+
+/// @brief INTERNAL - recalculates the transform and bounding box of a rotated sprite after its size, scale or angle change
+void updateSpriteTransform(Sprite *s);
 
 static inline void setSpriteScale(int ix, float xScale, float yScale)
 {
@@ -117,6 +129,9 @@ static inline void setSpriteScale(int ix, float xScale, float yScale)
     }
     s->offX=s->x-(s->scaledWidth/2);
     s->offY=s->y-(s->scaledHeight/2);
+    if(s->isRotated){
+        updateSpriteTransform(s);
+    }
 }
 
 static inline void setSpriteDir(int ix, float xDir, float yDir)
@@ -156,6 +171,13 @@ static inline void setSpritePalette(int ix, int p)
     spriteList[ix].paletteIX=p;
 }
 
+/// @brief Rotate a sprite around its centre. Works together with setSpriteScale. An angle of zero uses the
+/// faster unrotated renderers. Attributes are only set on the 8x4 cells the rotated sprite covers, using the
+/// palette row for the part of the sprite at the centre of each cell
+/// @param ix Sprite index
+/// @param angle Rotation in radians, clockwise on screen
+void setSpriteRotation(int ix, float angle);
+
 void initSprites(int numSprites);
 void deleteSprites(void);
 void setSpriteSize(int ix, SpriteSize st);
@@ -176,3 +198,7 @@ void blitSprite24ToRenderBuffer(Sprite *s);
 /// @brief INTERNAL - blits a scaled sprite to the render buffer
 /// @param s Sprite pointer
 void blitSpriteScaledToRenderBuffer(Sprite *s);
+
+/// @brief INTERNAL - blits a rotated (and possibly scaled) sprite to the render buffer
+/// @param s Sprite pointer
+void blitSpriteTransformedToRenderBuffer(Sprite *s);

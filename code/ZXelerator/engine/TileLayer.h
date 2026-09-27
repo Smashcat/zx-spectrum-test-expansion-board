@@ -7,8 +7,10 @@
 #include <memory.h>
 #include "pico/stdlib.h"
 #include "pico.h"
+#include <math.h>
 #include "shared.h"
 #include "displayMemoryOffsets.h"
+#include "fixedMath.h"
 
 /// @brief The layer's type, LT_TILE is a tilemap, LT_BITMAP holds a bitmap image. LT_BITMAP_WRAP allows the bitmap to repeat when exceeding its dimensions while scrolling (tilemaps always wrap)
 typedef enum LayerType {
@@ -16,6 +18,18 @@ typedef enum LayerType {
     LT_BITMAP,
     LT_BITMAP_WRAP
 } LayerType;
+
+/// @brief How one screen line of a transformed layer samples the layer (like a SNES Mode 7 HDMA table entry).
+/// Positions are in layer pixels, 16.16 fixed point (see FIXED16). Screen pixel x on this line samples the
+/// layer at (u+(x*dudx), v+(x*dvdx)), so u,v should be the layer position at the centre of screen pixel 0
+typedef struct LayerLineTransform {
+    int32_t u;
+    int32_t v;
+    int32_t dudx;
+    int32_t dvdx;
+    /// @brief Zero to leave this line of the layer blank (transparent), e.g. above the horizon
+    int32_t enabled;
+} LayerLineTransform;
 
 typedef struct TileLayer {
     /// @brief X position, relative to screen in pixels (if over 254, or under -511 layer not drawn)
@@ -40,6 +54,19 @@ typedef struct TileLayer {
     LayerType layerType;
     /// @brief If no attribute map supplied when switching layer to a bitmap type, then this is used to set the global background when drawing the bitmap
     uint8_t globalAttr;
+    /// @brief True if rotated or scaled with setLayerTransform (the fast scrolling-only renderer is used otherwise)
+    bool transformed;
+    /// @brief Rotation in radians (clockwise on screen)
+    float angle;
+    float scaleX;
+    float scaleY;
+    /// @brief Screen position the layer rotates/scales around
+    float pivotX;
+    float pivotY;
+    /// @brief Inverse transform (layer pixels per screen pixel), set from angle and scale
+    float dudx, dudy, dvdx, dvdy;
+    /// @brief If set, one entry per screen line, overriding the rotation/scale and position (for Mode 7 style effects)
+    const LayerLineTransform *lineTransforms;
 } TileLayer;
 
 /// @brief Initialise all tile layers, setting them off of screen, clearing tiles to zero, with attributes set to white ink on black background
@@ -116,5 +143,37 @@ void blitLayerToScratchBuffers(int layerIX);
 /// @brief Draws the bitmap layer to the scratch buffers, ready to move to the render buffer. Bitmaps wrap in both axis
 /// @param layerIX The layer to draw
 void blitBitmapLayerToScratchBuffers(int layerIX);
+
+/// @brief Rotate and/or scale a layer around its pivot point (the screen centre unless changed with setLayerPivot).
+/// The layer position set with setLayerPos still scrolls the layer. Tile layers and LT_BITMAP_WRAP layers repeat
+/// forever, LT_BITMAP layers are transparent outside the bitmap. With no rotation and a scale of 1, the fast
+/// scrolling renderer is used
+/// @param layerIX The layer to update
+/// @param angle Rotation in radians, clockwise on screen
+/// @param scaleX Horizontal scale (2.0 doubles the size on screen)
+/// @param scaleY Vertical scale
+void setLayerTransform(int layerIX, float angle, float scaleX, float scaleY);
+
+/// @brief Set the screen position a layer rotates and scales around (defaults to the screen centre)
+void setLayerPivot(int layerIX, float x, float y);
+
+/// @brief Remove any rotation, scaling and line transforms from the layer
+void clearLayerTransform(int layerIX);
+
+/// @brief Use a table of per-line transforms for the layer, for Mode 7 style effects (perspective floors, wobbles etc).
+/// While set, the layer position and setLayerTransform are ignored
+/// @param layerIX The layer to update
+/// @param lines SCREEN_HEIGHT_LINES (192) entries, which must stay valid while in use (not copied). NULL to stop using a table
+void setLayerLineTransforms(int layerIX, const LayerLineTransform *lines);
+
+/// @brief Fill a line transform table with a Mode 7 style perspective floor, viewed from a camera above the layer
+/// @param lines Table of SCREEN_HEIGHT_LINES entries to fill
+/// @param camX Camera X position on the layer, in layer pixels
+/// @param camY Camera Y position on the layer, in layer pixels
+/// @param angle Camera heading in radians - 0 looks towards the top of the layer (negative Y), increasing clockwise
+/// @param camHeight Camera height above the layer, in pixels
+/// @param horizonY Screen line of the horizon - lines above it are left blank, so layers behind show through
+/// @param focalLength Distance from the camera to the projection plane, in pixels (around 128 gives a 90 degree field of view)
+void buildLayerPerspective(LayerLineTransform *lines, float camX, float camY, float angle, float camHeight, float horizonY, float focalLength);
 
 extern TileLayer tileLayer[MAX_TILE_LAYERS];

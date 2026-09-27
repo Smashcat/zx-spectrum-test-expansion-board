@@ -31,6 +31,9 @@ void gameUpdateLoop(void){
                 case GS_title:
                     gameTitle();
                 break;
+                case GS_mode7Test:
+                    mode7Test();
+                break;
                 default:
                 break;
             }
@@ -47,6 +50,9 @@ void setState(GameState newGS)
     switch(newGS){
         case GS_title:
         {
+            // Start from clean layers, in case we're returning from another state (e.g. with rotated layers)
+            initLayers();
+
             // Layer 0 used for debugging
             setLayerPos(0,0,24*8);
             setTileDefSet(0,defaultTileDef);
@@ -99,6 +105,9 @@ void setState(GameState newGS)
                 spriteList[n].delay=(n*2);
             }
         }
+        break;
+        case GS_mode7Test:
+            setupMode7Test();
         break;
         default:
         break;
