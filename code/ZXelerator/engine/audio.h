@@ -26,6 +26,28 @@
 #define AUDIO_OUT_OFF           0x51    // out (c),d
 #define AUDIO_OUT_ON            0x59    // out (c),e
 
+// When each list runs, in T-states from the interrupt at the start of the frame (from sp48.asm and push_map.html)
+#define AUDIO_Z80_CLOCK_HZ      3500000
+#define AUDIO_TSTATES_PER_FRAME (69888*2)
+// IM1 ack (13) + reti (14) + ld a,colorGreen (7), then out (0xfe),a sets the border and speaker off
+#define AUDIO_BORDER_OUT_START_T    45
+// ...+ call pop_push_even (17) + ld (spBackupAddr),sp (20) + ld bc,0xfe (10) + ld de,0x0010 (10)
+#define AUDIO_LIST0_START_T     102
+// The end-of-frame list runs up to just before the ret and the next HALT. The exact spare time depends on the
+// template (red border area), so this is an estimate - a few hundred T-states either way won't be audible
+#define AUDIO_LIST1_END_SLACK_T 200
+#define AUDIO_LIST1_START_T     (AUDIO_TSTATES_PER_FRAME-(AUDIO_LIST1_LEN*AUDIO_TSTATES_PER_SAMPLE)-AUDIO_LIST1_END_SLACK_T)
+// ld sp,(spBackupAddr) (20) + ret (10) + ld a,colorRed (7), then out (0xfe),a sets the speaker off again
+#define AUDIO_BORDER_OUT_END_DELAY_T 37
+
+/// @brief When a sample plays, in T-states from the start of the frame
+static inline uint32_t audioSampleTState(int ix)
+{
+    return (ix<AUDIO_LIST0_LEN)?
+        (uint32_t)(AUDIO_LIST0_START_T+(ix*AUDIO_TSTATES_PER_SAMPLE)):
+        (uint32_t)(AUDIO_LIST1_START_T+((ix-AUDIO_LIST0_LEN)*AUDIO_TSTATES_PER_SAMPLE));
+}
+
 /// @brief Set a single beeper sample in the frame currently being generated (the write bank).
 /// Note the write bank still holds the audio from 2 frames ago, so every sample should be written each
 /// frame (use clearAudio() first if only setting some of them)
@@ -35,6 +57,10 @@ void setAudioBit(int ix, bool on);
 
 /// @brief Set every beeper sample in the frame currently being generated to off
 void clearAudio(void);
+
+/// @brief Set every beeper sample in every ASM bank to off - use when stopping sound, so the bank being
+/// displayed doesn't keep playing the last frame's audio
+void clearAudioAllBanks(void);
 
 /// @brief Read back a beeper sample from an ASM bank
 /// @param bankIX The ram bank to read from

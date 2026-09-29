@@ -65,8 +65,16 @@ typedef struct TileLayer {
     float pivotY;
     /// @brief Inverse transform (layer pixels per screen pixel), set from angle and scale
     float dudx, dudy, dvdx, dvdy;
+    /// @brief Forward transform (screen pixels per layer pixel), for layerToScreen
+    float fwdXX, fwdXY, fwdYX, fwdYY;
     /// @brief If set, one entry per screen line, overriding the rotation/scale and position (for Mode 7 style effects)
     const LayerLineTransform *lineTransforms;
+    /// @brief Bitmap layers only: if true, the bitmap hides the layers behind it (inside the bitmap's area), instead of
+    /// its set pixels being ORed over them
+    bool opaque;
+    /// @brief Transformed bitmap layers with per cell attributes only: resample by colour (default true) - see
+    /// setLayerColourAware
+    bool colourAware;
 } TileLayer;
 
 /// @brief Initialise all tile layers, setting them off of screen, clearing tiles to zero, with attributes set to white ink on black background
@@ -159,6 +167,66 @@ void setLayerPivot(int layerIX, float x, float y);
 
 /// @brief Remove any rotation, scaling and line transforms from the layer
 void clearLayerTransform(int layerIX);
+
+/// @brief Bitmap layers only: make the bitmap hide the layers behind it (true), or OR its set pixels over them (false,
+/// the default). Useful for a bitmap moving in front of other layers, e.g. a screen transition
+void setLayerOpaque(int layerIX, bool opaque);
+
+/// @brief Transformed (scaled/rotated/line transformed) bitmap layers with per cell attributes: when on (the default),
+/// each pixel is drawn by its actual colour - the ink or paper of its source cell - set as ink if that colour is
+/// closer to the destination cell's ink than its paper. This avoids pixels showing in the wrong colours where the
+/// source's 8x4 cells no longer line up with the screen's (e.g. solid "black ink" areas turning white), at roughly
+/// 1.5-2x the cost per pixel. Off resamples the pixels and attributes separately
+void setLayerColourAware(int layerIX, bool colourAware);
+
+// ---------------------------------------------------------------------------
+// Collision support - tile layers only (bitmap layers are decorative)
+// ---------------------------------------------------------------------------
+
+/// @brief True if the layer is a tile layer that is currently drawn (so things can collide with it)
+bool isLayerCollidable(int layerIX);
+
+/// @brief The tile graphics' pixels (not the masks) of a tile layer, as drawn at screen pixels x to x+31 on screen line y
+/// (rotated/scaled/line transformed layers included)
+/// @return 32 pixels, screen pixel x in bit 31. Zero if the layer isn't collidable, or y is off screen
+uint32_t getLayerPixels32(int layerIX, int x, int y);
+
+/// @brief As getLayerPixels32, but only n pixels (1 to 32) - cheaper when only a few are needed, especially on
+/// rotated layers, where each pixel is sampled separately
+/// @return The pixels in the top n bits (screen pixel x in bit 31)
+uint32_t getLayerPixelsN(int layerIX, int x, int y, int n);
+
+/// @brief The tile graphics' pixels of a tile layer's tile map, in the layer's own pixel coordinates (0-511, wrapping),
+/// whatever its position, rotation or scale
+/// @return n pixels (1 to 32) in the top n bits (layer pixel x in bit 31). Zero if it isn't a tile layer
+uint32_t getLayerMapPixels(int layerIX, int x, int y, int n);
+
+/// @brief True if every tile of a tile layer's map under an area in layer pixel coordinates (inclusive) is empty
+bool isLayerMapAreaEmpty(int layerIX, int x0, int y0, int x1, int y1);
+
+/// @brief Convert a screen position to the layer's own pixel coordinates, for scrolled, rotated and scaled layers (not
+/// line transformed ones). Positions are continuous: pixel n covers n to n+1
+void screenToLayer(int layerIX, float x, float y, float *u, float *v);
+
+/// @brief Convert a position in the layer's own pixel coordinates to the screen (see screenToLayer)
+void layerToScreen(int layerIX, float u, float v, float *x, float *y);
+
+/// @brief Convert a direction/velocity on screen to the layer's coordinates (rotated and scaled, not moved)
+void screenToLayerVector(int layerIX, float dx, float dy, float *du, float *dv);
+
+/// @brief Convert a direction/velocity in the layer's coordinates to the screen (rotated and scaled, not moved)
+void layerToScreenVector(int layerIX, float du, float dv, float *dx, float *dy);
+
+/// @brief Which tile of a tile layer is drawn at a screen pixel
+/// @return False if the layer isn't collidable, or the pixel is off screen or not on the layer
+bool getLayerTileAt(int layerIX, int x, int y, int *tileX, int *tileY);
+
+/// @brief True if a tile of the layer's current tile set has no pixels set (used to skip empty areas quickly)
+bool isLayerTileEmpty(int layerIX, int tileX, int tileY);
+
+/// @brief True if every tile under a screen area (x0,y0 to x1,y1 inclusive) is empty, so nothing there can collide.
+/// Only checked for scrolled (not transformed) layers - returns false otherwise
+bool isLayerAreaEmpty(int layerIX, int x0, int y0, int x1, int y1);
 
 /// @brief Use a table of per-line transforms for the layer, for Mode 7 style effects (perspective floors, wobbles etc).
 /// While set, the layer position and setLayerTransform are ignored

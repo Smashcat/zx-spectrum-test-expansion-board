@@ -10,6 +10,23 @@
 #include "palette.h"
 #include "fixedMath.h"
 
+// ---------------------------------------------------------------------------
+// Collisions - flags for setSpriteCollisions (combine with |)
+// ---------------------------------------------------------------------------
+#define MAX_COLLISION_HITS      16
+#define COLLIDE_NONE            0x00
+/// @brief Collide with the tile layer drawn just before the sprite - the layer it's drawn over (setSpriteLayer).
+/// Layers are drawn back to front, with each layer's sprites and particles drawn straight after it
+#define COLLIDE_LAYER           0x01
+/// @brief Collide with other sprites that also have COLLIDE_SPRITES
+#define COLLIDE_SPRITES         0x02
+
+/// @brief A tile a sprite collided with - its position in the layer's tile map
+typedef struct TileHit {
+    uint8_t x;
+    uint8_t y;
+} TileHit;
+
 /// @brief Sizes can be set since not all sprites need to be the maximum size, for example a bullet does not need to be 24x24, and would be wasteful in terms of flash space and processing
 typedef enum SpriteSize {
     SIZE_8X4,
@@ -98,6 +115,17 @@ typedef struct Sprite {
     int32_t         invDudx, invDudy, invDvdx, invDvdy;
     // ...and float for placing attributes
     float           fDudx, fDudy, fDvdx, fDvdy;
+
+    // What this sprite collides with (COLLIDE_ flags), set with setSpriteCollisions
+    uint8_t         collideWith;
+    // Collisions found in the last frame drawn (pixel accurate - the sprite's pixels, not its mask, against the other
+    // sprites' pixels and the tile graphics). Filled in by compositeScene, up to MAX_COLLISION_HITS of each
+    uint8_t         spriteHitCount;
+    uint8_t         tileHitCount;
+    // Indexes of the sprites hit
+    int16_t         spriteHits[MAX_COLLISION_HITS];
+    // Tiles hit in the layer the sprite is drawn over (each tile listed once)
+    TileHit         tileHits[MAX_COLLISION_HITS];
 } Sprite;
 
 extern Sprite *spriteList;
@@ -105,6 +133,21 @@ extern int totalSprites;
 
 /// @brief INTERNAL - recalculates the transform and bounding box of a rotated sprite after its size, scale or angle change
 void updateSpriteTransform(Sprite *s);
+
+/// @brief INTERNAL - for a rotated sprite, the sprite position (16.16) sampled at the centre of screen pixel (x0,y0).
+/// Shared by the renderer and collision tests, so both sample exactly the same pixels
+void spriteTransformOrigin(const Sprite *s, int x0, int y0, int32_t *u, int32_t *v);
+
+/// @brief Set what a sprite collides with. Results are in the sprite's spriteHits/tileHits after each compositeScene
+/// @param ix Sprite index
+/// @param flags COLLIDE_ flags, e.g. COLLIDE_SPRITES|COLLIDE_LAYER (COLLIDE_NONE to stop)
+static inline void setSpriteCollisions(int ix, uint8_t flags)
+{
+    Sprite *s=spriteList+ix;
+    s->collideWith=flags;
+    s->spriteHitCount=0;
+    s->tileHitCount=0;
+}
 
 static inline void setSpriteScale(int ix, float xScale, float yScale)
 {

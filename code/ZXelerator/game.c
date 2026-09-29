@@ -26,6 +26,7 @@ void gameUpdateLoop(void){
         __dsb(); // Make sure memory is consistent
 
         if(gv.frameRendered>25){
+            const uint64_t frameStart=time_us_64();
             initScratchBuffers(true);
             switch(gs){
                 case GS_title:
@@ -34,10 +35,17 @@ void gameUpdateLoop(void){
                 case GS_mode7Test:
                     mode7Test();
                 break;
+                case GS_audioTest:
+                    audioTest();
+                break;
+                case GS_collisionTest:
+                    collisionTest();
+                break;
                 default:
                 break;
             }
             compositeScene();
+            gv.frameTimeUs=(uint32_t)(time_us_64()-frameStart);
             flipBank=1;
             __dsb();
         }
@@ -108,6 +116,12 @@ void setState(GameState newGS)
         break;
         case GS_mode7Test:
             setupMode7Test();
+        break;
+        case GS_audioTest:
+            setupAudioTest();
+        break;
+        case GS_collisionTest:
+            setupCollisionTest();
         break;
         default:
         break;

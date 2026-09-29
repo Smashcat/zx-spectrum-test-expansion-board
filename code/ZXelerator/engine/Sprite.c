@@ -28,6 +28,9 @@ void initSprites(int numSprites)
         s->angle=0.0f;
         s->isRotated=0;
         s->delay=0;
+        s->collideWith=COLLIDE_NONE;
+        s->spriteHitCount=0;
+        s->tileHitCount=0;
     }
 }
 
@@ -386,7 +389,8 @@ void blitSpriteScaledToRenderBuffer(Sprite *s)
     const uint8_t *mDefBase=(uint8_t *)s->maskPtr+(s->frame*s->height*s->bytesPerRow);      // Point to start of sprite mask data
     const uint8_t *apSrc=palette[s->paletteIX];
     const int endLine=(sY+sHeight>SCREEN_HEIGHT_LINES?SCREEN_HEIGHT_LINES:sY+sHeight);
-    const int sWidthChars=(sWidth>>3)+1;
+    // Bytes the scaled line covers, including the start position within the first byte
+    const int sWidthChars=((s->offX&0x07)+sWidth+7)>>3;
 
     U32u8 xAdd,yAdd;
     yAdd.u32 = 0;
@@ -477,6 +481,18 @@ void blitSpriteScaledToRenderBuffer(Sprite *s)
 }
 
 
+// Not inlined, so the renderer and collision tests run the same compiled code, and get bit identical results (the
+// compiler may otherwise combine the multiply-adds differently in each place)
+__attribute__((noinline)) void spriteTransformOrigin(const Sprite *s, int x0, int y0, int32_t *u, int32_t *v)
+{
+    const float centreU=(float)s->width*0.5f;
+    const float centreV=(float)s->height*0.5f;
+    const float relX=((float)x0+0.5f)-(float)s->x;
+    const float relY=((float)y0+0.5f)-(float)s->y;
+    *u=FIXED16(centreU+(s->fDudx*relX)+(s->fDudy*relY));
+    *v=FIXED16(centreV+(s->fDvdx*relX)+(s->fDvdy*relY));
+}
+
 void __no_inline_not_in_flash_func(blitSpriteTransformedToRenderBuffer)(Sprite *s)
 {
     const int w=s->width;
@@ -513,12 +529,9 @@ void __no_inline_not_in_flash_func(blitSpriteTransformedToRenderBuffer)(Sprite *
     }
 
     // Sprite position sampled at the centre of screen pixel (x0,y0), stepped along each line and down each row
-    const float centreU=(float)w*0.5f;
     const float centreV=(float)h*0.5f;
-    const float relX=((float)x0+0.5f)-(float)s->x;
-    const float relY=((float)y0+0.5f)-(float)s->y;
-    int32_t rowU=FIXED16(centreU+(s->fDudx*relX)+(s->fDudy*relY));
-    int32_t rowV=FIXED16(centreV+(s->fDvdx*relX)+(s->fDvdy*relY));
+    int32_t rowU, rowV;
+    spriteTransformOrigin(s,x0,y0,&rowU,&rowV);
 
     uint8_t *rP=(uint8_t *)renderBuffer+(y0*SCREEN_WIDTH_CELLS);
     uint32_t cellsUsed=0;   // One bit per character column the sprite drew solid pixels in, for the current attribute row

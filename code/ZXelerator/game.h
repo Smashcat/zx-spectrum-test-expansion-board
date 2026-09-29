@@ -20,6 +20,7 @@
 #include "engine/Compositor.h"
 #include "engine/inputDevice.h"
 #include "engine/audio.h"
+#include "engine/synth.h"
 #include "engine/funcs.h"
 #include "gameFunc.h"
 

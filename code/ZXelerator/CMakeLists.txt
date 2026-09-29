@@ -61,6 +61,8 @@ add_executable(
     engine/inputDevice.c
     engine/particles.c
     engine/audio.c
+    engine/synth.c
+    engine/collision.c
     gameFunc.c
     gameStrings.c
     game.c 

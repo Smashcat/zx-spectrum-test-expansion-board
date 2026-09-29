@@ -46,6 +46,7 @@ add_executable(
     ZXeleratorPC
     pc_main.c
     pc_audio.c
+    pc_video.c
     ${ZX_ROOT}/engine/resetData.c
     ${ZX_ROOT}/engine/shared.c
     ${ZX_ROOT}/engine/spriteDefs.c
@@ -59,6 +60,8 @@ add_executable(
     ${ZX_ROOT}/engine/inputDevice.c
     ${ZX_ROOT}/engine/particles.c
     ${ZX_ROOT}/engine/audio.c
+    ${ZX_ROOT}/engine/synth.c
+    ${ZX_ROOT}/engine/collision.c
     ${ZX_ROOT}/gameFunc.c
     ${ZX_ROOT}/gameStrings.c
     ${ZX_ROOT}/game.c
@@ -110,11 +113,22 @@ add_executable(
     ${ZX_ROOT}/engine/Compositor.c
     ${ZX_ROOT}/engine/palette.c
     ${ZX_ROOT}/engine/particles.c
+    ${ZX_ROOT}/engine/collision.c
 )
 target_include_directories(ZXeleratorTests PRIVATE ${CMAKE_CURRENT_LIST_DIR}/include ${ZX_ROOT} ${ZX_ROOT}/engine)
+# The tests are built with AddressSanitizer, so any read or write outside a buffer (which the pixel
+# comparisons can't see) fails the run
 if(MSVC)
-    target_compile_options(ZXeleratorTests PRIVATE /FI${CMAKE_CURRENT_LIST_DIR}/pc_compat.h /J /W3 /utf-8 /wd4244 /wd4305 /wd4267)
+    target_compile_options(ZXeleratorTests PRIVATE /FI${CMAKE_CURRENT_LIST_DIR}/pc_compat.h /J /W3 /utf-8 /wd4244 /wd4305 /wd4267 /fsanitize=address /Zi)
+    target_link_options(ZXeleratorTests PRIVATE /INCREMENTAL:NO /DEBUG)
+    # The sanitizer runtime DLL lives next to the compiler - copy it next to the test executable
+    get_filename_component(MSVC_BIN_DIR ${CMAKE_C_COMPILER} DIRECTORY)
+    add_custom_command(
+        TARGET ZXeleratorTests POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${MSVC_BIN_DIR}/clang_rt.asan_dynamic-x86_64.dll $<TARGET_FILE_DIR:ZXeleratorTests>
+    )
 else()
-    target_compile_options(ZXeleratorTests PRIVATE -include ${CMAKE_CURRENT_LIST_DIR}/pc_compat.h -funsigned-char -Wall -Wextra)
+    target_compile_options(ZXeleratorTests PRIVATE -include ${CMAKE_CURRENT_LIST_DIR}/pc_compat.h -funsigned-char -Wall -Wextra -fsanitize=address)
+    target_link_options(ZXeleratorTests PRIVATE -fsanitize=address)
     target_link_libraries(ZXeleratorTests PRIVATE m)
 endif()

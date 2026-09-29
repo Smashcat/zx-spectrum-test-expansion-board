@@ -23,17 +23,29 @@ void setAudioBit(int ix, bool on)
     }
 }
 
-void clearAudio(void)
+static void clearAudioBank(int bankIX)
 {
-    uint8_t *p=ram[writeBank][0]+AUDIO_LIST0_OFFSET+1;
+    uint8_t *p=ram[bankIX][0]+AUDIO_LIST0_OFFSET+1;
     for(int n=0;n<AUDIO_LIST0_LEN;n++){
         *p=AUDIO_OUT_OFF;
         p+=2;
     }
-    p=ram[writeBank][1]+AUDIO_LIST1_OFFSET+1;
+    p=ram[bankIX][1]+AUDIO_LIST1_OFFSET+1;
     for(int n=0;n<AUDIO_LIST1_LEN;n++){
         *p=AUDIO_OUT_OFF;
         p+=2;
+    }
+}
+
+void clearAudio(void)
+{
+    clearAudioBank(writeBank);
+}
+
+void clearAudioAllBanks(void)
+{
+    for(int n=0;n<TOTAL_RAMBANKS;n++){
+        clearAudioBank(n);
     }
 }
 

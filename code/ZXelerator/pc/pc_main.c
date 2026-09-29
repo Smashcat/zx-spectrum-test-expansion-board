@@ -12,6 +12,7 @@
 //   F5             - pause / resume
 //   F6             - step a single frame while paused
 //   Tab (hold)     - fast forward (no frame rate limit)
+//   F9             - start / stop recording video (recording_YYYYMMDD_HHMMSS.avi in the current directory)
 //   F12            - save a screenshot (screenshot_NNNNN.bmp in the current directory)
 //   Esc            - quit
 //
@@ -23,13 +24,18 @@
 //                           names such as M, Space, Left - for scripted tests, e.g. --hold 40 45 M
 //   --mute                  start with audio muted
 //   --wav FILE.wav          record the beeper audio to a WAV file
+//   --record FILE.avi       record video (with audio) from the start, at exactly 25fps - one video frame per game
+//                           frame, whatever speed the emulator runs at (works with --fast too)
+//   --record-scale N        pixel scale for recordings (default 1 = 320x256, the screen and border)
 
 #include <SDL.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include "game.h"
 #include "pc_audio.h"
+#include "pc_video.h"
 
 #define FRAME_RATE      25      // The Z80 display code takes 2 TV frames per game frame
 #define BORDER          32
@@ -46,6 +52,7 @@ static bool showRenderBuffer=false;
 static bool paused=false;
 static bool stepFrame=false;
 static bool alwaysFast=false;
+static int recordScale=1;
 
 #define MAX_SHOTS 16
 typedef struct Shot {
@@ -169,6 +176,16 @@ static void handleEvents(void)
                     case SDLK_F6:
                         stepFrame=true;
                         break;
+                    case SDLK_F9:
+                        if(pcVideoRecording()){
+                            pcVideoStop();
+                        }else{
+                            char path[64];
+                            const time_t t=time(NULL);
+                            strftime(path,sizeof(path),"recording_%Y%m%d_%H%M%S.avi",localtime(&t));
+                            pcVideoStart(path,recordScale);
+                        }
+                        break;
                     case SDLK_F12:
                     {
                         char path[64];
@@ -241,8 +258,9 @@ static void updateStats(uint64_t now)
     const double fps=(double)statsFrames*(double)perfFreq/(double)(now-statsStartTime);
     const double avgMs=statsFrames?(1000.0*(double)workTimeTotal/(double)perfFreq)/statsFrames:0.0;
     const double maxMs=1000.0*(double)workTimeMax/(double)perfFreq;
-    snprintf(title,sizeof(title),"ZXelerator PC - %.1f fps - game+composite %.2fms avg, %.2fms max (PC time) - %s%s",
-        fps,avgMs,maxMs,showRenderBuffer?"render buffer":"ASM bank",paused?" - PAUSED":"");
+    snprintf(title,sizeof(title),"ZXelerator PC - %.1f fps - game+composite %.2fms avg, %.2fms max (PC time) - %s%s%s",
+        fps,avgMs,maxMs,showRenderBuffer?"render buffer":"ASM bank",paused?" - PAUSED":"",
+        pcVideoRecording()?" - RECORDING (F9 to stop)":"");
     SDL_SetWindowTitle(window,title);
     statsStartTime=now;
     statsFrames=0;
@@ -302,6 +320,11 @@ void pc_waitForFrame(void)
 
     pcAudioFrame(readBank);
     drawScreen();
+    if(pcVideoRecording()){
+        int numSamples;
+        const int16_t *samples=pcAudioFrameSamples(&numSamples);
+        pcVideoFrame(screenPixels,zxColours[0],samples,numSamples);
+    }
     for(int n=0;n<numShots;n++){
         if(shots[n].frame==frameDisplayed){
             saveScreenshot(shots[n].path);
@@ -341,6 +364,7 @@ uint64_t time_us_64(void)
 
 static void pcShutdown(void)
 {
+    pcVideoStop();
     pcAudioShutdown();
     if(screenTexture){
         SDL_DestroyTexture(screenTexture);
@@ -358,6 +382,7 @@ int main(int argc, char *argv[])
 {
     bool startMuted=false;
     const char *wavPath=NULL;
+    const char *recordPath=NULL;
     for(int n=1;n<argc;n++){
         if(strcmp(argv[n],"--shot")==0 && n+2<argc && numShots<MAX_SHOTS){
             shots[numShots].frame=(uint32_t)strtoul(argv[n+1],NULL,10);
@@ -380,6 +405,10 @@ int main(int argc, char *argv[])
             startMuted=true;
         }else if(strcmp(argv[n],"--wav")==0 && n+1<argc){
             wavPath=argv[++n];
+        }else if(strcmp(argv[n],"--record")==0 && n+1<argc){
+            recordPath=argv[++n];
+        }else if(strcmp(argv[n],"--record-scale")==0 && n+1<argc){
+            recordScale=atoi(argv[++n]);
         }else{
             fprintf(stderr,"Unknown/incomplete option: %s\n",argv[n]);
             return 1;
@@ -406,6 +435,9 @@ int main(int argc, char *argv[])
     SDL_RenderSetIntegerScale(renderer,SDL_TRUE);
 
     pcAudioInit(startMuted,wavPath);
+    if(recordPath && !pcVideoStart(recordPath,recordScale)){
+        return 1;
+    }
 
     perfFreq=SDL_GetPerformanceFrequency();
     nextFrameTime=SDL_GetPerformanceCounter();

@@ -12,23 +12,11 @@
 #include "audio.h"
 
 #define AUDIO_RATE              48000
-#define TSTATES_PER_TV_FRAME    69888
-#define TSTATES_PER_FRAME       (TSTATES_PER_TV_FRAME*2)
+#define TSTATES_PER_FRAME       AUDIO_TSTATES_PER_FRAME
 #define SAMPLES_PER_FRAME       (AUDIO_RATE/25)
 #define MAX_QUEUED_FRAMES       3
 #define AMPLITUDE               12000.0f
-
-// T-state timings from the interrupt at the start of the frame, taken from sp48.asm and push_map.html:
-// IM1 ack (13) + reti (14) + ld a,colorGreen (7), then out (0xfe),a sets the border and speaker off
-#define BORDER_OUT_START_T      45
-// ...+ call pop_push_even (17) + ld (spBackupAddr),sp (20) + ld bc,0xfe (10) + ld de,0x0010 (10)
-#define LIST0_START_T           102
-// The end-of-frame list runs up to just before the ret and the next HALT. The exact spare time depends
-// on the template (red border area), so this is an estimate - a few hundred T-states either way won't be audible
-#define LIST1_END_SLACK_T       200
-#define LIST1_START_T           (TSTATES_PER_FRAME-(AUDIO_LIST1_LEN*AUDIO_TSTATES_PER_SAMPLE)-LIST1_END_SLACK_T)
-// ld sp,(spBackupAddr) (20) + ret (10) + ld a,colorRed (7), then out (0xfe),a sets the speaker off again
-#define BORDER_OUT_END_DELAY_T  37
+// The OUT list timings (AUDIO_LIST0_START_T etc.) are in engine/audio.h, shared with the synth
 
 static SDL_AudioDeviceID audioDevice;
 static bool muted=false;
@@ -130,17 +118,17 @@ void pcAudioFrame(int bankIX)
 {
     // Build the speaker level for every T-state of the frame (the level persists from the previous frame)
     timelinePos=0;
-    levelUntil(BORDER_OUT_START_T);
+    levelUntil(AUDIO_BORDER_OUT_START_T);
     speakerLevel=0;
     for(int n=0;n<AUDIO_LIST0_LEN;n++){
-        levelUntil(LIST0_START_T+(n*AUDIO_TSTATES_PER_SAMPLE));
+        levelUntil(AUDIO_LIST0_START_T+(n*AUDIO_TSTATES_PER_SAMPLE));
         speakerLevel=getAudioBit(bankIX,n);
     }
     for(int n=0;n<AUDIO_LIST1_LEN;n++){
-        levelUntil(LIST1_START_T+(n*AUDIO_TSTATES_PER_SAMPLE));
+        levelUntil(AUDIO_LIST1_START_T+(n*AUDIO_TSTATES_PER_SAMPLE));
         speakerLevel=getAudioBit(bankIX,AUDIO_LIST0_LEN+n);
     }
-    levelUntil(LIST1_START_T+(AUDIO_LIST1_LEN*AUDIO_TSTATES_PER_SAMPLE)+BORDER_OUT_END_DELAY_T);
+    levelUntil(AUDIO_LIST1_START_T+(AUDIO_LIST1_LEN*AUDIO_TSTATES_PER_SAMPLE)+AUDIO_BORDER_OUT_END_DELAY_T);
     speakerLevel=0;
     levelUntil(TSTATES_PER_FRAME);
 
@@ -176,4 +164,10 @@ void pcAudioFrame(int bankIX)
         SDL_GetQueuedAudioSize(audioDevice)<(Uint32)(MAX_QUEUED_FRAMES*sizeof(frameSamples))){
         SDL_QueueAudio(audioDevice,frameSamples,sizeof(frameSamples));
     }
+}
+
+const int16_t *pcAudioFrameSamples(int *count)
+{
+    *count=SAMPLES_PER_FRAME;
+    return frameSamples;
 }

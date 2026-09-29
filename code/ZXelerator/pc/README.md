@@ -68,6 +68,7 @@ code 1 if any comparison fails.
 | F3 | Mute / unmute audio |
 | F5 / F6 | Pause / step one frame while paused |
 | Tab (hold) | Fast forward |
+| F9 | Start / stop recording video (`recording_YYYYMMDD_HHMMSS.avi`) |
 | F12 | Save screenshot (`screenshot_NNNNN.bmp`) |
 | Esc | Quit |
 
@@ -81,6 +82,27 @@ This is only useful for comparing one scene with another, not as an RP2350 timin
 | `--shot FRAME file.bmp` | Save a screenshot at that frame; exits after the last one (can be repeated) |
 | `--hold FROM TO KEY` | Hold a PC key (SDL name, e.g. `M`, `Space`, `Left`) from frame FROM to TO, for scripted tests (can be repeated) |
 | `--wav file.wav` | Record the beeper audio |
+| `--record file.avi` | Record video with audio from the start (see below) |
+| `--record-scale N` | Pixel scale for recordings: 1 = 320x256 (default), 2 = 640x512, etc. |
+
+## Recording video
+
+F9 or `--record` writes an AVI with one video frame per game frame, so it is exactly 25fps and
+perfectly smooth - unlike a desktop screen recorder at 30/60fps. The recording follows the game's
+frames, not real time, so it works the same with `--fast`, while fast forwarding, or when stepping
+frames with F6 (paused time isn't recorded).
+
+- Video is uncompressed 24-bit RGB: pixel exact, and plays in VLC, Windows Media Player and video
+  editors. It's about 6MB per second at scale 1, and 24MB per second at scale 2.
+- Audio is the beeper at 48kHz, in sync with the picture. It's recorded even when muted with F3.
+- Files are split at about 1GB (`name.avi`, `name_part2.avi`, ...), as many AVI readers can't
+  handle larger files.
+
+For example, to record the intro at 2x for 40 seconds, without waiting for it to play:
+
+```bat
+ZXeleratorPC.exe --fast --mute --record intro.avi --record-scale 2 --shot 1000 last.bmp
+```
 | `--mute` | Start muted |
 | `--fast` | Run without the 25fps frame limit |
 
