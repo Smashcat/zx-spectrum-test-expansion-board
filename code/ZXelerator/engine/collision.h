@@ -14,6 +14,10 @@
 /// @brief Most sprites with collision flags that are tested each frame (any more are skipped)
 #define MAX_COLLIDING_SPRITES   128
 
+/// @brief Sprite pairs considered in the last detectCollisions (their areas checked, and pixels if they overlap) - handy
+/// for seeing the effect of the collision flags on performance
+extern uint32_t collisionPairsTested;
+
 /// @brief Find the collisions of every sprite that has collision flags, filling in their spriteHits and tileHits.
 /// Called by compositeScene once the frame is drawn, so the results match what's on screen
 void detectCollisions(void);

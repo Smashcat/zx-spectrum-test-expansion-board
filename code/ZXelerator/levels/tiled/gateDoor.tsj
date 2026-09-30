@@ -1,0 +1,29 @@
+{
+	"columns":	4,
+	"image":	"gateDoor.png",
+	"imageheight":	32,
+	"imagewidth":	64,
+	"margin":	0,
+	"name":	"gateDoor",
+	"objectalignment":	"center",
+	"properties":	[{
+			"name":	"engineMask",
+			"type":	"string",
+			"value":	"gateDoorMaskDef"
+		}, {
+			"name":	"engineSprite",
+			"type":	"string",
+			"value":	"gateDoorDef"
+		}, {
+			"name":	"palette",
+			"type":	"int",
+			"value":	10
+		}],
+	"spacing":	0,
+	"tilecount":	4,
+	"tiledversion":	"1.12.2",
+	"tileheight":	32,
+	"tilewidth":	16,
+	"type":	"tileset",
+	"version":	"1.10"
+}

@@ -1,0 +1,29 @@
+{
+	"columns":	8,
+	"image":	"player.png",
+	"imageheight":	48,
+	"imagewidth":	192,
+	"margin":	0,
+	"name":	"player",
+	"objectalignment":	"center",
+	"properties":	[{
+			"name":	"engineMask",
+			"type":	"string",
+			"value":	"mask24x24Def"
+		}, {
+			"name":	"engineSprite",
+			"type":	"string",
+			"value":	"sprite24x24Def"
+		}, {
+			"name":	"palette",
+			"type":	"int",
+			"value":	5
+		}],
+	"spacing":	0,
+	"tilecount":	16,
+	"tiledversion":	"1.12.2",
+	"tileheight":	24,
+	"tilewidth":	24,
+	"type":	"tileset",
+	"version":	"1.10"
+}

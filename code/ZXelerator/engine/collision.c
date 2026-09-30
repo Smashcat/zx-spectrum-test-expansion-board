@@ -14,6 +14,7 @@ typedef struct SpriteShape {
 } SpriteShape;
 
 static SpriteShape shapes[MAX_COLLIDING_SPRITES];
+uint32_t collisionPairsTested=0;
 
 /// @brief Bits for screen pixels [from,to) in a 32 pixel window starting at x (bit 31 = x)
 static inline uint32_t rangeMask(int x, int from, int to)
@@ -246,10 +247,12 @@ void detectCollisions(void)
 {
     int numShapes=0;
     int numSpriteColliders=0;
+    collisionPairsTested=0;
     for(int n=0;n<totalSprites;n++){
         Sprite *s=spriteList+n;
         s->spriteHitCount=0;
         s->tileHitCount=0;
+        // Sprites with no collision flags aren't in any tests
         if(s->collideWith!=COLLIDE_NONE && numShapes<MAX_COLLIDING_SPRITES && buildShape(s,n,shapes+numShapes)){
             if(s->collideWith&COLLIDE_SPRITES){
                 ++numSpriteColliders;
@@ -258,18 +261,32 @@ void detectCollisions(void)
         }
     }
 
-    // Sprite to sprite - both need COLLIDE_SPRITES
-    if(numSpriteColliders>1){
+    // Sprite to sprite - a pair is only tested if at least one of them checks for collisions (COLLIDE_SPRITES), and the
+    // other checks too or is a target (COLLIDE_TARGET). Only the sprites that check record the hit, and targets are
+    // never tested against each other
+    if(numSpriteColliders>0){
         for(int a=0;a<numShapes;a++){
             Sprite *sa=(Sprite *)shapes[a].s;
-            if((sa->collideWith&COLLIDE_SPRITES)==0){
+            const bool aChecks=(sa->collideWith&COLLIDE_SPRITES)!=0;
+            const bool aHittable=aChecks || (sa->collideWith&COLLIDE_TARGET);
+            if(!aHittable){
                 continue;
             }
             for(int b=a+1;b<numShapes;b++){
                 Sprite *sb=(Sprite *)shapes[b].s;
-                if((sb->collideWith&COLLIDE_SPRITES) && shapesOverlap(shapes+a,shapes+b)){
-                    addSpriteHit(sa,shapes[b].ix);
-                    addSpriteHit(sb,shapes[a].ix);
+                const bool bChecks=(sb->collideWith&COLLIDE_SPRITES)!=0;
+                const bool bHittable=bChecks || (sb->collideWith&COLLIDE_TARGET);
+                if(!bHittable || (!aChecks && !bChecks)){
+                    continue;
+                }
+                ++collisionPairsTested;
+                if(shapesOverlap(shapes+a,shapes+b)){
+                    if(aChecks){
+                        addSpriteHit(sa,shapes[b].ix);
+                    }
+                    if(bChecks){
+                        addSpriteHit(sb,shapes[a].ix);
+                    }
                 }
             }
         }

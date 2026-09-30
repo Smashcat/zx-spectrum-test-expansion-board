@@ -18,8 +18,23 @@
 /// @brief Collide with the tile layer drawn just before the sprite - the layer it's drawn over (setSpriteLayer).
 /// Layers are drawn back to front, with each layer's sprites and particles drawn straight after it
 #define COLLIDE_LAYER           0x01
-/// @brief Collide with other sprites that also have COLLIDE_SPRITES
+/// @brief Check for collisions with other sprites - those with COLLIDE_SPRITES or COLLIDE_TARGET - and record the hits in
+/// this sprite's spriteHits (e.g. the player, or bullets)
 #define COLLIDE_SPRITES         0x02
+/// @brief Can be hit by sprites with COLLIDE_SPRITES, but doesn't check for collisions itself (no spriteHits are
+/// recorded for it, and targets are never tested against each other) - e.g. enemies or pickups, when the player and
+/// bullets do the checking. Sprites with no collision flags aren't in any collision tests
+#define COLLIDE_TARGET          0x04
+
+/// @brief Where a sprite's position (xF, yF) is (setSpriteSpace)
+typedef enum SpriteSpace {
+    /// @brief Screen pixel coordinates (the default) - e.g. the HUD, or things that don't belong to a layer's world
+    SPRITE_SPACE_SCREEN,
+    /// @brief A layer's own pixel coordinates - the sprite belongs to the layer's world, so it moves with the layer as it
+    /// scrolls, rotates and scales (and by default rotates and scales with it too - see setSpriteRotateWithLayer).
+    /// Scrolled, rotated and scaled layers only (not line transformed)
+    SPRITE_SPACE_LAYER
+} SpriteSpace;
 
 /// @brief A tile a sprite collided with - its position in the layer's tile map
 typedef struct TileHit {
@@ -45,7 +60,9 @@ typedef enum SpriteSize {
     SIZE_24X48,
     SIZE_24X64,
 
-    SIZE_32X40
+    SIZE_32X40,
+    SIZE_32X8,
+    SIZE_16X32
 } SpriteSize;
 
 /// @brief Used when performing fixed point math for faster scaling of sprites
@@ -126,13 +143,186 @@ typedef struct Sprite {
     int16_t         spriteHits[MAX_COLLISION_HITS];
     // Tiles hit in the layer the sprite is drawn over (each tile listed once)
     TileHit         tileHits[MAX_COLLISION_HITS];
+
+    // Screen or layer space (setSpriteSpace). In layer space, xF/yF are the sprite's position (centre) in the layer's
+    // coordinates, and x/y its position on screen, worked out each frame
+    uint8_t         space;
+    // The layer whose coordinates a layer space sprite uses (-1 = the layer it's drawn over)
+    int8_t          parentLayer;
+    // Layer space: if not zero (the default), the sprite also rotates and scales with the layer - otherwise it keeps its
+    // own rotation and scale relative to the screen
+    uint8_t         rotateWithLayer;
+    // Cosine and sine of the sprite's own angle, kept so a layer space sprite's transform can be combined with its
+    // layer's each frame without any trig
+    float           rotCos, rotSin;
+
+    // The sprite set it's in (SPRITE_SET_NONE if none) - see addSpriteToSet - and the next and previous sprites in that
+    // set (-1 at the ends)
+    int8_t          set;
+    int16_t         setNext;
+    int16_t         setPrev;
+
+    // Given out by allocateSprite (and not yet freed)
+    uint8_t         inUse;
+    // Solid: found by getSolidSpriteAt, so it blocks movement like a wall (e.g. closed doors, piston heads). Set by its
+    // sprite set (setSpriteSetSolid), or setSpriteSolid
+    uint8_t         solid;
+    // The level object this sprite was spawned for (see engine/level.h), or -1
+    int16_t         levelObject;
 } Sprite;
 
 extern Sprite *spriteList;
 extern int totalSprites;
 
+/// @brief Take an unused sprite (one not given out by allocateSprite, or freed since), reset to its initial state: off
+/// screen, screen space, no rotation, scaling, collisions or set. For sprites that come and go, e.g. enemies spawned
+/// as the level scrolls. Sprites used by index without allocateSprite aren't tracked, so allocate those first (or all
+/// sprites this way) to keep them apart
+/// @return The sprite's index, or -1 if every sprite is in use
+int allocateSprite(void);
+
+/// @brief Give a sprite back: it's hidden, taken out of its set and collision tests, and can be allocated again
+void freeSprite(int ix);
+
+// ---------------------------------------------------------------------------
+// Sprite sets - groups of sprites, e.g. platforms, enemies, doors, pickups. A sprite is in one set at most, and knows
+// which, so finding out what the player has hit is a single check (isSpriteInSet), and a set's sprites can be looped
+// through (firstSpriteInSet/nextSpriteInSet) without searching every sprite
+// ---------------------------------------------------------------------------
+
+#define MAX_SPRITE_SETS         16
+#define SPRITE_SET_NONE         (-1)
+
+typedef struct SpriteSet {
+    bool used;
+    // Sprites in it are solid (see setSpriteSetSolid)
+    bool solid;
+    // First and last sprites in the set (-1 if empty), and how many there are
+    int16_t first;
+    int16_t last;
+    int16_t count;
+} SpriteSet;
+
+extern SpriteSet spriteSets[MAX_SPRITE_SETS];
+
+/// @brief Create an empty sprite set
+/// @return The set's index, or SPRITE_SET_NONE if there are already MAX_SPRITE_SETS sets
+int createSpriteSet(void);
+
+/// @brief Delete a sprite set - its sprites are left out of any set (the sprites themselves aren't changed)
+void deleteSpriteSet(int setIX);
+
+/// @brief Delete every sprite set (initSprites and deleteSprites do this too)
+void deleteSpriteSets(void);
+
+/// @brief Put a sprite in a set (taking it out of any set it was in), at the end of the set
+/// @param setIX The set, or SPRITE_SET_NONE to take it out of its set
+void addSpriteToSet(int ix, int setIX);
+
+/// @brief Take a sprite out of its set
+void removeSpriteFromSet(int ix);
+
+/// @brief Set what every sprite in a set collides with (see setSpriteCollisions) - e.g. COLLIDE_TARGET for enemies
+void setSpriteSetCollisions(int setIX, uint8_t flags);
+
+/// @brief Make a set's sprites solid (or not) - those in it now, and those added later. Solid sprites block movement
+/// like walls: the game checks for them with getSolidSpriteAt, alongside the level's solid tiles
+void setSpriteSetSolid(int setIX, bool solid);
+
+/// @brief Make one sprite solid or not, e.g. a door once it's open (a sprite in a solid set is solid when added)
+void setSpriteSolid(int ix, bool solid);
+
+/// @brief The first solid sprite overlapping a box in a layer's coordinates (inclusive) - its drawn size, unrotated,
+/// around its position. Only layer space sprites belonging to that layer, in solid sets, are looked at (so it's quick)
+/// @return The sprite, or -1
+int getSolidSpriteAt(int layerIX, int x0, int y0, int x1, int y1);
+
+/// @brief The first sprite that a sprite hit in the last frame drawn (see spriteHits) that's in a set - e.g. "has the
+/// player hit an enemy?"
+/// @return The sprite hit, or -1 if it hit none in the set
+int getSpriteHitInSet(int ix, int setIX);
+
+/// @brief The set a sprite is in, or SPRITE_SET_NONE
+static inline int getSpriteSet(int ix)
+{
+    return spriteList[ix].set;
+}
+
+/// @brief True if a sprite is in a set - e.g. isSpriteInSet(player->spriteHits[n], platforms)
+static inline bool isSpriteInSet(int ix, int setIX)
+{
+    return setIX>=0 && spriteList[ix].set==setIX;
+}
+
+/// @brief How many sprites are in a set
+static inline int getSpriteSetCount(int setIX)
+{
+    return (setIX>=0 && setIX<MAX_SPRITE_SETS)?spriteSets[setIX].count:0;
+}
+
+/// @brief The sprites in a set, in the order they were added:
+/// for(int ix=firstSpriteInSet(enemies);ix>=0;ix=nextSpriteInSet(ix)){ ... }
+/// (to take sprites out of the set in the loop, get the next one before taking this one out)
+/// @return A sprite index, or -1 if the set is empty
+static inline int firstSpriteInSet(int setIX)
+{
+    return (setIX>=0 && setIX<MAX_SPRITE_SETS && spriteSets[setIX].used)?spriteSets[setIX].first:-1;
+}
+
+/// @brief The next sprite in the same set, or -1 after the last
+static inline int nextSpriteInSet(int ix)
+{
+    return spriteList[ix].setNext;
+}
+
 /// @brief INTERNAL - recalculates the transform and bounding box of a rotated sprite after its size, scale or angle change
 void updateSpriteTransform(Sprite *s);
+
+/// @brief INTERNAL - works out a layer space sprite's screen position and transform, from its layer position and its
+/// layer's current position, rotation and scale
+void placeSprite(Sprite *s);
+
+/// @brief INTERNAL - places every layer space sprite (called by compositeScene, before drawing)
+void placeLayerSprites(void);
+
+/// @brief Choose whether a sprite's position is in screen or layer coordinates (see SpriteSpace). Its current position is
+/// converted, so it stays where it is on screen
+/// @param ix Sprite index
+/// @param space SPRITE_SPACE_SCREEN or SPRITE_SPACE_LAYER
+/// @param parentLayer The layer whose coordinates are used, or -1 for the layer the sprite is drawn over
+void setSpriteSpace(int ix, SpriteSpace space, int parentLayer);
+
+/// @brief Layer space sprites: true (the default) to rotate and scale with the layer, e.g. scenery or crates on a tilting
+/// platform - false to keep the sprite's own rotation and scale relative to the screen, e.g. a character that stays
+/// upright (its position still follows the layer)
+void setSpriteRotateWithLayer(int ix, bool rotate);
+
+/// @brief A point near a sprite, in the sprite's space - e.g. where to start particles from its gun
+/// @param dx,dy Offset from the sprite's centre, in its own pixels - scaled and rotated as the sprite is drawn
+/// @param x,y Set to the point: in its layer's coordinates for a layer space sprite, on screen for a screen space one
+/// @return The layer: the one it belongs to (layer space) or is drawn over (screen space)
+int getSpritePoint(int ix, float dx, float dy, float *x, float *y);
+
+/// @brief The tile at a point near a sprite, in the layer the sprite belongs to (layer space) or is drawn over (screen
+/// space) - e.g. (0, height/2) is just under its feet, (-width/2-1, 0) just to its left
+/// @param dx,dy Offset from the sprite's centre, in its own pixels - scaled and rotated as the sprite is drawn, so the
+/// point turns with it
+/// @param tileX,tileY If not NULL, set to the tile's position in the tile map
+/// @return The tile number, or -1 if there's none (for screen space sprites, if the point is off screen). For layer
+/// space sprites this is a direct tile map lookup (fast, however the layer is rotated, and works off screen too)
+int getSpriteTileAt(int ix, float dx, float dy, int *tileX, int *tileY);
+
+/// @brief True if the tile graphics have a pixel set at a point near a sprite (see getSpriteTileAt) - a pixel accurate
+/// check for floors and walls, including slopes
+bool isSpritePointSolid(int ix, float dx, float dy);
+
+/// @brief getSpriteTileAt for a whole pixel offset - the fast route for gameplay checks (feet, walls). When the sprite
+/// isn't rotated or scaled itself (and, in layer space, turns with its layer or the layer isn't transformed), there's no
+/// float maths beyond one floor of its position: just an add and the tile lookup. Otherwise it's getSpriteTileAt
+int getSpriteTileAtI(int ix, int dx, int dy, int *tileX, int *tileY);
+
+/// @brief isSpritePointSolid for a whole pixel offset - fast in the same cases as getSpriteTileAtI
+bool isSpritePointSolidI(int ix, int dx, int dy);
 
 /// @brief INTERNAL - for a rotated sprite, the sprite position (16.16) sampled at the centre of screen pixel (x0,y0).
 /// Shared by the renderer and collision tests, so both sample exactly the same pixels
@@ -175,6 +365,9 @@ static inline void setSpriteScale(int ix, float xScale, float yScale)
     if(s->isRotated){
         updateSpriteTransform(s);
     }
+    if(s->space==SPRITE_SPACE_LAYER){
+        placeSprite(s);
+    }
 }
 
 static inline void setSpriteDir(int ix, float xDir, float yDir)
@@ -184,16 +377,20 @@ static inline void setSpriteDir(int ix, float xDir, float yDir)
     s->yDir=yDir;
 }
 
+/// @brief Set a sprite's position (its centre) - in screen coordinates, or for a layer space sprite, the layer's
 static inline void setSpritePos(int ix, float x, float y)
 {
     Sprite *s=spriteList+ix;
-    s->x=x;
-    s->y=y;
     s->xF=x;
     s->yF=y;
+    if(s->space==SPRITE_SPACE_LAYER){
+        placeSprite(s);
+        return;
+    }
+    s->x=x;
+    s->y=y;
     s->offX=s->x-(s->scaledWidth/2);
     s->offY=s->y-(s->scaledHeight/2);
-
 }
 
 static inline void setSpriteLayer(int ix, int l){

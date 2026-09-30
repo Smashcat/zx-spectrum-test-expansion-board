@@ -21,6 +21,8 @@
 #include "engine/audio.h"
 #include "engine/synth.h"
 #include "engine/funcs.h"
+#include "engine/level.h"
+#include "levels.h"
 
 #include "gameStrings.h"
 #include "game.h"
@@ -50,6 +52,14 @@ void setupCollisionTest(void);
 
 /// @brief Per-frame update of the collision test. SPACE returns to the title
 void collisionTest(void);
+
+/// @brief Set up the level test (press L on the title screen): the demo level made in Tiled (levels/tiled/demo.tmx),
+/// with a player who runs (O/P), jumps (Q) and collects coins, pillars in front of the player, parallax hills and sky,
+/// and animated tiles
+void setupLevelTest(void);
+
+/// @brief Per-frame update of the level test. R swings the level, SPACE returns to the title
+void levelTest(void);
 
 /// @brief Draw large font characters (8x16) to tilemap
 /// @param layerIX The layer index to draw to

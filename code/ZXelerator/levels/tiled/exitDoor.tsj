@@ -1,0 +1,29 @@
+{
+	"columns":	4,
+	"image":	"exitDoor.png",
+	"imageheight":	32,
+	"imagewidth":	64,
+	"margin":	0,
+	"name":	"exitDoor",
+	"objectalignment":	"center",
+	"properties":	[{
+			"name":	"engineMask",
+			"type":	"string",
+			"value":	"exitDoorMaskDef"
+		}, {
+			"name":	"engineSprite",
+			"type":	"string",
+			"value":	"exitDoorDef"
+		}, {
+			"name":	"palette",
+			"type":	"int",
+			"value":	11
+		}],
+	"spacing":	0,
+	"tilecount":	4,
+	"tiledversion":	"1.12.2",
+	"tileheight":	32,
+	"tilewidth":	16,
+	"type":	"tileset",
+	"version":	"1.10"
+}

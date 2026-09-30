@@ -12,7 +12,8 @@ typedef enum GameState {
     GS_gameOver,
     GS_mode7Test,
     GS_audioTest,
-    GS_collisionTest
+    GS_collisionTest,
+    GS_levelTest
 } GameState;
 
 typedef struct GameVar {

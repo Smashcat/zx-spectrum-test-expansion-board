@@ -41,6 +41,9 @@ void gameUpdateLoop(void){
                 case GS_collisionTest:
                     collisionTest();
                 break;
+                case GS_levelTest:
+                    levelTest();
+                break;
                 default:
                 break;
             }
@@ -122,6 +125,9 @@ void setState(GameState newGS)
         break;
         case GS_collisionTest:
             setupCollisionTest();
+        break;
+        case GS_levelTest:
+            setupLevelTest();
         break;
         default:
         break;

@@ -2,4 +2,7 @@
 
 #include <stdint.h>
 
-extern const uint8_t palette[][10];
+/// @brief How many palettes there are (keep in step with palette.c)
+#define PALETTE_COUNT 12
+
+extern const uint8_t palette[PALETTE_COUNT][10];

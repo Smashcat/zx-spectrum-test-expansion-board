@@ -10,6 +10,11 @@
 #define MAX_PARTICLES           1000
 #define MAX_SPRITES             500
 #define MAX_FALL_SPEED          6.0
+// RAM for the level being played (engine/level.c): its tile sets (4KB each) and unpacked tile layers, e.g. a 256x256 tile
+// layer is 64KB. The level converter reports what each level needs
+#define LEVEL_RAM_SIZE          (128*1024)
+// What's remembered about every level (a byte per persistent object - switches, keys etc), for the whole game
+#define LEVEL_STATE_SIZE        2048
 
 // ---------------------------------------------------------------------------
 // gpio pins

@@ -12,6 +12,10 @@
 #include <time.h>
 
 #include "engine/Compositor.h"
+#include "engine/level.h"
+#include "engine/lzUnpack.h"
+#include "lzPack.h"
+#include "levels.h"
 
 static int failures=0;
 static const char *outDir=".";
@@ -463,6 +467,123 @@ static void randomSprite(int ix, int layer)
     }
 }
 
+// Sprite sets: membership, moving between sets, taking sprites out (first, middle, last), looping through a set, and
+// finding which set a sprite that was hit is in
+static void testSpriteSets(void)
+{
+    initSprites(12);
+    const int platforms=createSpriteSet(), enemies=createSpriteSet(), doors=createSpriteSet();
+    check(platforms>=0 && enemies>=0 && doors>=0 && platforms!=enemies && enemies!=doors,"sprite sets created",
+        platforms,enemies);
+    for(int n=1;n<=5;n++){
+        addSpriteToSet(n,platforms);
+    }
+    for(int n=6;n<=9;n++){
+        addSpriteToSet(n,enemies);
+    }
+    addSpriteToSet(10,doors);
+    check(getSpriteSetCount(platforms)==5 && getSpriteSetCount(enemies)==4 && getSpriteSetCount(doors)==1,
+        "sprite set counts",getSpriteSetCount(platforms),getSpriteSetCount(enemies));
+    check(isSpriteInSet(3,platforms) && !isSpriteInSet(3,enemies) && !isSpriteInSet(0,platforms) &&
+        getSpriteSet(0)==SPRITE_SET_NONE && getSpriteSet(7)==enemies,"sprite set membership",getSpriteSet(7),enemies);
+
+    // Move one to another set, take out the first, a middle one and the last
+    addSpriteToSet(3,enemies);
+    removeSpriteFromSet(1);
+    removeSpriteFromSet(5);
+    removeSpriteFromSet(8);
+    int order[16], count=0;
+    for(int ix=firstSpriteInSet(platforms);ix>=0 && count<16;ix=nextSpriteInSet(ix)){
+        order[count++]=ix;
+    }
+    check(count==2 && order[0]==2 && order[1]==4 && getSpriteSetCount(platforms)==2,"sprites left in a set, in order",
+        count,getSpriteSetCount(platforms));
+    count=0;
+    for(int ix=firstSpriteInSet(enemies);ix>=0 && count<16;ix=nextSpriteInSet(ix)){
+        order[count++]=ix;
+    }
+    check(count==4 && order[0]==6 && order[1]==7 && order[2]==9 && order[3]==3 && getSpriteSetCount(enemies)==4,
+        "sprites moved to another set go at its end",count,order[3]);
+    check(getSpriteSet(1)==SPRITE_SET_NONE && getSpriteSet(8)==SPRITE_SET_NONE,"sprites taken out of a set",0,0);
+
+    // Taking every sprite out while looping (getting the next one first)
+    for(int ix=firstSpriteInSet(enemies),next;ix>=0;ix=next){
+        next=nextSpriteInSet(ix);
+        removeSpriteFromSet(ix);
+    }
+    check(getSpriteSetCount(enemies)==0 && firstSpriteInSet(enemies)<0 && getSpriteSet(6)==SPRITE_SET_NONE,
+        "every sprite taken out of a set in a loop",getSpriteSetCount(enemies),0);
+
+    // A deleted set frees its sprites, and its slot is reused
+    deleteSpriteSet(platforms);
+    check(getSpriteSet(2)==SPRITE_SET_NONE && getSpriteSet(4)==SPRITE_SET_NONE && firstSpriteInSet(platforms)<0,
+        "deleting a set frees its sprites",getSpriteSet(2),0);
+    check(createSpriteSet()==platforms,"a deleted set's slot is reused",0,0);
+    int made=3;
+    while(createSpriteSet()!=SPRITE_SET_NONE){
+        ++made;
+    }
+    check(made==MAX_SPRITE_SETS,"MAX_SPRITE_SETS sets can be made",made,MAX_SPRITE_SETS);
+
+    // Collisions: the player overlaps a platform and an enemy - which has it hit?
+    initLayers();
+    initSprites(4);
+    const int plat=createSpriteSet(), foes=createSpriteSet();
+    for(int n=0;n<4;n++){
+        setSpriteSize(n,SIZE_24X24);
+        setSpriteDef(n,sprite24x24Def,mask24x24Def);
+        setSpriteLayer(n,2);
+    }
+    setSpritePos(0,100,100);
+    setSpritePos(1,104,104);
+    setSpritePos(2,96,98);
+    setSpritePos(3,200,50);
+    addSpriteToSet(1,plat);
+    addSpriteToSet(2,foes);
+    addSpriteToSet(3,foes);
+    setSpriteCollisions(0,COLLIDE_SPRITES);
+    setSpriteSetCollisions(plat,COLLIDE_TARGET);
+    setSpriteSetCollisions(foes,COLLIDE_TARGET);
+    detectCollisions();
+    check(spriteList[0].spriteHitCount==2,"player hits a platform and an enemy",spriteList[0].spriteHitCount,2);
+    check(getSpriteHitInSet(0,plat)==1 && getSpriteHitInSet(0,foes)==2,"which set each hit sprite is in",
+        getSpriteHitInSet(0,plat),getSpriteHitInSet(0,foes));
+    setSpriteSetCollisions(foes,COLLIDE_NONE);
+    detectCollisions();
+    check(getSpriteHitInSet(0,foes)<0 && getSpriteHitInSet(0,plat)==1,"a set's collisions switched off",
+        getSpriteHitInSet(0,foes),-1);
+    // Solid sprites: found in a box, in a layer's coordinates, only in solid sets, and only while solid
+    initSprites(4);
+    const int solids=createSpriteSet(), others=createSpriteSet();
+    for(int n=0;n<4;n++){
+        setSpriteSize(n,SIZE_16X32);
+        setSpriteLayer(n,2);
+        setSpriteSpace(n,SPRITE_SPACE_LAYER,-1);
+    }
+    setSpritePos(0,100,100);      // 92-107 across, 84-115 down
+    setSpritePos(1,200,100);
+    setSpritePos(2,300,100);
+    addSpriteToSet(0,solids);
+    addSpriteToSet(1,others);
+    setSpriteSetSolid(solids,true);
+    addSpriteToSet(2,solids);
+    check(getSolidSpriteAt(2,107,115,120,130)==0 && getSolidSpriteAt(2,108,90,120,100)<0 &&
+        getSolidSpriteAt(2,80,116,120,120)<0,"a solid sprite's box",getSolidSpriteAt(2,108,90,120,100),-1);
+    check(getSolidSpriteAt(2,190,90,210,110)<0,"sprites in other sets aren't solid",0,0);
+    check(getSolidSpriteAt(2,290,90,310,110)==2,"sprites added to a solid set are solid",0,0);
+    check(getSolidSpriteAt(3,90,90,110,110)<0,"only the layer's own sprites",0,0);
+    setSpriteSolid(0,false);
+    check(getSolidSpriteAt(2,90,90,110,110)<0,"a sprite made not solid",0,0);
+    setSpriteSolid(0,true);
+    removeSpriteFromSet(0);
+    check(getSolidSpriteAt(2,90,90,110,110)<0,"a sprite taken out of a solid set isn't solid",0,0);
+
+    initSprites(1);
+    check(firstSpriteInSet(plat)<0 && createSpriteSet()==0,"initSprites clears the sets",0,0);
+    deleteSpriteSets();
+    printf("Sprite sets: membership, moving, removing, looping, deleting, and hits by set\n");
+}
+
 static void testSpriteSpriteCollisions(void)
 {
     initLayers();
@@ -476,20 +597,30 @@ static void testSpriteSpriteCollisions(void)
         const int y=(int)(rng()%236)-22;
         setSpritePos(0,(float)x,(float)y);
         setSpritePos(1,(float)(x+(int)(rng()%61)-30),(float)(y+(int)(rng()%61)-30));
-        setSpriteCollisions(0,COLLIDE_SPRITES);
-        setSpriteCollisions(1,COLLIDE_SPRITES);
+        // Each sprite checks for collisions (half the time), is only a target, or isn't in collision tests at all
+        static const uint8_t roles[4]={COLLIDE_SPRITES,COLLIDE_SPRITES,COLLIDE_TARGET,COLLIDE_NONE};
+        const uint8_t roleA=roles[rng()%4];
+        const uint8_t roleB=roles[rng()%4];
+        setSpriteCollisions(0,roleA);
+        setSpriteCollisions(1,roleB);
 
         drawSpriteAlone(0,drawnA);
         drawSpriteAlone(1,drawnB);
-        bool expected=false;
-        for(int i=0;i<(int)sizeof(drawnA) && !expected;i++){
-            expected=(drawnA[i]&drawnB[i])!=0;
+        bool overlap=false;
+        for(int i=0;i<(int)sizeof(drawnA) && !overlap;i++){
+            overlap=(drawnA[i]&drawnB[i])!=0;
         }
+        // A sprite records a hit if the pixels overlap, it checks for collisions, and the other can be hit
+        const bool expectA=overlap && roleA==COLLIDE_SPRITES && roleB!=COLLIDE_NONE;
+        const bool expectB=overlap && roleB==COLLIDE_SPRITES && roleA!=COLLIDE_NONE;
         detectCollisions();
         const bool gotA=(spriteList[0].spriteHitCount==1 && spriteList[0].spriteHits[0]==1);
         const bool gotB=(spriteList[1].spriteHitCount==1 && spriteList[1].spriteHits[0]==0);
-        check(gotA==expected && gotB==expected && (spriteList[0].spriteHitCount<=1),"sprite-sprite collision",x,y);
-        if(!(gotA==expected && gotB==expected) && failures<=8){
+        const bool ok=(gotA==expectA) && (gotB==expectB) && (spriteList[0].spriteHitCount<=1) &&
+            (spriteList[1].spriteHitCount<=1);
+        check(ok,"sprite-sprite collision",x,y);
+        const bool expected=overlap;
+        if(!ok && failures<=8){
             for(int k=0;k<2;k++){
                 const Sprite *s=spriteList+k;
                 printf("   sprite %d: %dx%d scaled=%d(%.2f,%.2f) rotated=%d(%.2f) off=(%d,%d) scaledWH=(%d,%d) expected=%d got=%d\n",
@@ -515,12 +646,149 @@ static void testSpriteSpriteCollisions(void)
         hits+=expected?1:0;
         ++tests;
     }
-    // Without the flag on both, nothing is recorded
-    setSpriteCollisions(1,COLLIDE_NONE);
-    setSpritePos(1,spriteList[0].x,spriteList[0].y);
+    // A checks, B is a target, C isn't in collision tests, and a second target D - all on top of each other. Only A
+    // records hits (B and D), and nothing is recorded for the targets or C
+    initSprites(4);
+    for(int n=0;n<4;n++){
+        setSpriteSize(n,SIZE_24X24);
+        setSpriteDef(n,sprite24x24Def,mask24x24Def);
+        setSpriteLayer(n,1);
+        setSpritePos(n,100.0f,100.0f);
+    }
+    setSpriteCollisions(0,COLLIDE_SPRITES);
+    setSpriteCollisions(1,COLLIDE_TARGET);
+    setSpriteCollisions(2,COLLIDE_NONE);
+    setSpriteCollisions(3,COLLIDE_TARGET);
     detectCollisions();
-    check(spriteList[0].spriteHitCount==0,"sprite-sprite needs COLLIDE_SPRITES on both",0,0);
-    printf("Sprite-sprite collisions: %d random pairs (%d touching), matching the drawn pixels\n",tests,hits);
+    const Sprite *sl=spriteList;
+    check(sl[0].spriteHitCount==2 && sl[0].spriteHits[0]==1 && sl[0].spriteHits[1]==3,"checking sprite hits targets only",
+        sl[0].spriteHitCount,0);
+    check(sl[1].spriteHitCount==0 && sl[2].spriteHitCount==0 && sl[3].spriteHitCount==0,"targets and others record nothing",
+        sl[1].spriteHitCount+sl[3].spriteHitCount,sl[2].spriteHitCount);
+    check(collisionPairsTested==2,"only pairs with a checking sprite are tested",(int)collisionPairsTested,2);
+
+    // One checking sprite among 40 targets and 40 others: 40 pairs, rather than all 3240 pairs of the 81
+    initSprites(81);
+    for(int n=0;n<81;n++){
+        setSpriteSize(n,SIZE_8X8);
+        setSpriteDef(n,sprite24x24Def,mask24x24Def);
+        setSpriteLayer(n,1);
+        setSpritePos(n,(float)(10+((n*29)%236)),(float)(10+((n*17)%172)));
+        setSpriteCollisions(n,(n==0)?COLLIDE_SPRITES:((n&1)?COLLIDE_TARGET:COLLIDE_NONE));
+    }
+    detectCollisions();
+    check(collisionPairsTested==40,"pairs tested with one checking sprite and 40 targets",(int)collisionPairsTested,40);
+    printf("Sprite-sprite collisions: %d random pairs (%d touching, random roles), matching the drawn pixels\n",tests,hits);
+}
+
+// Layer space sprites: drawn where the layer puts them, turning with it (or not)
+static int countDiffBits(const uint8_t *a, const uint8_t *b, int *setBits)
+{
+    int diff=0, set=0;
+    for(int i=0;i<SCREEN_WIDTH_CELLS*SCREEN_HEIGHT_LINES;i++){
+        uint8_t d=a[i]^b[i], s=a[i];
+        for(;d;d&=(uint8_t)(d-1)){
+            ++diff;
+        }
+        for(;s;s&=(uint8_t)(s-1)){
+            ++set;
+        }
+    }
+    *setBits=set;
+    return diff;
+}
+
+static void testLayerSpaceSprites(void)
+{
+    const int layer=1;
+    initLayers();
+    setTileDefSet(layer,defaultTileDef);
+    initSprites(2);
+    rngState=8080;
+    int exact=0, rotating=0, maxDiffPercent=0, collisionTests=0;
+    for(int n=0;n<3000;n++){
+        const int kind=n%3;     // 0 scrolled layer, 1 rotated layer with an upright sprite, 2 rotating with the layer
+        clearLayerTransform(layer);
+        setLayerPos(layer,(int)(rng()%400)-200,(int)(rng()%400)-200);
+        const float layerAngle=(float)(rng()%628)/100.0f;
+        const float layerScale=0.6f+((float)(rng()%100)/100.0f);
+        if(kind>0){
+            setLayerTransform(layer,layerAngle,layerScale,layerScale);
+        }
+
+        // The layer space sprite (uniformly scaled, so its combined transform is still a rotation and a scale)
+        randomSprite(0,layer);
+        if(spriteList[0].isScaled){
+            setSpriteScale(0,spriteList[0].scaleX,spriteList[0].scaleX);
+        }
+        spriteList[0].space=SPRITE_SPACE_SCREEN;
+        setSpriteSpace(0,SPRITE_SPACE_LAYER,-1);
+        setSpriteRotateWithLayer(0,kind==2);
+        setSpritePos(0,(float)(rng()%600),(float)(rng()%600));
+        placeLayerSprites();
+        const int sx=spriteList[0].x, sy=spriteList[0].y;
+        float ex, ey;
+        layerToScreen(layer,spriteList[0].xF,spriteList[0].yF,&ex,&ey);
+        check(sx==(int)floorf(ex+0.001f) && sy==(int)floorf(ey+0.001f),"layer space sprite position",sx,sy);
+        drawSpriteAlone(0,drawnA);
+
+        // The same sprite in screen space, at the same place on screen
+        Sprite *s1=spriteList+1;
+        const Sprite *s0=spriteList;
+        setSpriteSize(1,s0->size);
+        setSpriteDef(1,s0->defPtr,s0->maskPtr);
+        setSpriteLayer(1,layer);
+        s1->frame=s0->frame;
+        s1->space=SPRITE_SPACE_SCREEN;
+        const float ownScale=s0->isScaled?s0->scaleX:1.0f;
+        if(kind==2){
+            setSpriteScale(1,ownScale*layerScale,ownScale*layerScale);
+            setSpriteRotation(1,s0->angle+layerAngle);
+        }else{
+            setSpriteScale(1,s0->isScaled?s0->scaleX:0.0f,s0->isScaled?s0->scaleY:0.0f);
+            setSpriteRotation(1,s0->angle);
+        }
+        setSpritePos(1,(float)sx,(float)sy);
+        drawSpriteAlone(1,drawnB);
+
+        int setBits;
+        const int diff=countDiffBits(drawnA,drawnB,&setBits);
+        if(kind<2){
+            check(diff==0,kind?"upright layer space sprite matches screen space":"layer space sprite on a scrolled layer matches screen space",n,diff);
+            ++exact;
+        }else{
+            // The combined transform is worked out differently, so allow a few pixels at the edges
+            const int allowed=4+(setBits*3/100);
+            check(diff<=allowed,"layer space sprite rotating with the layer",diff,allowed);
+            if(setBits>0 && (diff*100/setBits)>maxDiffPercent){
+                maxDiffPercent=diff*100/setBits;
+            }
+            ++rotating;
+        }
+
+        // Collisions use what's drawn
+        setSpriteCollisions(0,COLLIDE_SPRITES);
+        setSpriteCollisions(1,COLLIDE_TARGET);
+        setSpritePos(1,(float)(sx+(int)(rng()%41)-20),(float)(sy+(int)(rng()%41)-20));
+        setSpriteRotation(1,(float)(rng()%628)/100.0f);
+        drawSpriteAlone(1,drawnB);
+        bool overlap=false;
+        for(int i=0;i<(int)sizeof(drawnA) && !overlap;i++){
+            overlap=(drawnA[i]&drawnB[i])!=0;
+        }
+        detectCollisions();
+        check((spriteList[0].spriteHitCount==1)==overlap,"layer space sprite collision",n,overlap);
+        ++collisionTests;
+
+        // Back to screen space, and it stays in the same place
+        setSpriteSpace(0,SPRITE_SPACE_SCREEN,-1);
+        check(spriteList[0].x==sx && spriteList[0].y==sy,"back to screen space in the same place",spriteList[0].x-sx,spriteList[0].y-sy);
+        setSpriteCollisions(0,COLLIDE_NONE);
+        setSpriteCollisions(1,COLLIDE_NONE);
+    }
+    clearLayerTransform(layer);
+    printf("Layer space sprites: %d exact matches (scrolled, and upright), %d rotating with the layer (within %d%% of pixels), %d collisions\n",
+        exact,rotating,maxDiffPercent,collisionTests);
 }
 
 static void testSpriteLayerCollisions(void)
@@ -648,6 +916,226 @@ static void launchParticle(int set, float x, float y, float xDir, float yDir)
     p->xDir=xDir;
     p->yDir=yDir;
     p->delay=0;
+}
+
+// The tile at a screen point must be the one drawn there: with odd numbered tiles solid and even ones empty, a point's
+// tile number is odd exactly when the renderer drew a pixel there - for scrolled, rotated/scaled and Mode 7 layers
+static uint8_t oddSolidTiles[4096];
+static LayerLineTransform tileAtLines[SCREEN_HEIGHT_LINES];
+
+static void testTileAtPoint(void)
+{
+    const int layer=2;
+    for(int t=0;t<256;t++){
+        for(int r=0;r<8;r++){
+            oddSolidTiles[(t*8)+r]=(t&1)?0xff:0x00;
+            oddSolidTiles[2048+(t*8)+r]=(t&1)?0x00:0xff;
+        }
+    }
+    initLayers();
+    setTileDefSet(layer,oddSolidTiles);
+    rngState=2024;
+    for(int y=0;y<TILE_LAYER_HEIGHT;y++){
+        for(int x=0;x<TILE_LAYER_WIDTH;x++){
+            setLayerTile(layer,(uint8_t)(rng()&0xff),0x47,0x47,x,y);
+        }
+    }
+    int tests=0;
+    for(int t=0;t<300;t++){
+        clearLayerTransform(layer);
+        setLayerPos(layer,(int)(rng()%1000)-800,(int)(rng()%1000)-800);
+        const int kind=t%3;
+        if(kind==1){
+            setLayerTransform(layer,(float)(rng()%628)/100.0f,0.5f+((float)(rng()%200)/100.0f),0.5f+((float)(rng()%200)/100.0f));
+        }else if(kind==2){
+            buildLayerPerspective(tileAtLines,(float)(rng()%512),(float)(rng()%512),(float)(rng()%628)/100.0f,24.0f,
+                (float)(rng()%100),128.0f);
+            setLayerLineTransforms(layer,tileAtLines);
+        }
+        initScratchBuffers(true);
+        blitLayerToScratchBuffers(layer);
+        const bool drawn=isLayerCollidable(layer);
+        for(int k=0;k<200;k++){
+            const int x=(int)(rng()%SCREEN_WIDTH_PIXELS);
+            const int y=(int)(rng()%SCREEN_HEIGHT_LINES);
+            const bool pixel=(scratchPixRam[(y*SCREEN_WIDTH_CELLS)+(x>>3)]&(0x80>>(x&7)))!=0;
+            int tx=-1, ty=-1;
+            const int tile=getLayerTileNumberAt(layer,x,y,&tx,&ty);
+            if(!drawn){
+                check(tile==-1 && !isLayerPixelSetAt(layer,x,y),"tile at a point, layer not drawn",x,y);
+                continue;
+            }
+            check(isLayerPixelSetAt(layer,x,y)==pixel,"isLayerPixelSetAt matches the drawn pixel",x,y);
+            // Mode 7 lines above the horizon aren't drawn, and have no tile
+            if(tile<0){
+                check(kind==2 && !pixel,"tile at a point missing",x,y);
+                continue;
+            }
+            check(((tile&1)!=0)==pixel,"tile at a point is the one drawn",x,y);
+            check(tile==tileLayer[layer].tileMap[(ty*TILE_LAYER_WIDTH)+tx],"tile number matches its map position",tx,ty);
+            if(kind==0){
+                check(tx==(((x-tileLayer[layer].x)&511)>>3) && ty==(((y-tileLayer[layer].y)&511)>>3),"tile position when scrolled",x,y);
+            }
+            ++tests;
+        }
+    }
+    // Off screen points have no tile
+    clearLayerTransform(layer);
+    setLayerPos(layer,0,0);
+    check(getLayerTileNumberAt(layer,-1,10,NULL,NULL)==-1 && getLayerTileNumberAt(layer,10,SCREEN_HEIGHT_LINES,NULL,NULL)==-1 &&
+        !isLayerPixelSetAt(layer,SCREEN_WIDTH_PIXELS,0),"no tile off screen",0,0);
+    printf("Tile at a point: %d points on scrolled, rotated/scaled and Mode 7 layers, matching the drawn tiles\n",tests);
+}
+
+// Tiles at points near layer space sprites: straight from the tile map, matching what's drawn at the same point on
+// screen, and working off screen too
+static void testSpriteTileAt(void)
+{
+    const int layer=2;
+    initLayers();
+    setTileDefSet(layer,oddSolidTiles);     // Built by testTileAtPoint: odd numbered tiles solid, even ones empty
+    rngState=5150;
+    for(int y=0;y<TILE_LAYER_HEIGHT;y++){
+        for(int x=0;x<TILE_LAYER_WIDTH;x++){
+            setLayerTile(layer,(uint8_t)(rng()&0xff),0x47,0x47,x,y);
+        }
+    }
+    initSprites(1);
+    int tests=0, onScreen=0, screenDiffers=0, plainTests=0;
+    for(int t=0;t<2000;t++){
+        clearLayerTransform(layer);
+        setLayerPos(layer,(int)(rng()%300)-200,(int)(rng()%300)-200);
+        if(t&1){
+            const float scale=0.6f+((float)(rng()%100)/100.0f);
+            setLayerTransform(layer,(float)(rng()%628)/100.0f,scale,scale);
+        }
+        randomSprite(0,layer);
+        spriteList[0].space=SPRITE_SPACE_SCREEN;
+        setSpriteSpace(0,SPRITE_SPACE_LAYER,-1);
+        setSpriteRotateWithLayer(0,(rng()&1)!=0);
+        setSpritePos(0,(float)(rng()%700)-100.0f,(float)(rng()%700)-100.0f);
+        placeLayerSprites();
+        for(int k=0;k<20;k++){
+            const float dx=(float)((int)(rng()%61)-30);
+            const float dy=(float)((int)(rng()%61)-30);
+            int tx, ty;
+            const int tile=getSpriteTileAt(0,dx,dy,&tx,&ty);
+            float lu, lv;
+            getSpritePoint(0,dx,dy,&lu,&lv);
+            const int mapTile=tileLayer[layer].tileMap[((((int)floorf(lv))>>3)&63)*TILE_LAYER_WIDTH+((((int)floorf(lu))>>3)&63)];
+            check(tile==mapTile,"sprite tile at a point is the map tile",tile,mapTile);
+            check(isSpritePointSolid(0,dx,dy)==((tile&1)!=0),"isSpritePointSolid matches the tile",tile,0);
+            // The whole pixel versions give the same answers (fast route or not)
+            int tx2=-1, ty2=-1;
+            check(getSpriteTileAtI(0,(int)dx,(int)dy,&tx2,&ty2)==tile && tx2==tx && ty2==ty,
+                "getSpriteTileAtI matches getSpriteTileAt",tx2,tx);
+            check(isSpritePointSolidI(0,(int)dx,(int)dy)==isSpritePointSolid(0,dx,dy),
+                "isSpritePointSolidI matches isSpritePointSolid",(int)dx,(int)dy);
+            plainTests+=(spriteList[0].rotSin==0.0f && !spriteList[0].isScaled)?1:0;
+            ++tests;
+            // The same point on screen (where it's on screen, and the layer is drawn)
+            float sx, sy;
+            layerToScreen(layer,lu,lv,&sx,&sy);
+            if(sx>=0.0f && sx<(float)SCREEN_WIDTH_PIXELS && sy>=0.0f && sy<(float)SCREEN_HEIGHT_LINES){
+                const int screenTile=getLayerTileNumberAt(layer,(int)sx,(int)sy,NULL,NULL);
+                if(screenTile>=0){
+                    ++onScreen;
+                    if(screenTile!=tile){
+                        // The screen lookup samples the centre of the screen pixel the point is in - up to ~1.2 layer
+                        // pixels away when scaled - so it can only differ near a tile edge
+                        ++screenDiffers;
+                        const float fu=fmodf(fmodf(lu,8.0f)+8.0f,8.0f), fv=fmodf(fmodf(lv,8.0f)+8.0f,8.0f);
+                        const float edge=fminf(fminf(fu,8.0f-fu),fminf(fv,8.0f-fv));
+                        check(edge<1.5f,"sprite tile differs from the screen away from a tile edge",(int)(edge*10),0);
+                    }
+                }
+            }
+        }
+        // And in screen space
+        if((t&3)==0){
+            setSpriteSpace(0,SPRITE_SPACE_SCREEN,-1);
+            for(int k=0;k<10;k++){
+                const int dx=(int)(rng()%61)-30, dy=(int)(rng()%61)-30;
+                const int a=getSpriteTileAtI(0,dx,dy,NULL,NULL), b=getSpriteTileAt(0,(float)dx,(float)dy,NULL,NULL);
+                check(a==b,"getSpriteTileAtI matches getSpriteTileAt in screen space",a,b);
+                check(isSpritePointSolidI(0,dx,dy)==isSpritePointSolid(0,(float)dx,(float)dy),
+                    "isSpritePointSolidI matches isSpritePointSolid in screen space",dx,dy);
+            }
+        }
+    }
+
+    // isLayerMapPixelSet reads single pixels as getLayerMapPixels does, with patterned tile graphics
+    static uint8_t patternTiles[256*8];
+    for(int n=0;n<256*8;n++){
+        patternTiles[n]=(uint8_t)rng();
+    }
+    setTileDefSet(layer,patternTiles);
+    for(int n=0;n<20000;n++){
+        const int x=(int)(rng()%2000)-1000, y=(int)(rng()%2000)-1000;
+        check(isLayerMapPixelSet(layer,x,y)==(getLayerMapPixels(layer,x,y,1)!=0),"isLayerMapPixelSet matches the map",x,y);
+    }
+    setTileDefSet(layer,oddSolidTiles);
+    // Speed on a rotated layer (PC, and this build has AddressSanitizer, so only relative): the raw lookups, and a point
+    // near the same sprite in screen space and in layer space (both including working out the point)
+    setLayerTransform(layer,0.5f,1.0f,1.0f);
+    setSpriteRotation(0,0.3f);
+    volatile int sink=0;
+    const int loops=400000;
+    clock_t t0=clock();
+    for(int n=0;n<loops;n++){
+        sink+=getLayerTileNumberAt(layer,n&255,(n>>8)%192,NULL,NULL);
+    }
+    const double rawScreen=(double)(clock()-t0);
+    t0=clock();
+    for(int n=0;n<loops;n++){
+        sink+=getLayerMapTileNumber(layer,n&511,(n>>9)&511,NULL,NULL);
+    }
+    const double rawMap=(double)(clock()-t0);
+    setSpriteSpace(0,SPRITE_SPACE_SCREEN,-1);
+    setSpritePos(0,128.0f,96.0f);
+    t0=clock();
+    for(int n=0;n<loops;n++){
+        sink+=getSpriteTileAt(0,(float)((n&63)-32),(float)(((n>>6)&63)-32),NULL,NULL);
+    }
+    const double spriteScreen=(double)(clock()-t0);
+    setSpriteSpace(0,SPRITE_SPACE_LAYER,-1);
+    t0=clock();
+    for(int n=0;n<loops;n++){
+        sink+=getSpriteTileAt(0,(float)((n&63)-32),(float)(((n>>6)&63)-32),NULL,NULL);
+    }
+    const double spriteLayer=(double)(clock()-t0);
+    // The same sprite, not rotated or scaled (a player turning with the layer): float offsets, then whole pixel ones
+    setSpriteRotateWithLayer(0,true);
+    setSpriteScale(0,0.0f,0.0f);
+    setSpriteRotation(0,0.0f);
+    t0=clock();
+    for(int n=0;n<loops;n++){
+        sink+=getSpriteTileAt(0,(float)((n&63)-32),(float)(((n>>6)&63)-32),NULL,NULL);
+    }
+    const double plainFloat=(double)(clock()-t0);
+    t0=clock();
+    for(int n=0;n<loops;n++){
+        sink+=getSpriteTileAtI(0,(n&63)-32,((n>>6)&63)-32,NULL,NULL);
+    }
+    const double plainInt=(double)(clock()-t0);
+    t0=clock();
+    for(int n=0;n<loops;n++){
+        sink+=isSpritePointSolid(0,(float)((n&63)-32),(float)(((n>>6)&63)-32))?1:0;
+    }
+    const double solidFloat=(double)(clock()-t0);
+    t0=clock();
+    for(int n=0;n<loops;n++){
+        sink+=isSpritePointSolidI(0,(n&63)-32,((n>>6)&63)-32)?1:0;
+    }
+    const double solidInt=(double)(clock()-t0);
+    (void)sink;
+    clearLayerTransform(layer);
+    printf("Sprite tile at a point: %d points (%d unrotated and unscaled), all matching the tile map (%d on screen, %d on screen differing only at tile edges)\n",
+        tests,plainTests,onScreen,screenDiffers);
+    printf("Tile at a point, rotated layer (PC): map lookup %.1fx faster than screen; near a sprite, layer space %.1fx faster than screen space\n",
+        rawScreen/(rawMap>0?rawMap:1),spriteScreen/(spriteLayer>0?spriteLayer:1));
+    printf("Unrotated, unscaled layer space sprite (PC): tile %.1fx and solid pixel %.1fx faster with whole pixel offsets; %.1fx faster than a rotated sprite in screen space\n",
+        plainFloat/(plainInt>0?plainInt:1),solidFloat/(solidInt>0?solidInt:1),spriteScreen/(plainInt>0?plainInt:1));
 }
 
 // Which space the particle tests run in (they run in both)
@@ -1213,6 +1701,546 @@ static void testParticleStillLimit(void)
 }
 
 // ---------------------------------------------------------------------------
+// Levels
+// ---------------------------------------------------------------------------
+
+// Pack and unpack all sorts of data: random, runs, repeating patterns, and more than the 64KB match window
+static void testLzPack(void)
+{
+    static uint8_t src[200000], packed[LZ_PACK_BOUND(200000)], out[200000];
+    const int sizes[]={0,1,3,4,5,15,16,19,20,255,270,1000,4096,65535,65536,65537,70000,200000};
+    int tests=0;
+    long totalIn=0, totalOut=0;
+    for(int kind=0;kind<5;kind++){
+        for(int s=0;s<(int)(sizeof(sizes)/sizeof(sizes[0]));s++){
+            const int n=sizes[s];
+            for(int i=0;i<n;i++){
+                switch(kind){
+                    case 0: src[i]=(uint8_t)rng(); break;                           // Random
+                    case 1: src[i]=7; break;                                        // One run
+                    case 2: src[i]=(uint8_t)((i/((rng()%40)+1))&3); break;          // Short runs
+                    case 3: src[i]=(uint8_t)((i%13)*(i%7)); break;                  // Repeating pattern
+                    default: src[i]=(rng()%10)?0:(uint8_t)rng(); break;             // Sparse, like a foreground
+                }
+            }
+            const int p=lzPack(src,n,packed);
+            check(p<=LZ_PACK_BOUND(n),"packed data fits LZ_PACK_BOUND",p,LZ_PACK_BOUND(n));
+            memset(out,0xAA,(size_t)n);
+            const int u=lzUnpack(packed,p,out,n);
+            check(u==n && memcmp(out,src,(size_t)n)==0,"data unpacks to what was packed",kind,n);
+            // Cut short, it's reported as corrupt rather than read past the end
+            if(p>1){
+                check(lzUnpack(packed,p-1,out,n)<0,"truncated packed data is found",kind,n);
+            }
+            ++tests;
+            totalIn+=n;
+            totalOut+=p;
+        }
+    }
+    printf("LZ packing: %d round trips, %ld bytes packed to %ld\n",tests,totalIn,totalOut);
+}
+
+// A level built here: a big layer with foreground tiles, and a small repeating parallax layer
+#define TL_W        200
+#define TL_H        150
+#define TL_BACK_W   37
+#define TL_BACK_H   23
+static uint8_t tlTiles[TL_W*TL_H], tlFg[TL_W*TL_H], tlBack[TL_BACK_W*TL_BACK_H];
+static uint8_t tlTileSet[4096], tlAttrs[512], tlFlags[256];
+static LevelAnimFrame tlFrames[3]={{50,2},{51,3},{52,1}};
+static LevelAnim tlAnim={49,3,tlFrames};
+static LevelTileSet tlSets[1];
+static LevelLayer tlLayers[2];
+static LevelDef tlLevel;
+static uint8_t tlPacked[2][LZ_PACK_BOUND(TL_W*TL_H*3)];
+
+static int tlExpectTile(int layer, int tx, int ty)
+{
+    if(layer==2){
+        tx-=5;
+        ty-=-7;
+        return (tx>=0 && tx<TL_W && ty>=0 && ty<TL_H)?tlTiles[(ty*TL_W)+tx]:0;
+    }
+    tx=((tx%TL_BACK_W)+TL_BACK_W)%TL_BACK_W;
+    ty=((ty%TL_BACK_H)+TL_BACK_H)%TL_BACK_H;
+    return tlBack[(ty*TL_BACK_W)+tx];
+}
+
+static int tlExpectFg(int tx, int ty)
+{
+    tx-=5;
+    ty-=-7;
+    return (tx>=0 && tx<TL_W && ty>=0 && ty<TL_H)?tlFg[(ty*TL_W)+tx]:0;
+}
+
+static void buildTestLevel(void)
+{
+    // Tiles in runs, a few foreground tiles, a patterned repeating layer
+    int t=0;
+    for(int n=0;n<TL_W*TL_H;n++){
+        if(rng()%8==0){
+            t=(int)(rng()%60);
+        }
+        tlTiles[n]=(uint8_t)t;
+        tlFg[n]=(rng()%20==0)?(uint8_t)(1+(rng()%60)):0;
+    }
+    for(int n=0;n<TL_BACK_W*TL_BACK_H;n++){
+        tlBack[n]=(uint8_t)(n%11);
+    }
+    for(int n=0;n<4096;n++){
+        tlTileSet[n]=(uint8_t)rng();
+    }
+    for(int n=0;n<256;n++){
+        tlAttrs[n*2]=(uint8_t)n;
+        tlAttrs[(n*2)+1]=(uint8_t)(n^0x55);
+        tlFlags[n]=(uint8_t)(n&3);
+    }
+    tlAttrs[0]=0x80;
+    tlAttrs[1]=0x80;
+    tlSets[0]=(LevelTileSet){tlTileSet,tlAttrs,tlFlags,1,&tlAnim};
+
+    // Main layer: tiles, then foreground bits (rows of 32 bit words) and tiles, as the converter packs them
+    static uint8_t stream[TL_W*TL_H*3];
+    const int tileBytes=(TL_W*TL_H+3)&~3;
+    const int rowWords=(TL_W+31)/32;
+    memset(stream,0,sizeof(stream));
+    memcpy(stream,tlTiles,TL_W*TL_H);
+    int fgCount=0;
+    uint8_t *list=stream+tileBytes+(TL_H*rowWords*4);
+    for(int y=0;y<TL_H;y++){
+        for(int x=0;x<TL_W;x++){
+            if(tlFg[(y*TL_W)+x]){
+                uint32_t *w=(uint32_t *)(stream+tileBytes)+(y*rowWords)+(x>>5);
+                *w|=1u<<(x&31);
+                list[fgCount++]=tlFg[(y*TL_W)+x];
+            }
+        }
+    }
+    const int mainSize=tileBytes+(TL_H*rowWords*4)+fgCount;
+    const int mainPacked=lzPack(stream,mainSize,tlPacked[0]);
+    tlLayers[0]=(LevelLayer){tlPacked[0],(uint32_t)mainPacked,TL_W,TL_H,5,-7,0,0,256,256,(uint16_t)fgCount,0,0,2,1,0,"main"};
+
+    // Background: repeats, half speed, offset (its tiles padded to 4 bytes too)
+    static uint8_t backStream[(TL_BACK_W*TL_BACK_H+3)&~3];
+    memcpy(backStream,tlBack,TL_BACK_W*TL_BACK_H);
+    const int backPacked=lzPack(backStream,sizeof(backStream),tlPacked[1]);
+    tlLayers[1]=(LevelLayer){tlPacked[1],(uint32_t)backPacked,TL_BACK_W,TL_BACK_H,0,0,3,-5,128,128,0,0,0,4,-1,
+        LEVEL_WRAP_X|LEVEL_WRAP_Y,"back"};
+
+    const uint32_t ram=4096+((mainSize+3)&~3)+((TL_H*2+3)&~3)+((TL_BACK_W*TL_BACK_H+3)&~3);
+    static const LevelTileSet *tlSetList[1]={tlSets};
+    tlLevel=(LevelDef){"test",TL_W+5,TL_H,ram,1,2,0,0,tlSetList,tlLayers,NULL,NULL};
+}
+
+// Every tile within 28 tiles of the middle of the screen (inside the 64x64 window around it) is in the engine layer,
+// with its colours - and the foreground's
+static int checkLevelWindow(int layer)
+{
+    const TileLayer *t=tileLayer+layer;
+    float cu, cv;
+    screenToLayer(layer,SCREEN_WIDTH_PIXELS/2,SCREEN_HEIGHT_LINES/2,&cu,&cv);
+    const int cx=(int)floorf(cu/8.0f), cy=(int)floorf(cv/8.0f);
+    int bad=0;
+    for(int ty=cy-28;ty<=cy+28;ty++){
+        for(int tx=cx-28;tx<=cx+28;tx++){
+            const int r=((ty&63)*TILE_LAYER_WIDTH)+(tx&63);
+            const int a=((ty&63)*TILE_LAYER_WIDTH*2)+(tx&63);
+            const int e=tlExpectTile(layer,tx,ty);
+            bad+=(t->tileMap[r]!=e || t->attrMap[a]!=tlAttrs[e*2] || t->attrMap[a+TILE_LAYER_WIDTH]!=tlAttrs[(e*2)+1])?1:0;
+            if(layer==2){
+                const int f=tlExpectFg(tx,ty);
+                const TileLayer *fl=tileLayer+1;
+                bad+=(fl->tileMap[r]!=f || fl->attrMap[a]!=tlAttrs[f*2] || fl->attrMap[a+TILE_LAYER_WIDTH]!=tlAttrs[(f*2)+1])?1:0;
+            }
+        }
+    }
+    return bad;
+}
+
+static void testLevelStreaming(void)
+{
+    initLayers();
+    rngState=4242;
+    buildTestLevel();
+    check(loadLevel(&tlLevel),"test level loads",0,0);
+
+    // Lookups straight from the level in RAM
+    int bad=0;
+    for(int ty=-10;ty<TL_H+10;ty++){
+        for(int tx=-10;tx<TL_W+20;tx++){
+            bad+=(getLevelTile(2,tx,ty)!=tlExpectTile(2,tx,ty))?1:0;
+            bad+=(getLevelForegroundTile(2,tx,ty)!=tlExpectFg(tx,ty))?1:0;
+            bad+=(getLevelTileFlags(2,tx,ty)!=(tlExpectTile(2,tx,ty)&3))?1:0;
+            bad+=(getLevelTile(4,tx,ty)!=tlExpectTile(4,tx,ty))?1:0;
+        }
+    }
+    check(bad==0,"level tile lookups match the level",bad,0);
+    check(getLevelTile(3,0,0)==-1,"layers that aren't the level's have no level tiles",getLevelTile(3,0,0),-1);
+
+    // The camera wanders, jumps, goes off the level's edges, and the main layer rotates and scales - the tiles around
+    // the view are always right
+    int moves=0, badMoves=0;
+    int camX=0, camY=0;
+    for(int n=0;n<3000;n++){
+        const uint32_t r=rng()%100;
+        if(r<80){
+            camX+=(int)(rng()%33)-16;
+            camY+=(int)(rng()%33)-16;
+        }else if(r<95){
+            camX=(int)(rng()%2400)-400;
+            camY=(int)(rng()%1600)-400;
+        }else{
+            camX+=(int)(rng()%1025)-512;
+        }
+        if(n%500==250){
+            setLayerTransform(2,(float)(rng()%628)/100.0f,0.7f+((float)(rng()%80)/100.0f),1.0f);
+        }else if(n%500==0){
+            clearLayerTransform(2);
+        }
+        setLevelCamera(camX,camY);
+        const int b=checkLevelWindow(2)+checkLevelWindow(4);
+        badMoves+=b?1:0;
+        ++moves;
+        if(b){
+            check(false,"level tiles around the view after a camera move",b,n);
+        }
+        // The layers are where the camera says (the background at half speed, plus its offset)
+        if(!tileLayer[2].transformed){
+            float u, v;
+            screenToLayer(2,0.0f,0.0f,&u,&v);
+            // (a whole 512 pixel repeat away if the camera is left of or above the level, as the layer can't go right of
+            // or below the screen)
+            check(((int)floorf(u)-camX)%512==0 && ((int)floorf(v)-camY)%512==0,"main layer at the camera",(int)floorf(u),camX);
+        }
+        const int bx=3-((camX*128)>>8);
+        check(((tileLayer[4].x-bx)%512)==0 && tileLayer[4].x<SCREEN_WIDTH_PIXELS,"parallax layer position",tileLayer[4].x,bx);
+    }
+    clearLayerTransform(2);
+    check(badMoves==0,"camera moves with wrong tiles",badMoves,moves);
+
+    // The foreground layer follows the main layer's position and transform
+    setLayerTransform(2,0.4f,1.2f,0.9f);
+    setLevelCamera(333,222);
+    syncFollowingLayers();
+    check(tileLayer[1].x==tileLayer[2].x && tileLayer[1].y==tileLayer[2].y && tileLayer[1].transformed &&
+        tileLayer[1].dudx==tileLayer[2].dudx && tileLayer[1].dvdy==tileLayer[2].dvdy,"foreground layer follows",0,0);
+    clearLayerTransform(2);
+
+    // Changing a tile changes it on screen, and in the level
+    setLevelCamera(400,300);
+    const int tx=(400/8)+10, ty=(300/8)+5;
+    setLevelTile(2,tx,ty,33);
+    check(getLevelTile(2,tx,ty)==33,"setLevelTile changes the level",getLevelTile(2,tx,ty),33);
+    const int r=((ty&63)*TILE_LAYER_WIDTH)+(tx&63);
+    check(tileLayer[2].tileMap[r]==33 && tileLayer[2].attrMap[((ty&63)*128)+(tx&63)]==33,"setLevelTile changes the screen",
+        tileLayer[2].tileMap[r],33);
+    tlTiles[((ty+7)*TL_W)+(tx-5)]=33;
+
+    // Animated tile 49: its graphic (in the RAM copy of the tile set) cycles through tiles 50, 51 and 52
+    const uint8_t *ram=tileLayer[2].tileDefPtr;
+    check(ram!=tlTileSet && memcmp(ram+(49*8),tlTileSet+(50*8),8)==0,"animated tile starts on its first frame",0,0);
+    const int expect[]={50,50,51,51,51,52,50,50,51};
+    bad=0;
+    for(int f=0;f<9;f++){
+        bad+=(memcmp(ram+(49*8),tlTileSet+(expect[f]*8),8)!=0 || memcmp(ram+(256*8)+(49*8),tlTileSet+(256*8)+(expect[f]*8),8)!=0)?1:0;
+        updateLevel();
+    }
+    check(bad==0,"animated tile frames and timings",bad,0);
+
+    // Too big for LEVEL_RAM_SIZE is refused
+    LevelDef big=tlLevel;
+    big.ramSize=LEVEL_RAM_SIZE+1;
+    check(!loadLevel(&big),"a level too big for RAM is refused",0,0);
+    printf("Level streaming: %d camera moves (with jumps, rotation, scaling and parallax), foreground, animation and tile changes\n",
+        moves);
+}
+
+static void saveScreenBMP(const char *name);
+
+static int shows=0, hides=0, lastShown=-1, lastHidden=-1;
+static void onShow(int objectIX, int spriteIX)
+{
+    ++shows;
+    lastShown=objectIX;
+    check(spriteList[spriteIX].levelObject==objectIX && getLevelActor(objectIX)->sprite==spriteIX,
+        "show callback gets the actor's sprite",objectIX,spriteIX);
+}
+static void onHide(int objectIX, int spriteIX)
+{
+    ++hides;
+    lastHidden=objectIX;
+    check(spriteList[spriteIX].inUse && getLevelActor(objectIX)->sprite<0,"hide callback before the sprite's freed",
+        objectIX,spriteIX);
+}
+
+// Objects and actors, from the demo level as converted from Tiled (levels/tiled/demo.tmx): its objects are the player
+// start (0), enemies (1-4, and 5 waiting for the camera), a platform (6) and its path (7), and a bubble generator (8)
+static void testLevelActors(void)
+{
+    initLayers();
+    initSprites(40);
+    check(loadLevel(&level_demo),"demo level loads",0,0);
+    check(getLevelObjectCount()==20,"demo level objects",getLevelObjectCount(),20);
+    const LevelObject *start=getLevelObject(0);
+    check(start->cls==LEVEL_CLASS_PLAYER_START && start->x==40 && start->y==261 && start->sheet>=0 && start->frame==11,
+        "player start object",start->x,start->y);
+    check(findLevelObject(LEVEL_CLASS_PLATFORM)==6 && findLevelObject(LEVEL_CLASS_GENERATOR)==8,"finding objects by class",
+        findLevelObject(LEVEL_CLASS_PLATFORM),6);
+
+    // Properties: class defaults from the Tiled project, and each object's own
+    check(getLevelObjectFloat(1,LEVEL_PROP_SPEED,-1.0f)==0.5f && getLevelObjectInt(1,LEVEL_PROP_ALERT_RANGE,-1)==96,
+        "class default properties",getLevelObjectInt(1,LEVEL_PROP_ALERT_RANGE,-1),96);
+    check(getLevelObjectInt(4,LEVEL_PROP_ALERT_RANGE,-1)==0 && getLevelObjectFloat(5,LEVEL_PROP_SPEED,-1.0f)==1.0f,
+        "an object's own properties",getLevelObjectInt(4,LEVEL_PROP_ALERT_RANGE,-1),0);
+    check(getLevelObjectInt(8,LEVEL_PROP_INTERVAL,-1)==25 && getLevelObjectInt(8,LEVEL_PROP_MAX,-1)==5,
+        "generator properties",getLevelObjectInt(8,LEVEL_PROP_INTERVAL,-1),25);
+    check(getLevelObjectInt(6,LEVEL_PROP_PATH,-1)==7,"object links become object indexes",
+        getLevelObjectInt(6,LEVEL_PROP_PATH,-1),7);
+    check(getLevelObjectInt(0,LEVEL_PROP_SPEED,-9)==-9 && strcmp(getLevelObjectString(1,LEVEL_PROP_SPEED,"x"),"x")==0,
+        "missing properties give the default",0,0);
+    check((getLevelObject(5)->flags&LEVEL_OBJ_WAIT) && !(getLevelObject(1)->flags&LEVEL_OBJ_WAIT),"waitForCamera flag",0,0);
+    const LevelObject *g=getLevelObject(8);
+    check(g->x==368 && g->y==280 && g->width==80 && g->height==8 && g->sheet<0,"an area object",g->x,g->y);
+
+    // Paths
+    check(fabsf(getLevelPathLength(7)-176.0f)<0.01f,"path length",(int)getLevelPathLength(7),176);
+    float px, py;
+    getLevelPathPoint(7,88.0f,&px,&py);
+    check(px==1262.0f && py==174.0f,"a point along a path",(int)px,(int)py);
+    getLevelPathPoint(7,500.0f,&px,&py);
+    check(py==86.0f,"points along a path stop at its end",(int)py,86);
+
+    // Actors: every object has one, where it was placed. The one waiting for the camera starts dormant
+    check(getLevelActor(1)->x==280.0f && getLevelActor(1)->sprite==-1 && isLevelActorActive(1) && !isLevelActorActive(5),
+        "actors start where their objects are",(int)getLevelActor(1)->x,280);
+    const int enemies=createSpriteSet();
+    setLevelClassSprites(LEVEL_CLASS_ENEMY,enemies,COLLIDE_TARGET);
+    setLevelActorCallbacks(onShow,onHide);
+    killLevelActor(0);
+
+    // Camera at the start: the first enemy (x 280) is within 32 pixels of the view, so gets a sprite; others don't
+    setLevelCamera(0,128);
+    updateLevel();
+    const int s1=getLevelActor(1)->sprite;
+    check(s1>=0 && getLevelActor(2)->sprite<0 && getLevelActor(0)->sprite<0,"sprites for actors near the camera",s1,0);
+    check(s1>=0 && spriteList[s1].layer==2 && spriteList[s1].space==SPRITE_SPACE_LAYER && spriteList[s1].xF==280.0f &&
+        spriteList[s1].frame==3 && isSpriteInSet(s1,enemies) && spriteList[s1].collideWith==COLLIDE_TARGET &&
+        getSpriteLevelObject(s1)==1,"an actor's sprite is set up from its object and class",s1,0);
+    // (the first enemy, and the door to the cave by the start)
+    check(shows==2 && getLevelActor(findLevelObjectByName("to cave"))->sprite>=0,"show callback",shows,2);
+
+    // The game moves an actor: its sprite follows. Off the view, but within the hide margin, it keeps it
+    getLevelActor(1)->x=340.0f;
+    getLevelActor(1)->frame=9;
+    updateLevel();
+    check(spriteList[s1].xF==340.0f && spriteList[s1].frame==9,"sprites follow their actors",(int)spriteList[s1].xF,340);
+
+    // Far along: the first enemy's sprite goes, the waiting one wakes and gets one
+    setLevelCamera(1000,128);
+    updateLevel();
+    // (the freed sprite may already be another actor's)
+    check(getLevelActor(1)->sprite<0 && spriteList[s1].levelObject!=1 && hides==2,"sprites taken from far actors",hides,2);
+    check(isLevelActorActive(5) && (getLevelActor(5)->flags&LEVEL_ACTOR_WOKE) && getLevelActor(5)->sprite>=0,
+        "waiting actors wake when the camera reaches them",getLevelActor(5)->flags,0);
+    updateLevel();
+    check(!(getLevelActor(5)->flags&LEVEL_ACTOR_WOKE),"woke is only set the frame they wake",getLevelActor(5)->flags,0);
+
+    // Killed: its sprite goes, and it isn't updated or shown again
+    const int s5=getLevelActor(5)->sprite;
+    killLevelActor(5);
+    updateLevel();
+    check(!isLevelActorActive(5) && getLevelActor(5)->sprite<0 && !spriteList[s5].inUse && getSpriteLevelObject(s5)==-1,
+        "killed actors lose their sprite",0,0);
+
+    // Running out of sprites: actors wait for one, then get one when a sprite's freed
+    initSprites(1);
+    loadLevel(&level_demo);
+    killLevelActor(0);
+    const int taken=allocateSprite();
+    setLevelCamera(0,128);
+    updateLevel();
+    check(taken==0 && getLevelActor(1)->sprite<0,"no sprite free, no sprite",getLevelActor(1)->sprite,-1);
+    freeSprite(taken);
+    updateLevel();
+    check(getLevelActor(1)->sprite==0,"an actor gets a sprite once one's free",getLevelActor(1)->sprite,0);
+    check(allocateSprite()==-1,"allocateSprite when every sprite's in use",0,0);
+    initSprites(1);
+    printf("Level objects and actors: properties, links, paths, sprites near the camera, waking, killing\n");
+}
+
+// Switch handler calls, recorded
+typedef struct SwitchCall {
+    int value;
+    bool on;
+    int objectIX;
+    uint8_t why;
+} SwitchCall;
+static SwitchCall switchCalls[32];
+static int switchCallCount=0, setupCalls=0;
+
+static void recordSwitch(int value, bool on, int objectIX, uint8_t why)
+{
+    if(switchCallCount<32){
+        switchCalls[switchCallCount++]=(SwitchCall){value,on,objectIX,why};
+    }
+}
+
+static void countSetup(const LevelDef *lv)
+{
+    (void)lv;
+    ++setupCalls;
+}
+
+// A switch handler call was made (value, on, why)
+static bool switchCalled(int value, bool on, uint8_t why)
+{
+    for(int n=0;n<switchCallCount;n++){
+        if(switchCalls[n].value==value && switchCalls[n].on==on && switchCalls[n].why==why){
+            return true;
+        }
+    }
+    return false;
+}
+
+// Switches, and what's remembered moving between levels - with the demo level and the cave (levels/tiled)
+static void testLevelSwitches(void)
+{
+    initLayers();
+    initSprites(20);
+    clearLevelStateStore();
+    setLevelHandlers(countSetup,recordSwitch);
+    switchCallCount=0;
+    setupCalls=0;
+
+    // Into the demo level at its start: set up, nothing on to replay
+    const int start=enterLevel(LEVEL_ID_DEMO,NULL);
+    check(start>=0 && strcmp(getLevelObject(start)->name,"start")==0 && getLevelID()==LEVEL_ID_DEMO,
+        "entering a level finds its start",start,0);
+    check(setupCalls==1 && switchCallCount==0,"level setup called, nothing replayed",setupCalls,switchCallCount);
+    check(enterLevel(LEVEL_ID_DEMO,"cave door")==findLevelObjectByName("cave door"),"entering at a named entrance",0,0);
+    check(enterLevel(99,NULL)==-2,"a level that doesn't exist",0,0);
+    enterLevel(LEVEL_ID_DEMO,NULL);
+    switchCallCount=0;
+
+    // Toggle (the piston lever): on, off, on - the handler told each time, its frame following
+    const int lever=findLevelObjectByName("piston lever");
+    check(lever>=0 && getLevelObject(lever)->mode==LEVEL_SWITCH_TOGGLE && getLevelObject(lever)->slot>=0,"the lever",lever,0);
+    check(useLevelSwitch(lever) && getLevelSwitch(lever) && getLevelActor(lever)->frame==1 &&
+        switchCalled(SWITCH_ID_PISTONS,true,LEVEL_SWITCH_USED),"a toggle switch turns on",switchCallCount,1);
+    check(useLevelSwitch(lever) && !getLevelSwitch(lever) && getLevelActor(lever)->frame==0 &&
+        switchCalled(SWITCH_ID_PISTONS,false,LEVEL_SWITCH_USED),"and off",switchCallCount,2);
+    useLevelSwitch(lever);
+
+    // Once (the locked door): opens, and stays open
+    const int door=findLevelObjectByName("treasure door");
+    check(getLevelActor(door)->frame==0,"a door starts shut (its placed frame)",getLevelActor(door)->frame,0);
+    check(useLevelSwitch(door) && getLevelSwitch(door) && !useLevelSwitch(door) && getLevelSwitch(door),
+        "a once switch stays on",0,0);
+    check(getLevelActor(door)->frame==3,"on, a switch shows the last frame of its sheet (the door open)",
+        getLevelActor(door)->frame,3);
+
+    // Timed (the lift plate): on, then off by itself after its time - used again while on restarts the time
+    const int plate=findLevelObjectByName("lift plate");
+    useLevelSwitch(plate);
+    for(int n=0;n<60;n++){
+        updateLevel();
+    }
+    check(!useLevelSwitch(plate) && getLevelSwitch(plate),"using a timed switch that's on restarts it",0,0);
+    for(int n=0;n<119;n++){
+        updateLevel();
+    }
+    check(getLevelSwitch(plate),"a timed switch stays on for its time",0,0);
+    updateLevel();
+    check(!getLevelSwitch(plate) && switchCalled(SWITCH_ID_LIFT_CALL,false,LEVEL_SWITCH_EXPIRED),
+        "then turns itself off",0,0);
+
+    // The game's own remembered bits
+    setLevelObjectMemory(lever,21);
+    check(getLevelObjectMemory(lever)==21 && getLevelObjectMemory(plate)==0,"object memory",getLevelObjectMemory(lever),21);
+
+    // To the cave: its key's there. Take it
+    const int from=enterLevel(LEVEL_ID_CAVE,"from demo");
+    check(from>=0 && getLevelID()==LEVEL_ID_CAVE,"into the cave at its entrance",from,0);
+    const int key=findLevelObjectByName("door key");
+    check(key>=0 && isLevelActorActive(key),"the key's in the cave",key,0);
+    killLevelActor(key);
+
+    // Back to the demo level: the lever and door were left on, so are replayed; the plate doesn't persist
+    switchCallCount=0;
+    enterLevel(LEVEL_ID_DEMO,"cave door");
+    check(getLevelSwitch(lever) && getLevelSwitch(door) && !getLevelSwitch(plate),"switches as they were left",0,0);
+    check(switchCallCount==2 && switchCalled(SWITCH_ID_PISTONS,true,LEVEL_SWITCH_REPLAY) &&
+        switchCalled(SWITCH_ID_DOOR_A,true,LEVEL_SWITCH_REPLAY),"switches left on are replayed",switchCallCount,2);
+    check(getLevelActor(lever)->frame==1 && getLevelObjectMemory(lever)==21,"frame and memory remembered",
+        getLevelObjectMemory(lever),21);
+
+    // The key stays gone
+    enterLevel(LEVEL_ID_CAVE,"from demo");
+    check(!isLevelActorActive(findLevelObjectByName("door key")),"a collected key stays gone",0,0);
+
+    // A switch in another level, changed from here: the lever off
+    check(getLevelSwitchState(LEVEL_ID_DEMO,LEVEL_SLOT_DEMO_PISTON_LEVER),"another level's switch, read",0,0);
+    setLevelSwitchState(LEVEL_ID_DEMO,LEVEL_SLOT_DEMO_PISTON_LEVER,false);
+    check(!getLevelSwitchState(LEVEL_ID_DEMO,LEVEL_SLOT_DEMO_PISTON_LEVER),"another level's switch, set",0,0);
+    switchCallCount=0;
+    enterLevel(LEVEL_ID_DEMO,NULL);
+    check(!getLevelSwitch(lever) && getLevelSwitch(door) && switchCallCount==1,"it's off when the level's entered",
+        switchCallCount,1);
+
+    // Saving and loading a game: the whole store
+    static uint8_t saved[LEVEL_STATE_SIZE];
+    memcpy(saved,getLevelStateStore(),LEVEL_STATE_SIZE);
+    clearLevelStateStore();
+    enterLevel(LEVEL_ID_DEMO,NULL);
+    check(!getLevelSwitch(door),"a new game forgets",0,0);
+    memcpy(getLevelStateStore(),saved,LEVEL_STATE_SIZE);
+    enterLevel(LEVEL_ID_DEMO,NULL);
+    check(getLevelSwitch(door),"a loaded game remembers",0,0);
+
+    setLevelHandlers(NULL,NULL);
+    clearLevelStateStore();
+    initSprites(1);
+    printf("Level switches: modes, handler, replay entering levels, entrances, keys staying gone, other levels' switches, saving\n");
+}
+
+// The demo level (levels/tiled/demo.tmx, converted into levels/level_demo.c) - loads, matches the map, and a view of it
+static void testDemoLevel(void)
+{
+    initLayers();
+    initSprites(1);
+    check(loadLevel(&level_demo),"demo level loads",0,0);
+    check(getLevelWidth()==192*8 && getLevelHeight()==40*8,"demo level size",getLevelWidth(),getLevelHeight());
+    // A few tiles from the map: ground, the pool's platform, a pillar in front, sky that repeats
+    check(getLevelTile(2,10,34)==1 && getLevelTile(2,43,31)==6 && getLevelTile(2,40,35)==7,"demo level tiles",
+        getLevelTile(2,43,31),6);
+    check(getLevelForegroundTile(2,74,30)==16 && getLevelForegroundTile(2,75,26)==19 && getLevelTile(2,74,30)==0,
+        "demo level foreground tiles",getLevelForegroundTile(2,74,30),16);
+    check(getLevelTile(4,5,20)==24 && getLevelTile(4,5+64*3,20)==24,"demo level sky repeats",getLevelTile(4,5+64*3,20),24);
+    check((getLevelTileFlags(2,10,34)&LEVEL_TILE_SOLID) && (getLevelTileFlags(2,43,31)&LEVEL_TILE_PLATFORM) &&
+        (getLevelTileFlags(2,24,29)&LEVEL_TILE_COLLECT),"demo level tile flags",getLevelTileFlags(2,24,29),0);
+    check(isLevelPixelSolid(2,10*8,34*8+4) && !isLevelPixelSolid(2,10*8,33*8+4),"demo level solid pixels",0,0);
+
+    // A view by the pillars, with a sprite behind one
+    setLayerPos(0,400,0);
+    setLevelCamera(560,112);
+    setSpriteSize(0,SIZE_16X16);
+    setSpriteDef(0,sprite24x24Def,mask24x24Def);
+    setSpriteLayer(0,2);
+    setSpritePalette(0,1);
+    setSpritePos(0,(float)(74*8+18-560),(float)(33*8-112));
+    initScratchBuffers(true);
+    compositeScene();
+    saveScreenBMP("level_demo.bmp");
+    setLevelCamera(1100,0);
+    setLayerTransform(2,0.25f,1.0f,1.0f);
+    setLevelCamera(1100,0);
+    initScratchBuffers(true);
+    compositeScene();
+    saveScreenBMP("level_demo_rotated.bmp");
+    clearLayerTransform(2);
+}
+
+// ---------------------------------------------------------------------------
 // Example scenes
 // ---------------------------------------------------------------------------
 
@@ -1440,11 +2468,22 @@ int main(int argc, char *argv[])
     testSpriteIdentity(SIZE_16X16,sprite24x24Def,mask24x24Def,1,"16x16");
     testSpriteIdentity(SIZE_24X24,sprite24x24Def,mask24x24Def,2,"24x24");
     testSpriteIdentity(SIZE_32X40,titleLettersDef,titleLettersMaskDef,2,"32x40");
+    testSpriteIdentity(SIZE_32X8,platformSpriteDef,platformSpriteMaskDef,1,"32x8");
+    testSpriteIdentity(SIZE_16X32,gateDoorDef,gateDoorMaskDef,4,"16x32");
 
     testFrameSnapshot();
+    testSpriteSets();
     testSpriteSpriteCollisions();
     testSpriteLayerCollisions();
+    testLayerSpaceSprites();
     testLayerSamplers();
+    testTileAtPoint();
+    testSpriteTileAt();
+    testLzPack();
+    testLevelStreaming();
+    testDemoLevel();
+    testLevelActors();
+    testLevelSwitches();
     for(int space=0;space<2;space++){
         testSpace=space?PARTICLE_SPACE_LAYER:PARTICLE_SPACE_SCREEN;
         printf("Particles in %s space:\n",space?"layer":"screen");

@@ -1,4 +1,5 @@
 #include "Sprite.h"
+#include "TileLayer.h"
 #include <math.h>
 #include "pico.h"
 
@@ -7,11 +8,14 @@ int totalSprites=0;
 static uint8_t pixLineBuffer[256] __attribute__((aligned(4)));
 static uint8_t maskLineBuffer[256] __attribute__((aligned(4)));
 
+SpriteSet spriteSets[MAX_SPRITE_SETS];
+
 void initSprites(int numSprites)
 {
     if(totalSprites){
         deleteSprites();
     }
+    deleteSpriteSets();
     spriteList=(Sprite *)malloc(numSprites*sizeof(Sprite));
     totalSprites=numSprites;
     for(int n=0;n<numSprites;n++){
@@ -31,17 +35,222 @@ void initSprites(int numSprites)
         s->collideWith=COLLIDE_NONE;
         s->spriteHitCount=0;
         s->tileHitCount=0;
+        s->space=SPRITE_SPACE_SCREEN;
+        s->parentLayer=-1;
+        s->rotateWithLayer=1;
+        s->rotCos=1.0f;
+        s->rotSin=0.0f;
+        s->set=SPRITE_SET_NONE;
+        s->setNext=-1;
+        s->setPrev=-1;
+        s->inUse=0;
+        s->levelObject=-1;
+        s->solid=0;
     }
+}
+
+// A sprite back to how initSprites leaves it (keeping its set links, which removeSpriteFromSet has already cleared)
+static void resetSprite(Sprite *s)
+{
+    s->space=SPRITE_SPACE_SCREEN;
+    s->parentLayer=-1;
+    s->rotateWithLayer=1;
+    s->frame=0;
+    s->delay=0;
+    s->isScaled=0;
+    s->scaleX=1.0f;
+    s->scaleY=1.0f;
+    s->angle=0.0f;
+    s->isRotated=0;
+    s->rotCos=1.0f;
+    s->rotSin=0.0f;
+    s->collideWith=COLLIDE_NONE;
+    s->spriteHitCount=0;
+    s->tileHitCount=0;
+    s->levelObject=-1;
+    s->solid=0;
+    s->xF=500.0f;
+    s->yF=0.0f;
+    s->x=500;
+    s->y=0;
+    s->offX=500;
+    s->offY=0;
+}
+
+int allocateSprite(void)
+{
+    for(int n=0;n<totalSprites;n++){
+        Sprite *s=spriteList+n;
+        if(!s->inUse){
+            removeSpriteFromSet(n);
+            resetSprite(s);
+            s->inUse=1;
+            return n;
+        }
+    }
+    return -1;
+}
+
+void freeSprite(int ix)
+{
+    Sprite *s=spriteList+ix;
+    removeSpriteFromSet(ix);
+    resetSprite(s);
+    s->inUse=0;
 }
 
 void deleteSprites(void)
 {
+    // The sets list sprites that are going
+    for(int n=0;n<MAX_SPRITE_SETS;n++){
+        spriteSets[n].used=false;
+    }
     totalSprites=0;
     if(spriteList==NULL){
         return;
     }
     free(spriteList);
     spriteList=NULL;
+}
+
+// ---------------------------------------------------------------------------
+// Sprite sets
+// ---------------------------------------------------------------------------
+
+int createSpriteSet(void)
+{
+    for(int n=0;n<MAX_SPRITE_SETS;n++){
+        SpriteSet *set=spriteSets+n;
+        if(!set->used){
+            set->used=true;
+            set->solid=false;
+            set->first=-1;
+            set->last=-1;
+            set->count=0;
+            return n;
+        }
+    }
+    return SPRITE_SET_NONE;
+}
+
+void removeSpriteFromSet(int ix)
+{
+    Sprite *s=spriteList+ix;
+    if(s->set<0){
+        return;
+    }
+    SpriteSet *set=spriteSets+s->set;
+    if(s->setPrev>=0){
+        spriteList[s->setPrev].setNext=s->setNext;
+    }else{
+        set->first=s->setNext;
+    }
+    if(s->setNext>=0){
+        spriteList[s->setNext].setPrev=s->setPrev;
+    }else{
+        set->last=s->setPrev;
+    }
+    --set->count;
+    s->set=SPRITE_SET_NONE;
+    s->setNext=-1;
+    s->setPrev=-1;
+    s->solid=0;
+}
+
+void addSpriteToSet(int ix, int setIX)
+{
+    removeSpriteFromSet(ix);
+    if(setIX<0 || setIX>=MAX_SPRITE_SETS || !spriteSets[setIX].used){
+        return;
+    }
+    Sprite *s=spriteList+ix;
+    SpriteSet *set=spriteSets+setIX;
+    s->set=(int8_t)setIX;
+    s->setPrev=set->last;
+    s->setNext=-1;
+    if(set->last>=0){
+        spriteList[set->last].setNext=(int16_t)ix;
+    }else{
+        set->first=(int16_t)ix;
+    }
+    set->last=(int16_t)ix;
+    ++set->count;
+    s->solid=set->solid?1:0;
+}
+
+void setSpriteSetSolid(int setIX, bool solid)
+{
+    if(setIX<0 || setIX>=MAX_SPRITE_SETS || !spriteSets[setIX].used){
+        return;
+    }
+    spriteSets[setIX].solid=solid;
+    for(int ix=firstSpriteInSet(setIX);ix>=0;ix=nextSpriteInSet(ix)){
+        spriteList[ix].solid=solid?1:0;
+    }
+}
+
+void setSpriteSolid(int ix, bool solid)
+{
+    spriteList[ix].solid=solid?1:0;
+}
+
+int getSolidSpriteAt(int layerIX, int x0, int y0, int x1, int y1)
+{
+    for(int n=0;n<MAX_SPRITE_SETS;n++){
+        if(!spriteSets[n].used || !spriteSets[n].solid){
+            continue;
+        }
+        for(int ix=spriteSets[n].first;ix>=0;ix=spriteList[ix].setNext){
+            const Sprite *s=spriteList+ix;
+            const int parent=(s->parentLayer>=0)?s->parentLayer:s->layer;
+            if(!s->solid || s->space!=SPRITE_SPACE_LAYER || parent!=layerIX){
+                continue;
+            }
+            const int w=s->isScaled?(int)((float)s->width*s->scaleX):s->width;
+            const int h=s->isScaled?(int)((float)s->height*s->scaleY):s->height;
+            const int sx0=(int)floorf(s->xF)-(w/2), sy0=(int)floorf(s->yF)-(h/2);
+            if(x1>=sx0 && x0<sx0+w && y1>=sy0 && y0<sy0+h){
+                return ix;
+            }
+        }
+    }
+    return -1;
+}
+
+void deleteSpriteSet(int setIX)
+{
+    if(setIX<0 || setIX>=MAX_SPRITE_SETS || !spriteSets[setIX].used){
+        return;
+    }
+    while(spriteSets[setIX].first>=0){
+        removeSpriteFromSet(spriteSets[setIX].first);
+    }
+    spriteSets[setIX].used=false;
+}
+
+void deleteSpriteSets(void)
+{
+    for(int n=0;n<MAX_SPRITE_SETS;n++){
+        deleteSpriteSet(n);
+    }
+}
+
+void setSpriteSetCollisions(int setIX, uint8_t flags)
+{
+    for(int ix=firstSpriteInSet(setIX);ix>=0;ix=nextSpriteInSet(ix)){
+        setSpriteCollisions(ix,flags);
+    }
+}
+
+int getSpriteHitInSet(int ix, int setIX)
+{
+    const Sprite *s=spriteList+ix;
+    for(int n=0;n<s->spriteHitCount;n++){
+        if(isSpriteInSet(s->spriteHits[n],setIX)){
+            return s->spriteHits[n];
+        }
+    }
+    return -1;
 }
 
 void setSpriteSize(int ix, SpriteSize st){
@@ -106,6 +315,14 @@ void setSpriteSize(int ix, SpriteSize st){
         s->width=32;
         s->height=40;
         break;
+        case SIZE_32X8:
+        s->width=32;
+        s->height=8;
+        break;
+        case SIZE_16X32:
+        s->width=16;
+        s->height=32;
+        break;
     }
     s->size=st;
     s->scaledWidth=s->width;
@@ -116,6 +333,9 @@ void setSpriteSize(int ix, SpriteSize st){
     s->bytesPerRow = (s->width==24?4:(s->width >> 3));  // 24bit wide sprites actually span 4 bytes for faster 32-bit aligned reads
     if(s->isRotated){
         updateSpriteTransform(s);
+    }
+    if(s->space==SPRITE_SPACE_LAYER){
+        placeSprite(s);
     }
 }
 
@@ -131,11 +351,247 @@ void setSpriteRotation(int ix, float angle)
     }
     s->angle=angle;
     s->isRotated=(fabsf(angle)>0.0001f)?1:0;
+    s->rotCos=s->isRotated?cosf(angle):1.0f;
+    s->rotSin=s->isRotated?sinf(angle):0.0f;
     if(s->isRotated){
         updateSpriteTransform(s);
+        if(s->space==SPRITE_SPACE_LAYER){
+            placeSprite(s);
+        }
     }else{
-        // Back to the unrotated renderers - restore the unrotated scaled size and position
+        // Back to the unrotated renderers - restore the unrotated scaled size and position (placing it, if in layer space)
         setSpriteScale(ix,s->isScaled?s->scaleX:0.0f,s->isScaled?s->scaleY:0.0f);
+    }
+}
+
+/// @brief Set a sprite to be drawn with the rotated renderer, with a forward transform (sprite pixels to screen pixels,
+/// including scale): screen offset = (a*u + b*v, c*u + d*v) for sprite offset (u,v) from its centre
+static void setSpriteMatrix(Sprite *s, float a, float b, float c, float d)
+{
+    float det=(a*d)-(b*c);
+    if(fabsf(det)<0.000001f){
+        det=0.000001f;
+    }
+    s->fDudx=d/det;
+    s->fDudy=-b/det;
+    s->fDvdx=-c/det;
+    s->fDvdy=a/det;
+    s->invDudx=FIXED16(s->fDudx);
+    s->invDudy=FIXED16(s->fDudy);
+    s->invDvdx=FIXED16(s->fDvdx);
+    s->invDvdy=FIXED16(s->fDvdy);
+    // Bounding box of the transformed sprite (plus a pixel of margin)
+    const float hw=(float)s->width*0.5f;
+    const float hh=(float)s->height*0.5f;
+    const int ex=(int)ceilf((fabsf(a)*hw)+(fabsf(b)*hh))+1;
+    const int ey=(int)ceilf((fabsf(c)*hw)+(fabsf(d)*hh))+1;
+    s->scaledWidth=(int16_t)(ex*2);
+    s->scaledHeight=(int16_t)(ey*2);
+    s->offX=(int16_t)(s->x-ex);
+    s->offY=(int16_t)(s->y-ey);
+    s->isRotated=1;
+}
+
+void placeSprite(Sprite *s)
+{
+    const int parent=(s->parentLayer>=0)?s->parentLayer:s->layer;
+    if(parent<0 || parent>=MAX_TILE_LAYERS){
+        return;
+    }
+    const TileLayer *tL=tileLayer+parent;
+
+    // Its centre on screen
+    // (to the pixel as a screen space sprite's position would be, allowing for float rounding in the conversion)
+    float sx, sy;
+    layerToScreen(parent,s->xF,s->yF,&sx,&sy);
+    s->x=(int16_t)floorf(sx+0.001f);
+    s->y=(int16_t)floorf(sy+0.001f);
+
+    // Its own rotation and scale, as a forward transform
+    const float scx=s->isScaled?s->scaleX:1.0f;
+    const float scy=s->isScaled?s->scaleY:1.0f;
+    const float a=s->rotCos*scx;
+    const float b=-s->rotSin*scy;
+    const float c=s->rotSin*scx;
+    const float d=s->rotCos*scy;
+
+    if(s->rotateWithLayer && tL->transformed){
+        // Rotating and scaling with the layer - combine the layer's transform with its own
+        setSpriteMatrix(s,(tL->fwdXX*a)+(tL->fwdXY*c),(tL->fwdXX*b)+(tL->fwdXY*d),
+            (tL->fwdYX*a)+(tL->fwdYY*c),(tL->fwdYX*b)+(tL->fwdYY*d));
+    }else if(fabsf(s->angle)>0.0001f){
+        // Its own rotation only - exactly as a screen space sprite
+        s->isRotated=1;
+        updateSpriteTransform(s);
+    }else{
+        // Not rotated - the fast (or scaled) renderers, as setSpriteScale sets up
+        s->isRotated=0;
+        s->scaledWidth=s->isScaled?(int16_t)((float)s->width*s->scaleX):s->width;
+        s->scaledHeight=s->isScaled?(int16_t)((float)s->height*s->scaleY):s->height;
+        s->offX=s->x-(s->scaledWidth/2);
+        s->offY=s->y-(s->scaledHeight/2);
+    }
+}
+
+void placeLayerSprites(void)
+{
+    for(int n=0;n<totalSprites;n++){
+        if(spriteList[n].space==SPRITE_SPACE_LAYER){
+            placeSprite(spriteList+n);
+        }
+    }
+}
+
+void setSpriteSpace(int ix, SpriteSpace space, int parentLayer)
+{
+    Sprite *s=spriteList+ix;
+    const int parent=(parentLayer>=0)?parentLayer:s->layer;
+    s->parentLayer=(int8_t)parentLayer;
+    if(parent<0 || parent>=MAX_TILE_LAYERS){
+        return;
+    }
+    if(space==SPRITE_SPACE_LAYER){
+        if(s->space!=SPRITE_SPACE_LAYER){
+            // Keep it where it is on screen
+            float u, v;
+            screenToLayer(parent,s->xF,s->yF,&u,&v);
+            s->xF=u;
+            s->yF=v;
+        }
+        s->space=SPRITE_SPACE_LAYER;
+        placeSprite(s);
+    }else if(s->space==SPRITE_SPACE_LAYER){
+        // Keep it where it is on screen (the pixel it's drawn at, and its position within it)
+        float sx, sy;
+        layerToScreen(parent,s->xF,s->yF,&sx,&sy);
+        const int16_t px=s->x, py=s->y;
+        s->space=SPRITE_SPACE_SCREEN;
+        setSpritePos(ix,sx,sy);
+        s->x=px;
+        s->y=py;
+        // Back to its own rotation and scale
+        setSpriteRotation(ix,s->angle);
+    }
+}
+
+/// @brief A point near a sprite - its offset in the sprite's own pixels, scaled and rotated as the sprite is drawn
+/// @param px,py Set to the point: in its layer's coordinates for a layer space sprite, on screen for a screen space one
+/// @return The layer to look in (the sprite's parent layer, or the layer it's drawn over)
+static int spritePointOf(const Sprite *s, float dx, float dy, float *px, float *py)
+{
+    float ox=dx, oy=dy;
+    if(s->rotSin!=0.0f || s->isScaled){
+        // Its own rotation and scale (rotSin is exactly 0 when it isn't rotated)
+        const float scx=s->isScaled?s->scaleX:1.0f;
+        const float scy=s->isScaled?s->scaleY:1.0f;
+        ox=(s->rotCos*dx*scx)-(s->rotSin*dy*scy);
+        oy=(s->rotSin*dx*scx)+(s->rotCos*dy*scy);
+    }
+    if(s->space==SPRITE_SPACE_LAYER){
+        const int parent=(s->parentLayer>=0)?s->parentLayer:s->layer;
+        if(s->rotateWithLayer || parent<0 || parent>=MAX_TILE_LAYERS || !tileLayer[parent].transformed){
+            // The sprite turns with the layer, so its own frame is already in the layer's coordinates
+            *px=s->xF+ox;
+            *py=s->yF+oy;
+        }else{
+            // Upright on screen - turn the offset from the screen's direction into the layer's
+            float lx, ly;
+            screenToLayerVector(parent,ox,oy,&lx,&ly);
+            *px=s->xF+lx;
+            *py=s->yF+ly;
+        }
+        return parent;
+    }
+    *px=(float)s->x+ox;
+    *py=(float)s->y+oy;
+    return s->layer;
+}
+
+int getSpritePoint(int ix, float dx, float dy, float *x, float *y)
+{
+    return spritePointOf(spriteList+ix,dx,dy,x,y);
+}
+
+int getSpriteTileAt(int ix, float dx, float dy, int *tileX, int *tileY)
+{
+    const Sprite *s=spriteList+ix;
+    float px, py;
+    const int layer=spritePointOf(s,dx,dy,&px,&py);
+    if(layer<0 || layer>=MAX_TILE_LAYERS){
+        return -1;
+    }
+    const int x=(int)floorf(px);
+    const int y=(int)floorf(py);
+    // Layer space: straight from the tile map. Screen space: through the layer's mapping to the screen
+    return (s->space==SPRITE_SPACE_LAYER)?getLayerMapTileNumber(layer,x,y,tileX,tileY):
+        getLayerTileNumberAt(layer,x,y,tileX,tileY);
+}
+
+bool isSpritePointSolid(int ix, float dx, float dy)
+{
+    const Sprite *s=spriteList+ix;
+    float px, py;
+    const int layer=spritePointOf(s,dx,dy,&px,&py);
+    if(layer<0 || layer>=MAX_TILE_LAYERS){
+        return false;
+    }
+    const int x=(int)floorf(px);
+    const int y=(int)floorf(py);
+    return (s->space==SPRITE_SPACE_LAYER)?isLayerMapPixelSet(layer,x,y):isLayerPixelSetAt(layer,x,y);
+}
+
+// If a whole pixel offset from a sprite needs no rotating or scaling (the sprite isn't rotated or scaled itself, and a
+// layer space sprite either turns with its layer or its layer isn't transformed), sets the sprite's own pixel and
+// returns the layer to look in - otherwise returns -1 and the float route is used
+static inline int __attribute__((always_inline)) spritePlainBase(const Sprite *s, int *bx, int *by)
+{
+    if(s->rotSin!=0.0f || s->isScaled){
+        return -1;
+    }
+    if(s->space==SPRITE_SPACE_LAYER){
+        const int parent=(s->parentLayer>=0)?s->parentLayer:s->layer;
+        if(parent<0 || parent>=MAX_TILE_LAYERS || (!s->rotateWithLayer && tileLayer[parent].transformed)){
+            return -1;
+        }
+        // floor(xF+dx) is floor(xF)+dx for a whole dx
+        *bx=(int)floorf(s->xF);
+        *by=(int)floorf(s->yF);
+        return parent;
+    }
+    *bx=s->x;
+    *by=s->y;
+    return s->layer;
+}
+
+int __not_in_flash_func(getSpriteTileAtI)(int ix, int dx, int dy, int *tileX, int *tileY)
+{
+    const Sprite *s=spriteList+ix;
+    int bx, by;
+    const int layer=spritePlainBase(s,&bx,&by);
+    if(layer<0){
+        return getSpriteTileAt(ix,(float)dx,(float)dy,tileX,tileY);
+    }
+    return (s->space==SPRITE_SPACE_LAYER)?getLayerMapTileNumber(layer,bx+dx,by+dy,tileX,tileY):
+        getLayerTileNumberAt(layer,bx+dx,by+dy,tileX,tileY);
+}
+
+bool __not_in_flash_func(isSpritePointSolidI)(int ix, int dx, int dy)
+{
+    const Sprite *s=spriteList+ix;
+    int bx, by;
+    const int layer=spritePlainBase(s,&bx,&by);
+    if(layer<0){
+        return isSpritePointSolid(ix,(float)dx,(float)dy);
+    }
+    return (s->space==SPRITE_SPACE_LAYER)?isLayerMapPixelSet(layer,bx+dx,by+dy):isLayerPixelSetAt(layer,bx+dx,by+dy);
+}
+
+void setSpriteRotateWithLayer(int ix, bool rotate)
+{
+    Sprite *s=spriteList+ix;
+    s->rotateWithLayer=rotate?1:0;
+    if(s->space==SPRITE_SPACE_LAYER){
+        placeSprite(s);
     }
 }
 
@@ -143,8 +599,9 @@ void updateSpriteTransform(Sprite *s)
 {
     const float sx=s->isScaled?s->scaleX:1.0f;
     const float sy=s->isScaled?s->scaleY:1.0f;
-    const float c=cosf(s->angle);
-    const float sn=sinf(s->angle);
+    // The cosine and sine of its angle, worked out once in setSpriteRotation
+    const float c=s->rotCos;
+    const float sn=s->rotSin;
 
     // Inverse of rotate then scale, so each screen pixel can be mapped back to a sprite pixel
     s->fDudx=c/sx;

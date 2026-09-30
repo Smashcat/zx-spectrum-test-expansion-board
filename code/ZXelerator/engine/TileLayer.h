@@ -32,9 +32,9 @@ typedef struct LayerLineTransform {
 } LayerLineTransform;
 
 typedef struct TileLayer {
-    /// @brief X position, relative to screen in pixels (if over 254, or under -511 layer not drawn)
+    /// @brief X position, relative to screen in pixels (not drawn if 256 or more - tile layers repeat, so can be any distance left; bitmaps not drawn once fully off screen)
     int16_t x;
-    /// @brief Y position, relative to screen in pixels (if over 191, or under -383 layer not drawn)
+    /// @brief Y position, relative to screen in pixels (not drawn if 192 or more - tile layers repeat, so can be any distance up; bitmaps not drawn once fully off screen)
     int16_t y;
     /// @brief Tile definitions in cells within this layer
     uint8_t tileMap[(TILE_LAYER_WIDTH*TILE_LAYER_HEIGHT)];
@@ -75,6 +75,9 @@ typedef struct TileLayer {
     /// @brief Transformed bitmap layers with per cell attributes only: resample by colour (default true) - see
     /// setLayerColourAware
     bool colourAware;
+    /// @brief If 0 or more, the layer this one follows: its position, rotation, scale and line transforms are copied from
+    /// that layer (see setLayerFollow)
+    int8_t follow;
 } TileLayer;
 
 /// @brief Initialise all tile layers, setting them off of screen, clearing tiles to zero, with attributes set to white ink on black background
@@ -136,8 +139,8 @@ void drawIntNumToLayer(int layerIX, int32_t num, uint8_t colorTop, uint8_t color
 
 /// @brief Set the position of the layer relative to the screen
 /// @param layerIX The layer to update
-/// @param x X position, relative to screen in pixels (if over 254, or under -511 layer not drawn)
-/// @param y Y position, relative to screen in pixels (if over 191, or under -383 layer not drawn)
+/// @param x X position, relative to screen in pixels (not drawn if 256 or more - tile layers repeat, so can be any distance left; bitmaps not drawn once fully off screen)
+/// @param y Y position, relative to screen in pixels (not drawn if 192 or more - tile layers repeat, so can be any distance up; bitmaps not drawn once fully off screen)
 void setLayerPos(int layerIX,int x, int y);
 
 /// @brief Set the tile-set to be used by the layer
@@ -167,6 +170,22 @@ void setLayerPivot(int layerIX, float x, float y);
 
 /// @brief Remove any rotation, scaling and line transforms from the layer
 void clearLayerTransform(int layerIX);
+
+/// @brief Lock a layer to another: each frame (as compositeScene starts), the layer takes the other's position,
+/// rotation, scale, pivot and line transforms - e.g. a foreground layer that must stay lined up with the layer behind it
+/// @param layerIX The layer that follows
+/// @param leaderIX The layer it follows, or -1 to stop following (it keeps where it was)
+void setLayerFollow(int layerIX, int leaderIX);
+
+/// @brief Copy a following layer's position and transform from its leader now (compositeScene does this each frame)
+void syncFollowingLayer(int layerIX);
+
+/// @brief Copy every following layer's position and transform from its leader (called by compositeScene)
+void syncFollowingLayers(void);
+
+/// @brief Call after changing tile graphics in RAM that a layer is using (e.g. animating them), so the engine's record
+/// of which tiles are empty (used to skip collision checks quickly) is rebuilt
+void tileSetsChanged(void);
 
 /// @brief Bitmap layers only: make the bitmap hide the layers behind it (true), or OR its set pixels over them (false,
 /// the default). Useful for a bitmap moving in front of other layers, e.g. a screen transition
@@ -217,9 +236,30 @@ void screenToLayerVector(int layerIX, float dx, float dy, float *du, float *dv);
 /// @brief Convert a direction/velocity in the layer's coordinates to the screen (rotated and scaled, not moved)
 void layerToScreenVector(int layerIX, float du, float dv, float *dx, float *dy);
 
-/// @brief Which tile of a tile layer is drawn at a screen pixel
+/// @brief Which tile of a tile layer is drawn at a screen pixel (its position in the tile map)
+/// @param tileX,tileY The tile's position in the tile map (either can be NULL)
 /// @return False if the layer isn't collidable, or the pixel is off screen or not on the layer
 bool getLayerTileAt(int layerIX, int x, int y, int *tileX, int *tileY);
+
+/// @brief The tile drawn at a screen pixel, for scrolled, rotated, scaled and line transformed layers alike - e.g. to
+/// check the point under a sprite's feet for a floor, or just beside it for a wall
+/// @param tileX,tileY If not NULL, set to the tile's position in the tile map
+/// @return The tile's number (its value in the tile map, 0-255), or -1 if the point is off screen, or the layer isn't
+/// a tile layer that's being drawn
+int getLayerTileNumberAt(int layerIX, int x, int y, int *tileX, int *tileY);
+
+/// @brief True if a tile layer has a pixel set (in the tile graphics, not the masks) at a screen pixel - a pixel
+/// accurate "is it solid here?", for sloped or partly filled tiles
+bool isLayerPixelSetAt(int layerIX, int x, int y);
+
+/// @brief As getLayerTileNumberAt, but for a point in the layer's own pixel coordinates (wrapping at 512) - a direct tile
+/// map lookup, whatever the layer's position, rotation or scale, and whether or not the point is on screen. Use this for
+/// things in the layer's world, e.g. layer space sprites (see getSpriteTileAt)
+/// @return The tile's number, or -1 if it isn't a tile layer
+int getLayerMapTileNumber(int layerIX, int x, int y, int *tileX, int *tileY);
+
+/// @brief As isLayerPixelSetAt, but for a point in the layer's own pixel coordinates (see getLayerMapTileNumber)
+bool isLayerMapPixelSet(int layerIX, int x, int y);
 
 /// @brief True if a tile of the layer's current tile set has no pixels set (used to skip empty areas quickly)
 bool isLayerTileEmpty(int layerIX, int tileX, int tileY);

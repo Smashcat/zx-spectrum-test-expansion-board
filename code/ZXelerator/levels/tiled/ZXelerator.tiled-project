@@ -1,0 +1,356 @@
+{
+    "automappingRulesFile": "",
+    "commands": [
+        {
+            "arguments": "level \"%mapfile\" \"%mappath/..\"",
+            "command": "G:/repos/Speccy/code/ZXelerator/pc/build/Release/levelconv.exe",
+            "enabled": true,
+            "name": "Convert level for ZXelerator",
+            "saveBeforeExecute": true,
+            "shortcut": "F5",
+            "showOutput": true,
+            "workingDirectory": "%mappath"
+        },
+        {
+            "arguments": "all \"%mappath\" \"%mappath/..\"",
+            "command": "G:/repos/Speccy/code/ZXelerator/pc/build/Release/levelconv.exe",
+            "enabled": true,
+            "name": "Convert all levels for ZXelerator",
+            "saveBeforeExecute": true,
+            "shortcut": "Shift+F5",
+            "showOutput": true,
+            "workingDirectory": "%mappath"
+        },
+        {
+            "arguments": "tileset \"%mapfile\"",
+            "command": "G:/repos/Speccy/code/ZXelerator/pc/build/Release/levelconv.exe",
+            "enabled": true,
+            "name": "Redraw tile set image (after changing tile colours)",
+            "saveBeforeExecute": true,
+            "shortcut": "F6",
+            "showOutput": true,
+            "workingDirectory": "%mappath"
+        }
+    ],
+    "compatibilityVersion": 1100,
+    "extensionsPath": "extensions",
+    "folders": [
+        "."
+    ],
+    "properties": [
+    ],
+    "propertyTypes": [
+        {
+            "id": 1,
+            "name": "ZXColour",
+            "storageType": "string",
+            "type": "enum",
+            "values": [
+                "black",
+                "blue",
+                "red",
+                "magenta",
+                "green",
+                "cyan",
+                "yellow",
+                "white"
+            ],
+            "valuesAsFlags": false
+        },
+        {
+            "color": "#ff40c0ff",
+            "drawFill": true,
+            "id": 2,
+            "members": [
+            ],
+            "name": "PlayerStart",
+            "type": "class",
+            "useAs": [
+                "object",
+                "tile"
+            ]
+        },
+        {
+            "color": "#ffff5050",
+            "drawFill": true,
+            "id": 3,
+            "members": [
+                {
+                    "name": "speed",
+                    "type": "float",
+                    "value": 0.5
+                },
+                {
+                    "name": "chaseSpeed",
+                    "type": "float",
+                    "value": 1.25
+                },
+                {
+                    "name": "alertRange",
+                    "type": "int",
+                    "value": 96
+                },
+                {
+                    "name": "waitForCamera",
+                    "type": "bool",
+                    "value": false
+                }
+            ],
+            "name": "Enemy",
+            "type": "class",
+            "useAs": [
+                "object",
+                "tile"
+            ]
+        },
+        {
+            "color": "#ffffd040",
+            "drawFill": true,
+            "id": 4,
+            "members": [
+                {
+                    "name": "speed",
+                    "type": "float",
+                    "value": 0.75
+                },
+                {
+                    "name": "path",
+                    "type": "object",
+                    "value": 0
+                }
+            ],
+            "name": "Platform",
+            "type": "class",
+            "useAs": [
+                "object",
+                "tile"
+            ]
+        },
+        {
+            "color": "#ff50ffff",
+            "drawFill": true,
+            "id": 5,
+            "members": [
+                {
+                    "name": "interval",
+                    "type": "int",
+                    "value": 40
+                },
+                {
+                    "name": "max",
+                    "type": "int",
+                    "value": 5
+                },
+                {
+                    "name": "speed",
+                    "type": "float",
+                    "value": 0.6
+                }
+            ],
+            "name": "Generator",
+            "type": "class",
+            "useAs": [
+                "object"
+            ]
+        },
+        {
+            "color": "#ffc0c0c0",
+            "drawFill": true,
+            "id": 6,
+            "members": [
+                {
+                    "name": "path",
+                    "type": "object",
+                    "value": 0
+                },
+                {
+                    "name": "speedOut",
+                    "type": "float",
+                    "value": 3
+                },
+                {
+                    "name": "speedIn",
+                    "type": "float",
+                    "value": 0.75
+                },
+                {
+                    "name": "waitOut",
+                    "type": "int",
+                    "value": 20
+                },
+                {
+                    "name": "waitIn",
+                    "type": "int",
+                    "value": 50
+                },
+                {
+                    "name": "phase",
+                    "type": "int",
+                    "value": 0
+                },
+                {
+                    "name": "shaftTile",
+                    "type": "int",
+                    "value": 34
+                }
+            ],
+            "name": "Piston",
+            "type": "class",
+            "useAs": [
+                "object",
+                "tile"
+            ]
+        },
+        {
+            "id": 7,
+            "name": "SwitchMode",
+            "storageType": "string",
+            "type": "enum",
+            "values": [
+                "once",
+                "toggle",
+                "timed"
+            ],
+            "valuesAsFlags": false
+        },
+        {
+            "id": 8,
+            "name": "SwitchId",
+            "storageType": "string",
+            "type": "enum",
+            "values": [
+                "pistons",
+                "liftCall",
+                "doorA"
+            ],
+            "valuesAsFlags": false
+        },
+        {
+            "color": "#ff80ff80",
+            "drawFill": true,
+            "id": 9,
+            "members": [
+                {
+                    "name": "value",
+                    "propertyType": "SwitchId",
+                    "type": "string",
+                    "value": "pistons"
+                },
+                {
+                    "name": "mode",
+                    "propertyType": "SwitchMode",
+                    "type": "string",
+                    "value": "toggle"
+                },
+                {
+                    "name": "time",
+                    "type": "int",
+                    "value": 100
+                },
+                {
+                    "name": "startOn",
+                    "type": "bool",
+                    "value": false
+                },
+                {
+                    "name": "persist",
+                    "type": "bool",
+                    "value": true
+                }
+            ],
+            "name": "Switch",
+            "type": "class",
+            "useAs": [
+                "object",
+                "tile"
+            ]
+        },
+        {
+            "color": "#ffffff00",
+            "drawFill": true,
+            "id": 10,
+            "members": [
+                {
+                    "name": "value",
+                    "propertyType": "SwitchId",
+                    "type": "string",
+                    "value": "doorA"
+                },
+                {
+                    "name": "persist",
+                    "type": "bool",
+                    "value": true
+                }
+            ],
+            "name": "Key",
+            "type": "class",
+            "useAs": [
+                "object",
+                "tile"
+            ]
+        },
+        {
+            "color": "#ffc08040",
+            "drawFill": true,
+            "id": 11,
+            "members": [
+                {
+                    "name": "value",
+                    "propertyType": "SwitchId",
+                    "type": "string",
+                    "value": "doorA"
+                },
+                {
+                    "name": "mode",
+                    "propertyType": "SwitchMode",
+                    "type": "string",
+                    "value": "once"
+                },
+                {
+                    "name": "persist",
+                    "type": "bool",
+                    "value": true
+                }
+            ],
+            "name": "Door",
+            "type": "class",
+            "useAs": [
+                "object"
+            ]
+        },
+        {
+            "color": "#ff40ff40",
+            "drawFill": true,
+            "id": 12,
+            "members": [
+            ],
+            "name": "Entrance",
+            "type": "class",
+            "useAs": [
+                "object"
+            ]
+        },
+        {
+            "color": "#ffff40ff",
+            "drawFill": true,
+            "id": 13,
+            "members": [
+                {
+                    "name": "toLevel",
+                    "type": "file",
+                    "value": ""
+                },
+                {
+                    "name": "toEntrance",
+                    "type": "string",
+                    "value": "start"
+                }
+            ],
+            "name": "Exit",
+            "type": "class",
+            "useAs": [
+                "object"
+            ]
+        }
+    ]
+}

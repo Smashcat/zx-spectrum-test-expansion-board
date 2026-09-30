@@ -1,4 +1,5 @@
 #include "gameFunc.h"
+#include <ctype.h>
 
 void demoLoop(void){
 
@@ -326,7 +327,7 @@ static void startStoryScreen(void)
 void gameTitle(void)
 {
 
-    // M switches to the Mode 7 test scene, T to the audio test, C to the collision test
+    // M switches to the Mode 7 test scene, T to the audio test, C to the collision test, L to the level test
     if(keyDown(KEY_M)){
         setState(GS_mode7Test);
         return;
@@ -337,6 +338,10 @@ void gameTitle(void)
     }
     if(keyDown(KEY_C)){
         setState(GS_collisionTest);
+        return;
+    }
+    if(keyDown(KEY_L)){
+        setState(GS_levelTest);
         return;
     }
 
@@ -839,6 +844,7 @@ void audioTest(void)
 #define CT_BUBBLES      3       // Bubbles and particles emitted per frame - doubled with N
 #define CT_EMIT         2
 #define CT_PARTICLES    600     // Enough for the doubled fountain
+#define CT_LETTERS      (1+(CT_BUBBLES*2))  // First of two letter sprites standing in the tile layer's world
 
 static uint8_t collisionTestTiles[256*8*2];
 static int ctParticleSet=-1;
@@ -858,7 +864,7 @@ static void ctShowBubbles(void)
         if(n<=active){
             if(spriteList[n].collideWith==COLLIDE_NONE){
                 setSpritePos(n,(float)(40+(n*30)),(float)(40+((n*23)%100)));
-                setSpriteCollisions(n,COLLIDE_SPRITES);
+                setSpriteCollisions(n,COLLIDE_TARGET);
             }
         }else{
             setSpritePos(n,300,300);
@@ -950,7 +956,7 @@ void setupCollisionTest(void)
     ctFps=25;
 
     // Player - collides with sprites and the tile layer it's drawn over
-    initSprites(1+(CT_BUBBLES*2));
+    initSprites(CT_LETTERS+2);
     setSpriteSize(0,SIZE_24X24);
     setSpriteDef(0,sprite24x24Def,mask24x24Def);
     setSpritePalette(0,1);
@@ -958,7 +964,8 @@ void setupCollisionTest(void)
     setSpritePos(0,60,60);
     setSpriteCollisions(0,COLLIDE_SPRITES|COLLIDE_LAYER);
 
-    // Bubbles - collide with sprites only (the second half only when doubled)
+    // Bubbles - targets the player can hit, but they don't check for collisions themselves (the second half only when
+    // doubled)
     for(int n=1;n<=CT_BUBBLES*2;n++){
         setSpriteSize(n,SIZE_24X24);
         setSpriteDef(n,spriteBubbleDef,spriteBubbleMaskDef);
@@ -970,6 +977,20 @@ void setupCollisionTest(void)
         ctBubbleDY[n]=(n&2)?0.9f:-0.7f;
     }
     ctShowBubbles();
+
+    // Two letters standing in the tile layer's world (layer space), so they move with it as it swings: the E on the
+    // platform turns with the layer, the R on the floor stays upright. They're scenery, so have no collision flags
+    for(int n=0;n<2;n++){
+        const int ix=CT_LETTERS+n;
+        setSpriteSize(ix,SIZE_32X40);
+        setSpriteDef(ix,titleLettersDef,titleLettersMaskDef);
+        setSpritePalette(ix,2);
+        setSpriteLayer(ix,CT_LAYER);
+        spriteList[ix].frame=(int16_t)(n?2:0);
+        setSpriteSpace(ix,SPRITE_SPACE_LAYER,-1);
+        setSpriteRotateWithLayer(ix,n==0);
+        setSpritePos(ix,n?180.0f:60.0f,n?148.0f:92.0f);
+    }
 
     // Particles bouncing off the tile layer
     deleteParticleSets();
@@ -1064,29 +1085,35 @@ void collisionTest(void)
     // Player - these are the collisions found when the last frame was drawn
     Sprite *player=spriteList;
     setSpritePalette(0,(player->spriteHitCount || player->tileHitCount)?3:1);
+    // Points around the player: the tile just under its feet, and whether there's anything solid just to its left and
+    // right - these follow the layer however it's rotated (-1 = off screen)
+    const int feetTile=getLayerTileNumberAt(CT_LAYER,player->x,player->y+(player->height/2),NULL,NULL);
+    const bool wallLeft=isLayerPixelSetAt(CT_LAYER,player->x-(player->width/2)-1,player->y);
+    const bool wallRight=isLayerPixelSetAt(CT_LAYER,player->x+(player->width/2),player->y);
     char txt[40];
-    if(player->tileHitCount){
-        snprintf(txt,sizeof(txt),"SPRITES:%d TILES:%2d AT %2d,%2d  ",player->spriteHitCount,player->tileHitCount,
-            player->tileHits[0].x,player->tileHits[0].y);
-    }else{
-        snprintf(txt,sizeof(txt),"SPRITES:%d TILES:%2d          ",player->spriteHitCount,player->tileHitCount);
-    }
-    drawTxtToLayer(CT_HUD_LAYER,txt,0x46,0x46,1,0);
+    snprintf(txt,sizeof(txt),"SPR:%d TILES:%2d FEET:%3d L:%d R:%d",player->spriteHitCount,player->tileHitCount,feetTile,
+        wallLeft?1:0,wallRight?1:0);
+    drawTxtToLayer(CT_HUD_LAYER,txt,0x46,0x46,0,0);
 
-    float px=player->xF, py=player->yF;
-    if(keyDown(KEY_O)){
-        px-=2.0f;
+    // Move a pixel at a time (2 a frame), only if the point just beyond the player's edge in that direction isn't
+    // solid - so it stops at floors and walls, even as the layer rotates
+    int px=player->x, py=player->y;
+    const int halfW=player->width/2, halfH=player->height/2;
+    for(int step=0;step<2;step++){
+        if(keyDown(KEY_O) && !isLayerPixelSetAt(CT_LAYER,px-halfW-1,py)){
+            --px;
+        }
+        if(keyDown(KEY_P) && !isLayerPixelSetAt(CT_LAYER,px+halfW,py)){
+            ++px;
+        }
+        if(keyDown(KEY_Q) && !isLayerPixelSetAt(CT_LAYER,px,py-halfH-1)){
+            --py;
+        }
+        if(keyDown(KEY_A) && !isLayerPixelSetAt(CT_LAYER,px,py+halfH)){
+            ++py;
+        }
     }
-    if(keyDown(KEY_P)){
-        px+=2.0f;
-    }
-    if(keyDown(KEY_Q)){
-        py-=2.0f;
-    }
-    if(keyDown(KEY_A)){
-        py+=2.0f;
-    }
-    setSpritePos(0,px,py);
+    setSpritePos(0,(float)px,(float)py);
 
     // Bubbles drift around, bouncing off the screen edges
     for(int n=1;n<=(ctDouble?CT_BUBBLES*2:CT_BUBBLES);n++){
@@ -1100,7 +1127,1163 @@ void collisionTest(void)
             ctBubbleDY[n]=-ctBubbleDY[n];
         }
         setSpritePos(n,bx,by);
-        // Bubbles flash red while touching another sprite
-        setSpritePalette(n,b->spriteHitCount?3:2);
+        // Bubbles flash red while the player is touching them (targets keep no hit lists, so look in the player's)
+        bool hitByPlayer=false;
+        for(int h=0;h<player->spriteHitCount;h++){
+            hitByPlayer|=(player->spriteHits[h]==n);
+        }
+        setSpritePalette(n,hitByPlayer?3:2);
     }
+}
+// ---------------------------------------------------------------------------
+// Level test - the demo level made in Tiled (levels/tiled/demo.tmx, converted to levels/level_demo.c): a player who
+// runs, jumps and collects coins, walking behind pillars (the level's foreground layer), over parallax hills and sky
+// ---------------------------------------------------------------------------
+
+#define LV_LAYER        2       // The level layer the player is in - its foreground tiles are on layer 1
+#define LV_HUD_LAYER    0       // Text, in front of everything (the level uses layers 1-4)
+#define LV_SPRITES      40      // Sprites for the player, the actors near the camera and bubbles
+
+// The player's (and the enemies') hitbox, around its position (the sprite's centre): the part of the 24x24 graphic the
+// character fills
+#define LV_LEFT         8       // Pixels left of the centre
+#define LV_RIGHT        7       // ...right
+#define LV_TOP          11      // ...above
+#define LV_BOTTOM       10      // ...below (the feet)
+
+// Movement, in pixels per frame. On the ground, speed is along the level; in the air, velocity is on screen, so a jump
+// goes up the screen whichever way the level is tilted
+#define LV_WALK         1.25f   // Speed on first moving
+#define LV_ACCEL        0.06f   // Build up to...
+#define LV_RUN          3.25f   // ...the top speed, the longer the player runs
+#define LV_FRICTION     0.12f   // Slowing down, when nothing's pressed
+#define LV_SKID         0.30f   // Slowing down, when pushing the other way
+#define LV_AIR_CONTROL  0.16f   // Steering in the air
+#define LV_GRAVITY      0.32f
+#define LV_MAX_FALL     6.0f
+#define LV_JUMP         5.4f
+#define LV_STOMP        4.0f    // Bounce off an enemy stomped on
+#define LV_CLIMB        2       // Steepest slope climbed: pixels up for each pixel across
+
+// Sprite frames: 0-7 face left, 8-15 right. Each 8 is a run cycle; frame 3 has the feet together (standing)
+#define LV_FRAMES_RIGHT 8
+#define LV_FRAME_STAND  3
+#define LV_FRAME_JUMP   4
+#define LV_FRAME_SKID   0
+#define LV_STRIDE       5.0f    // Pixels run per frame of the cycle
+
+// Palettes: the player, bubbles
+#define LV_PALETTE      5
+#define LV_BUBBLE_PAL   8
+
+// Enemy AI states
+#define LV_PATROL       0
+#define LV_CHASE        1
+
+// Bubbles from generators (sprites the game makes itself - they aren't level objects)
+#define LV_MAX_BUBBLES  12
+#define LV_BUBBLE_LIFE  220
+
+typedef struct LvBubble {
+    int16_t sprite;             // -1 if not in use
+    int16_t generator;          // The generator object it came from
+    int16_t age;
+    float baseX, y, rise;
+} LvBubble;
+
+static int lvX, lvY;                    // Position in level pixels
+static float lvFracX, lvFracY;          // ...and the fraction of a pixel moved towards the next
+static float lvSpeed;                   // On the ground: speed along the level (+ is right)
+static float lvVX, lvVY;                // In the air: velocity on screen
+static bool lvOnGround, lvSkidding, lvRotate, lvPrevR, lvPrevQ, lvLoaded;
+static int lvFacing, lvCoins, lvLost, lvSwing, lvStomped, lvPopped, lvPlayer, lvStartX, lvStartY;
+static float lvStride, lvCamX, lvCamY;
+// Frames left of not being hurt after losing a life (the player flashes)
+static int lvSafe;
+#define LV_SAFE_TIME    50
+static int lvEnemies, lvPlatforms, lvBubbles, lvPistons, lvDoors;  // Sprite sets (pistons and doors are solid)
+
+// Set by the switch handler (as switches change, and when entering a level with them on)
+static bool lvPistonsStopped, lvLiftCalled;
+// Keys the player carries (a bit per SwitchId - a key opens doors with the same value), and the use key (A)
+static uint32_t lvKeys;
+static bool lvPrevA;
+// An exit used this frame: the level and entrance to go to
+static int lvGoLevel=-1;
+static const char *lvGoEntrance;
+
+// Doors (gate doors and doors to other levels) play their frames when opening: the actor's state while they do, and
+// frames each is shown for
+#define LV_DOOR_SHUT        0
+#define LV_DOOR_OPENING     1
+#define LV_DOOR_TICKS       5
+// The door to another level the player's going through (it opens, then they go), or -1
+static int lvLeaving=-1;
+
+// Piston states (in the actor's state), and a piston head's box in level pixels (inclusive)
+#define LV_PISTON_IN        0   // Waiting, pulled in
+#define LV_PISTON_OUT       1   // Pushing out - its front crushes
+#define LV_PISTON_WAIT_OUT  2
+#define LV_PISTON_BACK      3   // Pulling back in
+
+typedef struct LvBox {
+    int x0, y0, x1, y1;
+} LvBox;
+
+static LvBox lvBoxOf(int obj)
+{
+    const LevelActor *a=getLevelActor(obj);
+    const LevelObject *o=getLevelObject(obj);
+    LvBox b;
+    b.x0=(int)floorf(a->x)-(o->width/2);
+    b.y0=(int)floorf(a->y)-(o->height/2);
+    b.x1=b.x0+o->width-1;
+    b.y1=b.y0+o->height-1;
+    return b;
+}
+
+static LvBubble lvBubbleList[LV_MAX_BUBBLES];
+
+// Solid pixels in a column of the hitbox (at level x cx), or a row (at level y cy) - every pixel, so nothing slips
+// between the checks - and solid sprites (piston heads, closed doors) in the way
+static bool lvColumnBlocked(int cx, int y)
+{
+    for(int py=y-LV_TOP;py<=y+LV_BOTTOM;py++){
+        if(isLevelPixelSolid(LV_LAYER,cx,py)){
+            return true;
+        }
+    }
+    return getSolidSpriteAt(LV_LAYER,cx,y-LV_TOP,cx,y+LV_BOTTOM)>=0;
+}
+
+static bool lvRowBlocked(int x, int cy)
+{
+    for(int px=x-LV_LEFT;px<=x+LV_RIGHT;px++){
+        if(isLevelPixelSolid(LV_LAYER,px,cy)){
+            return true;
+        }
+    }
+    return getSolidSpriteAt(LV_LAYER,x-LV_LEFT,cy,x+LV_RIGHT,cy)>=0;
+}
+
+// (the player and enemies are stopped by the same things)
+#define lvPlayerColumnBlocked lvColumnBlocked
+#define lvPlayerRowBlocked lvRowBlocked
+
+// Level ground just under the feet: solid, or the top pixel of a one way platform tile
+static bool lvOnLevelGround(int x, int y)
+{
+    const int fy=y+LV_BOTTOM+1;
+    for(int px=x-LV_LEFT;px<=x+LV_RIGHT;px++){
+        if(isLevelPixelSolid(LV_LAYER,px,fy)){
+            return true;
+        }
+        if((getLevelTileFlags(LV_LAYER,px>>3,fy>>3)&LEVEL_TILE_PLATFORM) && isLevelPixelSet(LV_LAYER,px,fy) &&
+            !isLevelPixelSet(LV_LAYER,px,fy-1)){
+            return true;
+        }
+    }
+    return false;
+}
+
+// The moving platform just under the player's feet (its object), or -1 - looking through the platforms sprite set,
+// which only has the platforms near the camera, where the player is. slack lets the platform's top be that many pixels
+// above the feet: a rising platform can move up into a falling player between frames, so landing allows for it
+static int lvPlatformUnderSlack(int x, int y, int slack)
+{
+    for(int ix=firstSpriteInSet(lvPlatforms);ix>=0;ix=nextSpriteInSet(ix)){
+        const int obj=getSpriteLevelObject(ix);
+        const LevelActor *a=getLevelActor(obj);
+        const LevelObject *o=getLevelObject(obj);
+        if(!a || !o){
+            continue;
+        }
+        const int top=(int)floorf(a->y)-(o->height/2);
+        const int left=(int)floorf(a->x)-(o->width/2);
+        const int under=y+LV_BOTTOM+1;
+        if(under>=top && under<=top+slack && x+LV_RIGHT>=left && x-LV_LEFT<left+o->width){
+            return obj;
+        }
+    }
+    return -1;
+}
+
+static int lvPlatformUnder(int x, int y)
+{
+    return lvPlatformUnderSlack(x,y,0);
+}
+
+// A platform that moved up through the player's feet this frame (it was below them, now it's at or above them) - a
+// rising platform catching the player near the top of a jump, when they're hardly falling. -1 if none
+static int lvPlatformRoseInto(int x, int y)
+{
+    const int under=y+LV_BOTTOM+1;
+    for(int ix=firstSpriteInSet(lvPlatforms);ix>=0;ix=nextSpriteInSet(ix)){
+        const int obj=getSpriteLevelObject(ix);
+        const LevelActor *a=getLevelActor(obj);
+        const LevelObject *o=getLevelObject(obj);
+        if(!a || !o){
+            continue;
+        }
+        const int top=(int)floorf(a->y)-(o->height/2);
+        const int prevTop=(int)floorf(a->y-a->vy)-(o->height/2);
+        const int left=(int)floorf(a->x)-(o->width/2);
+        if(under<=prevTop && under>=top && x+LV_RIGHT>=left && x-LV_LEFT<left+o->width){
+            return obj;
+        }
+    }
+    return -1;
+}
+
+// Stand the player on a platform's top
+static void lvStandOn(int obj)
+{
+    lvY=(int)floorf(getLevelActor(obj)->y)-(getLevelObject(obj)->height/2)-LV_BOTTOM-1;
+}
+
+static bool lvGrounded(int x, int y)
+{
+    return lvOnLevelGround(x,y) || lvPlatformUnder(x,y)>=0 ||
+        getSolidSpriteAt(LV_LAYER,x-LV_LEFT,y+LV_BOTTOM+1,x+LV_RIGHT,y+LV_BOTTOM+1)>=0;
+}
+
+// Move the player a pixel across the level. On the ground, it climbs slopes up to LV_CLIMB pixels high per pixel across
+// (if there's head room), and follows the ground down slopes as steep. False if a wall's in the way
+static bool lvStepAcross(int dir, bool onGround)
+{
+    const int cx=(dir>0)?lvX+LV_RIGHT+1:lvX-LV_LEFT-1;
+    if(!lvPlayerColumnBlocked(cx,lvY)){
+        lvX+=dir;
+        if(onGround && !lvGrounded(lvX,lvY)){
+            for(int k=1;k<=LV_CLIMB;k++){
+                if(lvGrounded(lvX,lvY+k)){
+                    lvY+=k;
+                    break;
+                }
+            }
+        }
+        return true;
+    }
+    if(onGround){
+        for(int k=1;k<=LV_CLIMB;k++){
+            if(lvPlayerRowBlocked(lvX,lvY-LV_TOP-k)){
+                break;
+            }
+            if(!lvPlayerColumnBlocked(cx,lvY-k)){
+                lvX+=dir;
+                lvY-=k;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+static void lvRespawn(void)
+{
+    lvSafe=LV_SAFE_TIME;
+    lvX=lvStartX;
+    lvY=lvStartY;
+    lvFracX=0.0f;
+    lvFracY=0.0f;
+    lvSpeed=0.0f;
+    lvVX=0.0f;
+    lvVY=0.0f;
+    lvOnGround=false;
+    lvSkidding=false;
+    lvFacing=1;
+}
+
+// Leave the ground: the speed along the level becomes a velocity on screen, plus the jump (straight up the screen)
+static void lvTakeOff(float jump)
+{
+    layerToScreenVector(LV_LAYER,lvSpeed,0.0f,&lvVX,&lvVY);
+    lvVY-=jump;
+    lvOnGround=false;
+    lvSkidding=false;
+    lvFracY=0.0f;
+}
+
+static void lvRun(int dir)
+{
+    // Mario style: a walk to start, building up speed the longer it runs one way. Pushing the other way skids, and
+    // letting go slides to a stop
+    lvSkidding=false;
+    if(dir && lvSpeed*(float)dir<0.0f){
+        lvSkidding=true;
+        lvSpeed+=(float)dir*LV_SKID;
+        if(lvSpeed*(float)dir>0.0f){
+            lvSpeed=0.0f;
+        }
+    }else if(dir){
+        lvSpeed=(fabsf(lvSpeed)<LV_WALK)?(float)dir*LV_WALK:lvSpeed+((float)dir*LV_ACCEL);
+        if(fabsf(lvSpeed)>LV_RUN){
+            lvSpeed=(float)dir*LV_RUN;
+        }
+    }else if(fabsf(lvSpeed)<=LV_FRICTION){
+        lvSpeed=0.0f;
+    }else{
+        lvSpeed-=(lvSpeed>0.0f)?LV_FRICTION:-LV_FRICTION;
+    }
+
+    lvFracX+=lvSpeed;
+    while(fabsf(lvFracX)>=1.0f){
+        const int step=(lvFracX>0.0f)?1:-1;
+        if(!lvStepAcross(step,true)){
+            lvSpeed=0.0f;
+            lvFracX=0.0f;
+            break;
+        }
+        lvFracX-=(float)step;
+        lvStride+=1.0f;
+    }
+    // Ran off an edge
+    if(!lvGrounded(lvX,lvY)){
+        lvTakeOff(0.0f);
+    }
+}
+
+static void lvFly(int dir)
+{
+    lvVX+=(float)dir*LV_AIR_CONTROL;
+    lvVX=(lvVX>LV_RUN)?LV_RUN:((lvVX<-LV_RUN)?-LV_RUN:lvVX);
+    lvVY+=LV_GRAVITY;
+    lvVY=(lvVY>LV_MAX_FALL)?LV_MAX_FALL:lvVY;
+
+    // The velocity on screen, in the level's direction (the level may be tilted), a pixel at a time across and down
+    float du, dv;
+    screenToLayerVector(LV_LAYER,lvVX,lvVY,&du,&dv);
+
+    // Caught by a platform rising into the player (unless they're still jumping up fast, away from it)
+    const int caught=(dv>-1.5f)?lvPlatformRoseInto(lvX,lvY):-1;
+    if(caught>=0){
+        lvStandOn(caught);
+        lvOnGround=true;
+        lvSpeed=du;
+        lvFracY=0.0f;
+        return;
+    }
+    lvFracX+=du;
+    lvFracY+=dv;
+    while(fabsf(lvFracX)>=1.0f || fabsf(lvFracY)>=1.0f){
+        if(fabsf(lvFracX)>=1.0f){
+            const int step=(lvFracX>0.0f)?1:-1;
+            if(lvStepAcross(step,false)){
+                lvFracX-=(float)step;
+            }else{
+                // Hit a wall: stop moving across the level
+                lvFracX=0.0f;
+                du=0.0f;
+                layerToScreenVector(LV_LAYER,du,dv,&lvVX,&lvVY);
+            }
+        }
+        if(lvFracY>=1.0f){
+            const int plat=lvPlatformUnderSlack(lvX,lvY,4);
+            if(plat>=0){
+                lvStandOn(plat);
+            }
+            if(plat>=0 || lvGrounded(lvX,lvY)){
+                // Landed: carry on at the speed it was moving along the level
+                lvOnGround=true;
+                lvSpeed=du;
+                lvFracY=0.0f;
+                return;
+            }
+            ++lvY;
+            lvFracY-=1.0f;
+        }else if(lvFracY<=-1.0f){
+            if(lvPlayerRowBlocked(lvX,lvY-LV_TOP-1)){
+                // Head hit something: stop going up the level
+                lvFracY=0.0f;
+                dv=0.0f;
+                layerToScreenVector(LV_LAYER,du,dv,&lvVX,&lvVY);
+            }else{
+                --lvY;
+                lvFracY+=1.0f;
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Actors - every level object is updated each frame, wherever it is: enemies patrol off screen too. They only react to
+// the player when near them
+// ---------------------------------------------------------------------------
+
+// Enemies patrol, turning at walls and ledges. One facing the player, close enough and at about the same height, gives
+// chase (faster), until the player gets away
+static void lvUpdateEnemy(int ix, LevelActor *a)
+{
+    const float speed=getLevelObjectFloat(ix,LEVEL_PROP_SPEED,0.5f);
+    const float chaseSpeed=getLevelObjectFloat(ix,LEVEL_PROP_CHASE_SPEED,1.25f);
+    const int range=getLevelObjectInt(ix,LEVEL_PROP_ALERT_RANGE,96);
+    const float dx=(float)lvX-a->x, dy=(float)lvY-a->y;
+    if(a->state==LV_PATROL){
+        if(range>0 && fabsf(dx)<(float)range && fabsf(dy)<24.0f && dx*(float)a->dir>0.0f){
+            a->state=LV_CHASE;
+        }
+    }else if(fabsf(dx)>(float)range*1.5f || fabsf(dy)>48.0f){
+        a->state=LV_PATROL;
+    }
+    if(a->state==LV_CHASE && fabsf(dx)>2.0f){
+        a->dir=(dx>0.0f)?1:-1;
+    }
+
+    // Fall until on the ground
+    int x=(int)floorf(a->x), y=(int)floorf(a->y);
+    if(!lvOnLevelGround(x,y)){
+        a->vy=(a->vy+LV_GRAVITY>LV_MAX_FALL)?LV_MAX_FALL:a->vy+LV_GRAVITY;
+        for(int n=0;n<(int)a->vy && !lvOnLevelGround(x,y);n++){
+            ++y;
+        }
+        a->y=(float)y;
+        return;
+    }
+    a->vy=0.0f;
+
+    // Walk a pixel at a time (vx holds the fraction of a pixel), up and down slopes as the player does. At a wall, or a
+    // ledge (the ground drops more than a slope would), a patroller turns and a chaser waits
+    a->vx+=(a->state==LV_CHASE)?chaseSpeed:speed;
+    while(a->vx>=1.0f){
+        a->vx-=1.0f;
+        x=(int)floorf(a->x);
+        y=(int)floorf(a->y);
+        const int nx=x+a->dir;
+        const int ahead=(a->dir>0)?nx+LV_RIGHT:nx-LV_LEFT;
+        int ny=-1;
+        for(int k=0;k<=LV_CLIMB && ny<0;k++){
+            if(k>0 && lvRowBlocked(x,y-LV_TOP-k)){
+                break;
+            }
+            if(!lvColumnBlocked(ahead,y-k)){
+                ny=y-k;
+            }
+        }
+        if(ny>=0 && !lvOnLevelGround(nx,ny)){
+            const int top=ny;
+            ny=-1;
+            for(int k=1;k<=LV_CLIMB && ny<0;k++){
+                ny=lvOnLevelGround(nx,top+k)?top+k:-1;
+            }
+        }
+        if(ny<0){
+            if(a->state==LV_PATROL){
+                a->dir=(int8_t)-a->dir;
+            }
+            a->vx=0.0f;
+            break;
+        }
+        a->x=(float)nx;
+        a->y=(float)ny;
+        a->timer=(int16_t)(a->timer+1);
+    }
+    const int stride=(a->state==LV_CHASE)?3:6;
+    a->frame=(uint8_t)(((a->timer/stride)&7)+((a->dir>0)?LV_FRAMES_RIGHT:0));
+}
+
+// Moving platforms go back and forth along their path, waiting a moment at each end, carrying the player. vx/vy are how
+// far they moved this frame (to carry the player), angle how far along the path they are, and timer the wait
+#define LV_PLATFORM_WAIT 40
+static void lvUpdatePlatform(int ix, LevelActor *a)
+{
+    const int path=getLevelObjectInt(ix,LEVEL_PROP_PATH,-1);
+    const float len=getLevelPathLength(path);
+    a->vx=0.0f;
+    a->vy=0.0f;
+    if(len<=0.0f){
+        return;
+    }
+    // Called (the lift plate's on): straight back to the start of its path, and wait there
+    if(lvLiftCalled){
+        a->timer=0;
+        a->dir=-1;
+    }
+    if(a->timer>0){
+        --a->timer;
+        return;
+    }
+    a->angle+=getLevelObjectFloat(ix,LEVEL_PROP_SPEED,0.75f)*(float)a->dir;
+    if(a->angle>=len){
+        a->angle=len;
+        a->dir=-1;
+        a->timer=LV_PLATFORM_WAIT;
+    }else if(a->angle<=0.0f){
+        a->angle=0.0f;
+        a->dir=lvLiftCalled?-1:1;
+        a->timer=lvLiftCalled?0:LV_PLATFORM_WAIT;
+    }
+    float x, y;
+    getLevelPathPoint(path,a->angle,&x,&y);
+    a->vx=x-a->x;
+    a->vy=y-a->y;
+    a->x=x;
+    a->y=y;
+}
+
+// Generators make bubbles every so often, up to a limit - only when the player's near (so off screen ones don't use up
+// sprites)
+static void lvUpdateGenerator(int ix, LevelActor *a)
+{
+    const LevelObject *o=getLevelObject(ix);
+    if(fabsf((float)lvX-a->x)>200.0f || fabsf((float)lvY-a->y)>150.0f){
+        return;
+    }
+    if(++a->timer<getLevelObjectInt(ix,LEVEL_PROP_INTERVAL,40)){
+        return;
+    }
+    a->timer=0;
+    int count=0, freeSlot=-1;
+    for(int n=0;n<LV_MAX_BUBBLES;n++){
+        count+=(lvBubbleList[n].sprite>=0 && lvBubbleList[n].generator==ix)?1:0;
+        freeSlot=(lvBubbleList[n].sprite<0 && freeSlot<0)?n:freeSlot;
+    }
+    if(count>=getLevelObjectInt(ix,LEVEL_PROP_MAX,5) || freeSlot<0){
+        return;
+    }
+    const int s=allocateSprite();
+    if(s<0){
+        return;
+    }
+    LvBubble *b=lvBubbleList+freeSlot;
+    b->sprite=(int16_t)s;
+    b->generator=(int16_t)ix;
+    b->age=0;
+    b->baseX=a->x+(float)((rand()%(o->width+1))-(o->width/2));
+    b->y=a->y;
+    b->rise=getLevelObjectFloat(ix,LEVEL_PROP_SPEED,0.6f)*(0.7f+((float)(rand()%60)/100.0f));
+    setSpriteSize(s,SIZE_24X24);
+    setSpriteDef(s,spriteBubbleDef,spriteBubbleMaskDef);
+    setSpritePalette(s,LV_BUBBLE_PAL);
+    setSpriteLayer(s,LV_LAYER);
+    setSpriteSpace(s,SPRITE_SPACE_LAYER,-1);
+    addSpriteToSet(s,lvBubbles);
+    setSpriteCollisions(s,COLLIDE_TARGET);
+    setSpritePos(s,b->baseX,b->y);
+}
+
+static void lvFreeBubble(LvBubble *b)
+{
+    freeSprite(b->sprite);
+    b->sprite=-1;
+}
+
+static void lvUpdateBubbles(void)
+{
+    for(int n=0;n<LV_MAX_BUBBLES;n++){
+        LvBubble *b=lvBubbleList+n;
+        if(b->sprite<0){
+            continue;
+        }
+        b->y-=b->rise;
+        if(++b->age>LV_BUBBLE_LIFE){
+            lvFreeBubble(b);
+            continue;
+        }
+        spriteList[b->sprite].frame=(int16_t)((b->age/10)%3);
+        setSpritePos(b->sprite,b->baseX+(sinf((float)b->age*0.08f)*6.0f),b->y);
+    }
+}
+
+// A piston's shaft: solid tiles written into the level behind its head, from where the head starts (pulled in) to
+// the head's back edge - two tiles across (shaftTile and shaftTile+1). Only the tiles that change are written, as the
+// head crosses into another tile; hp holds how many tiles long the shaft is. The partly filled tile at the head end
+// is covered by the head (8 pixels long in the direction it moves). The shaft's path must be empty in the map, as the
+// tiles are cleared to 0 as it pulls back
+static void lvPistonShaft(int ix, LevelActor *a, const LevelObject *path)
+{
+    const LevelObject *o=getLevelObject(ix);
+    const LevelPoint *p0=path->points, *p1=path->points+(path->pointCount-1);
+    const bool vertical=(p0->x==p1->x);
+    const int dir=vertical?((p1->y>p0->y)?1:-1):((p1->x>p0->x)?1:-1);
+    const int half=(vertical?o->height:o->width)/2;
+    const int back0=(vertical?p0->y:p0->x)-(dir*half);
+    const int back=(int)floorf(vertical?a->y:a->x)-(dir*half);
+
+    // Whole tiles from the base (where the head starts) to the head
+    int base, n=0;
+    if(dir>0){
+        base=(back0+7)>>3;
+        const int last=(back-1)>>3;
+        n=(back>back0 && last>=base)?last-base+1:0;
+    }else{
+        base=(back0>>3)-1;
+        const int first=back>>3;
+        n=(back<back0 && base>=first)?base-first+1:0;
+    }
+    const int shaftTile=getLevelObjectInt(ix,LEVEL_PROP_SHAFT_TILE,34);
+    const int across=((int)floorf(vertical?a->x:a->y)-8)>>3;
+    const int from=(n<a->hp)?n:a->hp, to=(n<a->hp)?a->hp:n;
+    for(int k=from;k<to;k++){
+        const int along=base+(k*dir);
+        for(int j=0;j<2;j++){
+            const uint8_t tile=(uint8_t)((k<n)?shaftTile+j:0);
+            if(vertical){
+                setLevelTile(LV_LAYER,across+j,along,tile);
+            }else{
+                setLevelTile(LV_LAYER,along,across+j,tile);
+            }
+        }
+    }
+    a->hp=(int16_t)n;
+}
+
+// Pistons push out fast along their path, wait, pull back slowly, and wait - starting after their phase, so a row of
+// them can fire one after another
+static void lvUpdatePiston(int ix, LevelActor *a)
+{
+    const int path=getLevelObjectInt(ix,LEVEL_PROP_PATH,-1);
+    const LevelObject *po=getLevelObject(path);
+    const float len=getLevelPathLength(path);
+    if(!po || len<=0.0f){
+        return;
+    }
+    // Stopped (the lever's on): pull back in, and stay there
+    if(lvPistonsStopped){
+        if(a->state!=LV_PISTON_IN){
+            a->state=LV_PISTON_BACK;
+        }else{
+            getLevelPathPoint(path,a->angle,&a->x,&a->y);
+            lvPistonShaft(ix,a,po);
+            return;
+        }
+    }
+    switch(a->state){
+        case LV_PISTON_IN:
+            if(--a->timer<=0){
+                a->state=LV_PISTON_OUT;
+            }
+        break;
+        case LV_PISTON_OUT:
+            a->angle+=getLevelObjectFloat(ix,LEVEL_PROP_SPEED_OUT,3.0f);
+            if(a->angle>=len){
+                a->angle=len;
+                a->state=LV_PISTON_WAIT_OUT;
+                a->timer=(int16_t)getLevelObjectInt(ix,LEVEL_PROP_WAIT_OUT,20);
+            }
+        break;
+        case LV_PISTON_WAIT_OUT:
+            if(--a->timer<=0){
+                a->state=LV_PISTON_BACK;
+            }
+        break;
+        default:
+            a->angle-=getLevelObjectFloat(ix,LEVEL_PROP_SPEED_IN,0.75f);
+            if(a->angle<=0.0f){
+                a->angle=0.0f;
+                a->state=LV_PISTON_IN;
+                a->timer=(int16_t)getLevelObjectInt(ix,LEVEL_PROP_WAIT_IN,50);
+            }
+        break;
+    }
+    getLevelPathPoint(path,a->angle,&a->x,&a->y);
+    lvPistonShaft(ix,a,po);
+}
+
+// A piston's front: true if a point is ahead of its head, in the direction it pushes
+static bool lvInFrontOfPiston(int obj, float x, float y)
+{
+    const LevelObject *po=getLevelObject(getLevelObjectInt(obj,LEVEL_PROP_PATH,-1));
+    const LevelActor *a=getLevelActor(obj);
+    if(!po || po->pointCount<2){
+        return false;
+    }
+    const float dx=(float)(po->points[po->pointCount-1].x-po->points[0].x);
+    const float dy=(float)(po->points[po->pointCount-1].y-po->points[0].y);
+    return ((x-a->x)*dx)+((y-a->y)*dy)>0.0f;
+}
+
+// Piston heads that moved into the player this frame: the front of one pushing out crushes them. Otherwise (a head
+// coming down while the player's safe after losing a life, or its side), they're pushed out to the nearer side. Uses
+// the heads' boxes and the player's hitbox, the same as the solid collisions. False if the player was crushed
+static bool lvPistonsHitPlayer(void)
+{
+    const int px0=lvX-LV_LEFT, px1=lvX+LV_RIGHT, py0=lvY-LV_TOP, py1=lvY+LV_BOTTOM;
+    for(int ix=firstSpriteInSet(lvPistons);ix>=0;ix=nextSpriteInSet(ix)){
+        const int obj=getSpriteLevelObject(ix);
+        const LvBox b=lvBoxOf(obj);
+        if(px1<b.x0 || px0>b.x1 || py1<b.y0 || py0>b.y1){
+            continue;
+        }
+        const LevelActor *a=getLevelActor(obj);
+        if(lvSafe==0 && a->state==LV_PISTON_OUT && lvInFrontOfPiston(obj,(float)lvX,(float)lvY)){
+            ++lvLost;
+            lvRespawn();
+            return false;
+        }
+        // Out of the way, across the direction the piston moves
+        const LevelObject *po=getLevelObject(getLevelObjectInt(obj,LEVEL_PROP_PATH,-1));
+        const bool vertical=po && po->pointCount>1 && po->points[0].x==po->points[po->pointCount-1].x;
+        // (the nearer side, unless something solid's in the way there)
+        if(vertical){
+            const int left=b.x0-LV_RIGHT-1, right=b.x1+LV_LEFT+1;
+            const bool leftFree=!lvColumnBlocked(left-LV_LEFT,lvY) && !lvColumnBlocked(left+LV_RIGHT,lvY);
+            const bool rightFree=!lvColumnBlocked(right-LV_LEFT,lvY) && !lvColumnBlocked(right+LV_RIGHT,lvY);
+            lvX=(leftFree && (!rightFree || lvX-left<right-lvX))?left:right;
+        }else{
+            const int up=b.y0-LV_BOTTOM-1, down=b.y1+LV_TOP+1;
+            const bool upFree=!lvRowBlocked(lvX,up-LV_TOP) && !lvRowBlocked(lvX,up+LV_BOTTOM);
+            const bool downFree=!lvRowBlocked(lvX,down-LV_TOP) && !lvRowBlocked(lvX,down+LV_BOTTOM);
+            lvY=(upFree && (!downFree || lvY-up<down-lvY))?up:down;
+        }
+    }
+    return true;
+}
+
+static void lvUpdateDoor(int ix, LevelActor *a);
+
+static void lvUpdateActors(void)
+{
+    for(int ix=0;ix<getLevelObjectCount();ix++){
+        if(!isLevelActorActive(ix)){
+            continue;
+        }
+        LevelActor *a=getLevelActor(ix);
+        switch(getLevelObject(ix)->cls){
+            case LEVEL_CLASS_ENEMY:
+                lvUpdateEnemy(ix,a);
+            break;
+            case LEVEL_CLASS_PLATFORM:
+                lvUpdatePlatform(ix,a);
+            break;
+            case LEVEL_CLASS_PISTON:
+                lvUpdatePiston(ix,a);
+            break;
+            case LEVEL_CLASS_DOOR:
+            case LEVEL_CLASS_EXIT:
+                lvUpdateDoor(ix,a);
+            break;
+            case LEVEL_CLASS_GENERATOR:
+                lvUpdateGenerator(ix,a);
+            break;
+            default:
+            break;
+        }
+    }
+    lvUpdateBubbles();
+}
+
+// What the player touched when the last frame was drawn: enemies are stomped on from above, or cost a life; bubbles pop
+static void lvPlayerHits(void)
+{
+    const Sprite *p=spriteList+lvPlayer;
+    if(lvSafe>0){
+        --lvSafe;
+    }
+    for(int n=0;n<p->spriteHitCount;n++){
+        const int hit=p->spriteHits[n];
+        if(isSpriteInSet(hit,lvEnemies)){
+            const int obj=getSpriteLevelObject(hit);
+            const LevelActor *a=getLevelActor(obj);
+            if(!a){
+                continue;
+            }
+            if(!lvOnGround && lvVY>0.0f && (float)lvY<a->y-6.0f){
+                killLevelActor(obj);
+                ++lvStomped;
+                lvVY=-LV_STOMP;
+            }else if(lvSafe==0){
+                ++lvLost;
+                lvRespawn();
+                return;
+            }
+        }else if(isSpriteInSet(hit,lvBubbles)){
+            for(int b=0;b<LV_MAX_BUBBLES;b++){
+                if(lvBubbleList[b].sprite==hit){
+                    lvFreeBubble(lvBubbleList+b);
+                    ++lvPopped;
+                }
+            }
+        }
+    }
+}
+
+// The camera catches up with the player - faster the further the player is from the middle of the screen, and slowly
+// centring on them when they stop
+static void lvCamera(bool snap)
+{
+    const float maxX=(float)(getLevelWidth()-SCREEN_WIDTH_PIXELS), maxY=(float)(getLevelHeight()-SCREEN_HEIGHT_LINES);
+    float tx=(float)lvX-(SCREEN_WIDTH_PIXELS/2);
+    float ty=(float)lvY-(SCREEN_HEIGHT_LINES/2);
+    tx=(tx<0.0f)?0.0f:((tx>maxX)?maxX:tx);
+    ty=(ty<0.0f)?0.0f:((ty>maxY)?maxY:ty);
+    if(snap){
+        lvCamX=tx;
+        lvCamY=ty;
+    }else{
+        const float dx=tx-lvCamX, dy=ty-lvCamY;
+        const float kx=0.03f+(fabsf(dx)*0.001f), ky=0.03f+(fabsf(dy)*0.001f);
+        lvCamX+=dx*((kx>1.0f)?1.0f:kx);
+        lvCamY+=dy*((ky>1.0f)?1.0f:ky);
+    }
+    setLevelCamera((int)floorf(lvCamX+0.5f),(int)floorf(lvCamY+0.5f));
+}
+
+// ---------------------------------------------------------------------------
+// Switches, keys, doors, and moving between levels
+// ---------------------------------------------------------------------------
+
+#define LV_DOOR_OPEN        2
+
+// A gate door is solid until it's fully open (doors to other levels open into the screen, so never block the way)
+static void lvDoorSolidity(int objectIX)
+{
+    const LevelActor *a=getLevelActor(objectIX);
+    if(a->sprite>=0){
+        setSpriteSolid(a->sprite,!getLevelSwitch(objectIX) || a->state==LV_DOOR_OPENING);
+    }
+}
+
+// Doors play their opening frames, from the one placed in Tiled to the last of their sprite sheet. A door to another
+// level takes the player there once it's open
+static void lvUpdateDoor(int ix, LevelActor *a)
+{
+    const LevelObject *o=getLevelObject(ix);
+    if(a->state==LV_DOOR_OPENING && o->sheet>=0){
+        const int last=getLevel()->sheets[o->sheet].frames-1;
+        int frame=o->frame+(++a->timer/LV_DOOR_TICKS);
+        if(frame>=last){
+            frame=last;
+            a->state=LV_DOOR_OPEN;
+            if(ix==lvLeaving){
+                lvGoLevel=getLevelObjectInt(ix,LEVEL_PROP_TO_LEVEL,-1);
+                lvGoEntrance=getLevelObjectString(ix,LEVEL_PROP_TO_ENTRANCE,"start");
+                lvLeaving=-1;
+            }
+        }
+        a->frame=(uint8_t)frame;
+    }
+    if(o->cls==LEVEL_CLASS_DOOR){
+        lvDoorSolidity(ix);
+    }
+}
+
+static void lvOpenDoor(int objectIX)
+{
+    LevelActor *a=getLevelActor(objectIX);
+    a->state=LV_DOOR_OPENING;
+    a->timer=0;
+    a->frame=getLevelObject(objectIX)->frame;
+}
+
+// As an actor gets its sprite: a gate door's is solid or not, as the door is
+static void lvOnShow(int objectIX, int spriteIX)
+{
+    (void)spriteIX;
+    if(getLevelObject(objectIX)->cls==LEVEL_CLASS_DOOR){
+        lvDoorSolidity(objectIX);
+    }
+}
+
+// The one switch handler for every switch in every level - by the switch's value (its SwitchId in Tiled). Called when
+// a switch changes, and again for switches that are on when a level's entered (LEVEL_SWITCH_REPLAY) - so everything
+// here sets up a state (the pistons are stopped, the door's open), rather than starting an animation - except a door
+// the player's just opened, which plays its opening frames
+static void lvOnSwitch(int value, bool on, int objectIX, uint8_t why)
+{
+    if(getLevelObject(objectIX)->cls==LEVEL_CLASS_DOOR){
+        if(on && why==LEVEL_SWITCH_USED){
+            lvOpenDoor(objectIX);
+        }else{
+            getLevelActor(objectIX)->state=on?LV_DOOR_OPEN:LV_DOOR_SHUT;
+        }
+        lvDoorSolidity(objectIX);
+        return;
+    }
+    switch(value){
+        case SWITCH_ID_PISTONS:
+            lvPistonsStopped=on;
+        break;
+        case SWITCH_ID_LIFT_CALL:
+            lvLiftCalled=on;
+        break;
+        default:
+        break;
+    }
+}
+
+// Each level's setup, as it's entered (before its switches are replayed): the game's per level state, sprite sets for
+// its classes, and its actors' starting states
+static void lvSetupLevel(const LevelDef *lv)
+{
+    (void)lv;
+    lvPistonsStopped=false;
+    lvLiftCalled=false;
+    for(int n=0;n<LV_MAX_BUBBLES;n++){
+        if(lvBubbleList[n].sprite>=0){
+            freeSprite(lvBubbleList[n].sprite);
+        }
+        lvBubbleList[n].sprite=-1;
+    }
+    // Sprites near the camera join a set by their class, so what the player hits says what it is
+    setLevelClassSprites(LEVEL_CLASS_ENEMY,lvEnemies,COLLIDE_TARGET);
+    setLevelClassSprites(LEVEL_CLASS_PLATFORM,lvPlatforms,COLLIDE_NONE);
+    setLevelClassSprites(LEVEL_CLASS_PISTON,lvPistons,COLLIDE_NONE);
+    setLevelClassSprites(LEVEL_CLASS_DOOR,lvDoors,COLLIDE_NONE);
+    setLevelActorCallbacks(lvOnShow,NULL);
+    lvLeaving=-1;
+    for(int ix=0;ix<getLevelObjectCount();ix++){
+        const LevelObject *o=getLevelObject(ix);
+        LevelActor *a=getLevelActor(ix);
+        switch(o->cls){
+            case LEVEL_CLASS_ENEMY:
+                // Setting off the way they face in Tiled (frames 0-7 face left)
+                a->dir=(o->frame<LV_FRAMES_RIGHT)?-1:1;
+            break;
+            case LEVEL_CLASS_PISTON:
+                // Pulled in, waiting for their phase
+                a->timer=(int16_t)(getLevelObjectInt(ix,LEVEL_PROP_PHASE,0)+getLevelObjectInt(ix,LEVEL_PROP_WAIT_IN,50));
+            break;
+            case LEVEL_CLASS_PLAYER_START:
+                // Just marks where the player starts - not shown
+                killLevelActor(ix);
+            break;
+            default:
+            break;
+        }
+    }
+}
+
+// Go to a level, arriving at an entrance (its switches are replayed first, so everything's as it was left)
+static bool lvEnter(int levelID, const char *entrance)
+{
+    const int e=enterLevel(levelID,entrance);
+    if(e==-2){
+        return false;
+    }
+    lvStartX=40;
+    lvStartY=250;
+    if(e>=0){
+        lvStartX=(int)getLevelActor(e)->x;
+        lvStartY=(int)getLevelActor(e)->y;
+    }
+    lvRespawn();
+    if(e>=0){
+        lvFacing=getLevelActor(e)->dir;
+    }
+    setSpritePos(lvPlayer,(float)lvX,(float)lvY);
+    lvCamera(true);
+    updateLevel();
+    return true;
+}
+
+// Is the player touching an object (its box, grown by margin pixels)?
+static bool lvTouching(int objectIX, int margin)
+{
+    const LevelActor *a=getLevelActor(objectIX);
+    const LevelObject *o=getLevelObject(objectIX);
+    const int hw=(o->width/2)+margin, hh=(o->height/2)+margin;
+    const int cx=(int)floorf(a->x), cy=(int)floorf(a->y);
+    return lvX+LV_RIGHT>=cx-hw && lvX-LV_LEFT<cx+hw && lvY+LV_BOTTOM>=cy-hh && lvY-LV_TOP<cy+hh;
+}
+
+// Switches (levers used with A, pressure plates stood on), keys picked up, locked doors opened with their key, and
+// exits used with A
+static void lvUseThings(bool usePressed)
+{
+    for(int ix=0;ix<getLevelObjectCount();ix++){
+        if(!isLevelActorActive(ix)){
+            continue;
+        }
+        const LevelObject *o=getLevelObject(ix);
+        switch(o->cls){
+            case LEVEL_CLASS_SWITCH:
+                if(lvTouching(ix,0) && (o->mode==LEVEL_SWITCH_TIMED || usePressed)){
+                    useLevelSwitch(ix);
+                }
+            break;
+            case LEVEL_CLASS_KEY:
+                if(lvTouching(ix,0)){
+                    // Gone for good - it persists, so it isn't there when the level's entered again
+                    lvKeys|=1u<<o->value;
+                    killLevelActor(ix);
+                }
+            break;
+            case LEVEL_CLASS_DOOR:
+                if(!getLevelSwitch(ix) && (lvKeys&(1u<<o->value)) && lvTouching(ix,2)){
+                    useLevelSwitch(ix);
+                }
+            break;
+            case LEVEL_CLASS_EXIT:
+                // A door opens first (lvUpdateDoor then takes the player through); an exit without one is immediate
+                if(usePressed && lvLeaving<0 && lvTouching(ix,0)){
+                    if(o->sheet>=0){
+                        lvOpenDoor(ix);
+                        lvLeaving=ix;
+                    }else{
+                        lvGoLevel=getLevelObjectInt(ix,LEVEL_PROP_TO_LEVEL,-1);
+                        lvGoEntrance=getLevelObjectString(ix,LEVEL_PROP_TO_ENTRANCE,"start");
+                    }
+                }
+            break;
+            default:
+            break;
+        }
+    }
+}
+
+void setupLevelTest(void)
+{
+    initLayers();
+    initSprites(LV_SPRITES);
+    setTileDefSet(LV_HUD_LAYER,defaultTileDef);
+    setLayerPos(LV_HUD_LAYER,0,0);
+    drawTxtToLayer(LV_HUD_LAYER,"O/P:RUN Q:JUMP A:USE R:TILT     ",0x45,0x45,0,1);
+
+    // Sprite sets, for what the player touches
+    lvEnemies=createSpriteSet();
+    lvPlatforms=createSpriteSet();
+    lvBubbles=createSpriteSet();
+    lvPistons=createSpriteSet();
+    lvDoors=createSpriteSet();
+    // Piston heads and closed doors block the way, like walls
+    setSpriteSetSolid(lvPistons,true);
+    setSpriteSetSolid(lvDoors,true);
+    for(int n=0;n<LV_MAX_BUBBLES;n++){
+        lvBubbleList[n].sprite=-1;
+    }
+
+    // The player lives in the level (layer space), so its position is in level pixels and it moves with the level
+    lvPlayer=allocateSprite();
+    setSpriteSize(lvPlayer,SIZE_24X24);
+    setSpriteDef(lvPlayer,sprite24x24Def,mask24x24Def);
+    setSpritePalette(lvPlayer,LV_PALETTE);
+    setSpriteLayer(lvPlayer,LV_LAYER);
+    setSpriteSpace(lvPlayer,SPRITE_SPACE_LAYER,-1);
+    setSpriteCollisions(lvPlayer,COLLIDE_SPRITES);
+    lvCoins=0;
+    lvLost=0;
+    lvStomped=0;
+    lvPopped=0;
+    lvSwing=0;
+    lvStride=0.0f;
+    lvRotate=false;
+    lvPrevR=false;
+    lvPrevQ=false;
+    lvPrevA=false;
+    lvKeys=0;
+    lvGoLevel=-1;
+
+    // A new game: nothing remembered yet. Then into the demo level, at its start
+    clearLevelStateStore();
+    setLevelHandlers(lvSetupLevel,lvOnSwitch);
+    lvLoaded=lvEnter(LEVEL_ID_DEMO,NULL);
+    if(!lvLoaded){
+        drawTxtToLayer(LV_HUD_LAYER,"LEVEL DOESN'T FIT IN RAM",0x42,0x42,4,10);
+    }
+}
+
+void levelTest(void)
+{
+    if(keyDown(KEY_SPACE)){
+        setState(GS_title);
+        return;
+    }
+    if(!lvLoaded){
+        return;
+    }
+    const bool rDown=keyDown(KEY_R)!=0;
+    if(rDown && !lvPrevR){
+        lvRotate=!lvRotate;
+    }
+    lvPrevR=rDown;
+
+    // The level swings gently around the middle of the screen (the foreground follows it, the hills and sky don't) -
+    // set first, as the player's jumps and falls go by the screen
+    if(lvRotate){
+        setLayerTransform(LV_LAYER,0.2f*sinf((float)lvSwing*0.03f),1.0f,1.0f);
+        ++lvSwing;
+    }else{
+        clearLayerTransform(LV_LAYER);
+    }
+
+    // What the player touched last frame
+    lvPlayerHits();
+
+    // Every actor, then the player - carried by the platform they're standing on
+    const int riding=lvOnGround?lvPlatformUnder(lvX,lvY):-1;
+    lvUpdateActors();
+    lvPistonsHitPlayer();
+    if(riding>=0){
+        const LevelActor *pa=getLevelActor(riding);
+        lvFracX+=pa->vx;
+        while(fabsf(lvFracX)>=1.0f){
+            const int step=(lvFracX>0.0f)?1:-1;
+            if(!lvStepAcross(step,false)){
+                lvFracX=0.0f;
+                break;
+            }
+            lvFracX-=(float)step;
+        }
+        lvStandOn(riding);
+    }
+
+    // (no control while going through a door to another level)
+    const int dir=(lvLeaving>=0)?0:(keyDown(KEY_O)?-1:(keyDown(KEY_P)?1:0));
+    if(dir){
+        lvFacing=dir;
+    }
+    const bool qDown=keyDown(KEY_Q)!=0;
+    if(qDown && !lvPrevQ && lvOnGround && lvLeaving<0){
+        lvTakeOff(LV_JUMP);
+    }
+    lvPrevQ=qDown;
+    if(lvOnGround){
+        lvRun(dir);
+    }else{
+        lvFly(dir);
+    }
+
+    // Switches, keys, doors and exits (A uses things) - an exit takes the player to another level straight away
+    const bool aDown=keyDown(KEY_A)!=0;
+    lvUseThings(aDown && !lvPrevA);
+    lvPrevA=aDown;
+    if(lvGoLevel>=0){
+        const int to=lvGoLevel;
+        lvGoLevel=-1;
+        lvEnter(to,lvGoEntrance);
+        return;
+    }
+
+    // Coins: collected by touching them (the tile's taken out of the level, and off the screen)
+    const int px[5]={lvX,lvX-LV_LEFT,lvX+LV_RIGHT,lvX,lvX};
+    const int py[5]={lvY,lvY,lvY,lvY-LV_TOP,lvY+LV_BOTTOM};
+    for(int n=0;n<5;n++){
+        if(getLevelTileFlags(LV_LAYER,px[n]>>3,py[n]>>3)&LEVEL_TILE_COLLECT){
+            setLevelTile(LV_LAYER,px[n]>>3,py[n]>>3,0);
+            ++lvCoins;
+        }
+    }
+    // Water and spikes, or off the bottom of the level: back to the start
+    if((getLevelTileFlags(LV_LAYER,lvX>>3,(lvY+LV_BOTTOM-1)>>3)&LEVEL_TILE_HAZARD) || lvY>getLevelHeight()+LV_TOP){
+        ++lvLost;
+        lvRespawn();
+    }
+
+    // Frame: standing, running (the cycle moving on with the distance run), skidding or in the air
+    int frame=LV_FRAME_STAND;
+    if(!lvOnGround){
+        frame=LV_FRAME_JUMP;
+    }else if(lvSkidding){
+        frame=LV_FRAME_SKID;
+    }else if(lvSpeed!=0.0f){
+        frame=((int)(lvStride/LV_STRIDE))&7;
+    }
+    spriteList[lvPlayer].frame=(int16_t)(frame+((lvFacing>0)?LV_FRAMES_RIGHT:0));
+    // Flashing (taking the background's colours every other few frames) while safe after losing a life
+    setSpritePalette(lvPlayer,(lvSafe>0 && (lvSafe&4))?0:LV_PALETTE);
+    setSpritePos(lvPlayer,(float)lvX,(float)lvY);
+
+    // The camera, then the level: animated tiles, sprites for the actors near the camera, placed where they are now
+    lvCamera(false);
+    updateLevel();
+
+    char status[64];
+    char where[8];
+    snprintf(where,sizeof(where),"%s",getLevel()->name);
+    for(char *c=where;*c;c++){
+        *c=(char)toupper((unsigned char)*c);
+    }
+    snprintf(status,sizeof(status),"%-5s COIN:%2d LOST:%2d KEY:%s %2u%% ",where,lvCoins,lvLost,lvKeys?"Y":"N",
+        (unsigned)(gv.frameTimeUs/400));
+    drawTxtToLayer(LV_HUD_LAYER,status,0x46,0x46,0,0);
 }

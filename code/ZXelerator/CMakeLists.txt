@@ -42,6 +42,9 @@ project(ZXelerator C CXX ASM)
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
+# Levels converted from Tiled (levels/*.c - see levels/README.md)
+file(GLOB LEVEL_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/levels/*.c)
+
 # Add executable. Default name is the project name, version 0.1
 
 add_executable(
@@ -63,6 +66,9 @@ add_executable(
     engine/audio.c
     engine/synth.c
     engine/collision.c
+    engine/level.c
+    engine/lzUnpack.c
+    ${LEVEL_SOURCES}
     gameFunc.c
     gameStrings.c
     game.c 
@@ -92,6 +98,7 @@ target_include_directories(
     ZXelerator PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/engine
+    ${CMAKE_CURRENT_LIST_DIR}/levels
 )
 
 pico_add_extra_outputs(ZXelerator)

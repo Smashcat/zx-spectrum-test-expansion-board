@@ -22,6 +22,7 @@ void initLayers(void){
         t->pivotY=SCREEN_HEIGHT_LINES/2;
         t->opaque=false;
         t->colourAware=true;
+        t->follow=-1;
         clearLayerTransform(n);
         clearLayerLines(n,0,TILE_LAYER_HEIGHT);
     }
@@ -155,13 +156,9 @@ void blitLayerToScratchBuffers(int layerIX)
         return;
     }
 
-    // If layer is off screen, don't draw it
-    if(
-        (tL->x<=-TILE_LAYER_WIDTH*8*2) ||
-        (tL->x>=SCREEN_WIDTH_PIXELS) ||
-        (tL->y<=-TILE_LAYER_HEIGHT*8*2) ||
-        (tL->y>=SCREEN_HEIGHT_LINES) 
-    ){
+    // A layer placed at or beyond the right or bottom of the screen is hidden (tile layers repeat, so any position left
+    // of or above the screen is drawn - e.g. a level scrolled thousands of pixels)
+    if((tL->x>=SCREEN_WIDTH_PIXELS) || (tL->y>=SCREEN_HEIGHT_LINES)){
         return;
     }
 
@@ -466,6 +463,45 @@ void clearLayerTransform(int layerIX)
     t->fwdYY=1.0f;
     t->transformed=false;
     t->lineTransforms=NULL;
+}
+
+void setLayerFollow(int layerIX, int leaderIX)
+{
+    tileLayer[layerIX].follow=(int8_t)((leaderIX>=0 && leaderIX<MAX_TILE_LAYERS && leaderIX!=layerIX)?leaderIX:-1);
+    syncFollowingLayer(layerIX);
+}
+
+void syncFollowingLayer(int layerIX)
+{
+    TileLayer *t=tileLayer+layerIX;
+    if(t->follow<0){
+        return;
+    }
+    const TileLayer *l=tileLayer+t->follow;
+    t->x=l->x;
+    t->y=l->y;
+    t->transformed=l->transformed;
+    t->angle=l->angle;
+    t->scaleX=l->scaleX;
+    t->scaleY=l->scaleY;
+    t->pivotX=l->pivotX;
+    t->pivotY=l->pivotY;
+    t->dudx=l->dudx;
+    t->dudy=l->dudy;
+    t->dvdx=l->dvdx;
+    t->dvdy=l->dvdy;
+    t->fwdXX=l->fwdXX;
+    t->fwdXY=l->fwdXY;
+    t->fwdYX=l->fwdYX;
+    t->fwdYY=l->fwdYY;
+    t->lineTransforms=l->lineTransforms;
+}
+
+void syncFollowingLayers(void)
+{
+    for(int n=0;n<MAX_TILE_LAYERS;n++){
+        syncFollowingLayer(n);
+    }
 }
 
 void setLayerOpaque(int layerIX, bool opaque)
@@ -861,8 +897,7 @@ bool isLayerCollidable(int layerIX)
         return true;
     }
     // The same off screen test as the renderer
-    return !((tL->x<=-TILE_LAYER_WIDTH*8*2) || (tL->x>=SCREEN_WIDTH_PIXELS) ||
-        (tL->y<=-TILE_LAYER_HEIGHT*8*2) || (tL->y>=SCREEN_HEIGHT_LINES));
+    return !((tL->x>=SCREEN_WIDTH_PIXELS) || (tL->y>=SCREEN_HEIGHT_LINES));
 }
 
 /// @brief n pixels (1-32) of the tile map at layer pixel lx,ly (wrapping at 512), in the top n bits. Only the tile bytes
@@ -945,19 +980,80 @@ bool getLayerTileAt(int layerIX, int x, int y, int *tileX, int *tileY)
         }
         const uint32_t u=(uint32_t)lt.u+((uint32_t)x*(uint32_t)lt.dudx);
         const uint32_t v=(uint32_t)lt.v+((uint32_t)x*(uint32_t)lt.dvdx);
-        *tileX=(int)((u>>19)&(TILE_LAYER_WIDTH-1));
-        *tileY=(int)((v>>19)&(TILE_LAYER_HEIGHT-1));
+        if(tileX){
+            *tileX=(int)((u>>19)&(TILE_LAYER_WIDTH-1));
+        }
+        if(tileY){
+            *tileY=(int)((v>>19)&(TILE_LAYER_HEIGHT-1));
+        }
     }else{
-        *tileX=(int)((((uint32_t)(x-tL->x))>>3)&(TILE_LAYER_WIDTH-1));
-        *tileY=(int)((((uint32_t)(y-tL->y))>>3)&(TILE_LAYER_HEIGHT-1));
+        if(tileX){
+            *tileX=(int)((((uint32_t)(x-tL->x))>>3)&(TILE_LAYER_WIDTH-1));
+        }
+        if(tileY){
+            *tileY=(int)((((uint32_t)(y-tL->y))>>3)&(TILE_LAYER_HEIGHT-1));
+        }
     }
     return true;
 }
 
+int getLayerTileNumberAt(int layerIX, int x, int y, int *tileX, int *tileY)
+{
+    int tx, ty;
+    if(!getLayerTileAt(layerIX,x,y,&tx,&ty)){
+        return -1;
+    }
+    if(tileX){
+        *tileX=tx;
+    }
+    if(tileY){
+        *tileY=ty;
+    }
+    return tileLayer[layerIX].tileMap[(ty*TILE_LAYER_WIDTH)+tx];
+}
+
+bool isLayerPixelSetAt(int layerIX, int x, int y)
+{
+    return (x>=0 && x<SCREEN_WIDTH_PIXELS) && getLayerPixelsN(layerIX,x,y,1)!=0;
+}
+
+int __not_in_flash_func(getLayerMapTileNumber)(int layerIX, int x, int y, int *tileX, int *tileY)
+{
+    if(layerIX<0 || layerIX>=MAX_TILE_LAYERS || tileLayer[layerIX].layerType!=LT_TILE){
+        return -1;
+    }
+    const int tx=(int)(((uint32_t)x>>3)&(TILE_LAYER_WIDTH-1));
+    const int ty=(int)(((uint32_t)y>>3)&(TILE_LAYER_HEIGHT-1));
+    if(tileX){
+        *tileX=tx;
+    }
+    if(tileY){
+        *tileY=ty;
+    }
+    return tileLayer[layerIX].tileMap[(ty*TILE_LAYER_WIDTH)+tx];
+}
+
+bool __not_in_flash_func(isLayerMapPixelSet)(int layerIX, int x, int y)
+{
+    const TileLayer *tL=tileLayer+layerIX;
+    if(layerIX<0 || layerIX>=MAX_TILE_LAYERS || tL->layerType!=LT_TILE || tL->tileDefPtr==NULL){
+        return false;
+    }
+    // One pixel: its tile, then the row of that tile's graphics, then the bit
+    const uint32_t lx=(uint32_t)x, ly=(uint32_t)y;
+    const uint8_t tile=tL->tileMap[(((ly>>3)&(TILE_LAYER_HEIGHT-1))*TILE_LAYER_WIDTH)+((lx>>3)&(TILE_LAYER_WIDTH-1))];
+    return (tL->tileDefPtr[((uint32_t)tile<<3)+(ly&7)]&(0x80u>>(lx&7)))!=0;
+}
+
 // Which tiles of a tile set have no pixels, for the tile set used most recently. If a tile set's graphics are changed
-// in RAM after use, they're picked up next time a different tile set is looked at
+// in RAM after use, they're picked up next time a different tile set is looked at (or after tileSetsChanged)
 static const uint8_t *emptyTilesFor=NULL;
 static uint32_t emptyTiles[256/32];
+
+void tileSetsChanged(void)
+{
+    emptyTilesFor=NULL;
+}
 
 bool isLayerTileEmpty(int layerIX, int tileX, int tileY)
 {

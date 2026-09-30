@@ -1,0 +1,29 @@
+{
+	"columns":	1,
+	"image":	"platform.png",
+	"imageheight":	8,
+	"imagewidth":	32,
+	"margin":	0,
+	"name":	"platform",
+	"objectalignment":	"center",
+	"properties":	[{
+			"name":	"engineMask",
+			"type":	"string",
+			"value":	"platformSpriteMaskDef"
+		}, {
+			"name":	"engineSprite",
+			"type":	"string",
+			"value":	"platformSpriteDef"
+		}, {
+			"name":	"palette",
+			"type":	"int",
+			"value":	6
+		}],
+	"spacing":	0,
+	"tilecount":	1,
+	"tiledversion":	"1.12.2",
+	"tileheight":	8,
+	"tilewidth":	32,
+	"type":	"tileset",
+	"version":	"1.10"
+}

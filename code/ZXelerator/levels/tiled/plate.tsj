@@ -1,0 +1,29 @@
+{
+	"columns":	2,
+	"image":	"plate.png",
+	"imageheight":	8,
+	"imagewidth":	32,
+	"margin":	0,
+	"name":	"plate",
+	"objectalignment":	"center",
+	"properties":	[{
+			"name":	"engineMask",
+			"type":	"string",
+			"value":	"plateMaskDef"
+		}, {
+			"name":	"engineSprite",
+			"type":	"string",
+			"value":	"plateDef"
+		}, {
+			"name":	"palette",
+			"type":	"int",
+			"value":	9
+		}],
+	"spacing":	0,
+	"tilecount":	2,
+	"tiledversion":	"1.12.2",
+	"tileheight":	8,
+	"tilewidth":	16,
+	"type":	"tileset",
+	"version":	"1.10"
+}

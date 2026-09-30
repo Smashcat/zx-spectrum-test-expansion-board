@@ -26,6 +26,10 @@ static void captureFrame(FrameSnapshot *snap)
 }
 
 void compositeScene(void){
+    // Layers locked to another layer (e.g. a level's foreground) take its position and transform as it is this frame
+    syncFollowingLayers();
+    // Layer space sprites follow their layer's position, rotation and scale as it is this frame
+    placeLayerSprites();
     updateParticles();
     for(int n=MAX_TILE_LAYERS-1;n>-1;n--){
         initScratchBuffers(false);

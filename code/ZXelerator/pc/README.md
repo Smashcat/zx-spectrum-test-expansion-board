@@ -57,6 +57,12 @@ nothing is rotated (tile layers, bitmap layers and every sprite width, at thousa
 also renders example scenes (rotated layers and sprites, Mode 7 floor) to BMP files. It exits with
 code 1 if any comparison fails.
 
+### Level converter
+
+`build.bat` also builds `pc\build\Release\levelconv.exe`, which converts levels made in Tiled into
+`levels/*.c` - see [levels/README.md](../levels/README.md). Converted levels are ordinary source files,
+built into both the firmware and the emulator (any `.c` file in `levels/` is picked up automatically).
+
 ## Controls
 
 | Key | Action |
