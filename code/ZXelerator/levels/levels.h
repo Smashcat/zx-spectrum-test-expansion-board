@@ -5,7 +5,11 @@
 #include "levelObjects.h"
 #include "level_cave.h"
 #include "level_demo.h"
+#include "level_demo16.h"
+#include "level_flight.h"
 
 #define LEVEL_ID_CAVE                     0
 #define LEVEL_ID_DEMO                     1
-#define LEVEL_COUNT                       2
+#define LEVEL_ID_DEMO16                   2
+#define LEVEL_ID_FLIGHT                   3
+#define LEVEL_COUNT                       4

@@ -2,8 +2,10 @@
 #include <stddef.h>
 #include "levels.h"
 
-const LevelDef *const levelList[2]={
+const LevelDef *const levelList[4]={
     &level_cave,
     &level_demo,
+    &level_demo16,
+    &level_flight,
 };
-const int levelCount=2;
+const int levelCount=4;

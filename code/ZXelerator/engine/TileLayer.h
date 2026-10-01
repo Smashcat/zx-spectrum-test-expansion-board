@@ -40,7 +40,9 @@ typedef struct TileLayer {
     uint8_t tileMap[(TILE_LAYER_WIDTH*TILE_LAYER_HEIGHT)];
     /// @brief Attribute definitions in cells within this layer (bi-color, so 8x4 pixel blocks). If "flash bit" (7) set, then will not update current attr under the tile on this layer"
     uint8_t attrMap[(TILE_LAYER_WIDTH*TILE_LAYER_ATTR_HEIGHT)];
-    /// @brief Pointer to the tile definitions to use for this layer (mask defs are always tileDefPtr+(8*256))
+    /// @brief Pointer to the tile definitions to use for this layer: 256 tiles then their 256 masks. 8x8 tiles are 8
+    /// bytes each (masks at tileDefPtr+(8*256)); 16x16 tiles (see setLayerTileSize) are 32 bytes, a row of 2 bytes
+    /// (left, right) at a time (masks at tileDefPtr+(32*256))
     const uint8_t *tileDefPtr;
     /// @brief Pointer to the bitmap to use for the layer (if layerType is set to LT_BITMAP)
     const uint8_t *bitmapDefPtr;
@@ -78,6 +80,11 @@ typedef struct TileLayer {
     /// @brief If 0 or more, the layer this one follows: its position, rotation, scale and line transforms are copied from
     /// that layer (see setLayerFollow)
     int8_t follow;
+    /// @brief 16x16 tiles (see setLayerTileSize) - otherwise 8x8
+    bool tile16;
+    /// @brief Tile layers: one colour (attribute) for the whole layer, instead of its cells' (see setLayerColour) -
+    /// LAYER_COLOUR_CELLS (-1) to use the cells'
+    int16_t colour;
 } TileLayer;
 
 /// @brief Initialise all tile layers, setting them off of screen, clearing tiles to zero, with attributes set to white ink on black background
@@ -146,6 +153,24 @@ void setLayerPos(int layerIX,int x, int y);
 /// @brief Set the tile-set to be used by the layer
 /// @param setRef pointer to the array of tile data
 void setTileDefSet(int layerIX, const uint8_t *setRef);
+
+/// @brief A tile layer's tile size: 8 (the default) or 16. The layer's map is still 64x64 cells of 8x8 pixels (with
+/// colours per 8x4), but on a 16x16 layer each cell holds the number of a 16x16 tile, and shows the quarter of it
+/// that its position gives (even/odd across and down - so a 16x16 tile is written into 2x2 cells, starting at an even
+/// cell). That gives 256 different 16x16 tiles, from a tile set of 256 x 32 bytes then 256 x 32 bytes of masks
+void setLayerTileSize(int layerIX, int size);
+
+/// @brief setLayerColour: the layer uses its cells' colours (the default)
+#define LAYER_COLOUR_CELLS      (-1)
+/// @brief setLayerColour: the layer draws its pixels only, leaving the colours under it as they are
+#define LAYER_COLOUR_NONE       0x80
+
+/// @brief Make a tile layer one colour: its cells' colours are ignored, and it colours the whole screen with one
+/// attribute (or with LAYER_COLOUR_NONE, any attribute with bit 7 set, leaves the colours alone). Quicker to draw than
+/// per cell colours, and no colour clash from scrolling or parallax - e.g. stack single colour layers (the back one
+/// setting the colour, those in front LAYER_COLOUR_NONE), then a layer with per cell colours on top for the UI
+/// @param colour An attribute (0-255), or LAYER_COLOUR_CELLS to use the cells' colours again
+void setLayerColour(int layerIX, int colour);
 
 /// @brief Draws the layer to the scratch buffers, ready to move to the render buffer
 /// @param layerIX The layer to draw

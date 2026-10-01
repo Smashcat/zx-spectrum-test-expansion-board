@@ -13,7 +13,10 @@
 #define LEVEL_CLASS_DOOR                 8
 #define LEVEL_CLASS_ENTRANCE             9
 #define LEVEL_CLASS_EXIT                 10
-#define LEVEL_CLASS_COUNT               11
+#define LEVEL_CLASS_LEVEL                11
+#define LEVEL_CLASS_FLYER                12
+#define LEVEL_CLASS_TURRET               13
+#define LEVEL_CLASS_COUNT               14
 
 #define LEVEL_PROP_SPEED                 0
 #define LEVEL_PROP_CHASE_SPEED           1
@@ -35,6 +38,26 @@
 #define LEVEL_PROP_PERSIST               17
 #define LEVEL_PROP_TO_LEVEL              18
 #define LEVEL_PROP_TO_ENTRANCE           19
+#define LEVEL_PROP_LEVEL_TYPE            20
+#define LEVEL_PROP_LEVEL_NAME            21
+#define LEVEL_PROP_LEVEL_DESCRIPTION     22
+#define LEVEL_PROP_PATTERN               23
+#define LEVEL_PROP_AMPLITUDE             24
+#define LEVEL_PROP_PERIOD                25
+#define LEVEL_PROP_HP                    26
+#define LEVEL_PROP_FIRE_RATE             27
+#define LEVEL_PROP_SHOT_SPEED            28
+#define LEVEL_PROP_RANGE                 29
+#define LEVEL_PROP_TURN_SPEED            30
+#define LEVEL_PROP_CEILING               31
+
+// TileType
+#define TILE_TYPE_NONE                   0
+#define TILE_TYPE_CONVEYOR_LEFT          1
+#define TILE_TYPE_CONVEYOR_RIGHT         2
+#define TILE_TYPE_SUPER_JUMP             3
+#define TILE_TYPE_GRAPPLE_POINT          4
+#define TILE_TYPE_COUNT 5
 
 // ZXColour
 #define ZXCOLOUR_BLACK                   0
@@ -58,3 +81,17 @@
 #define SWITCH_ID_LIFT_CALL              1
 #define SWITCH_ID_DOOR_A                 2
 #define SWITCH_ID_COUNT 3
+
+// LevelType
+#define LEVEL_TYPE_PLATFORM              0
+#define LEVEL_TYPE_SHOOTER               1
+#define LEVEL_TYPE_COUNT 2
+
+// FlyPattern
+#define FLY_PATTERN_STRAIGHT             0
+#define FLY_PATTERN_SINE                 1
+#define FLY_PATTERN_SWOOP                2
+#define FLY_PATTERN_PATH                 3
+#define FLY_PATTERN_HOMING               4
+#define FLY_PATTERN_LAUNCH               5
+#define FLY_PATTERN_COUNT 6

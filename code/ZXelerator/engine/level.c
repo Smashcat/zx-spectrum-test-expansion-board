@@ -32,7 +32,16 @@ typedef struct LevelAnimState {
     uint8_t *dst;           // Its copy in RAM, which the layers draw from
     uint8_t frame;
     uint8_t ticksLeft;
+    uint8_t tileBytes;      // 8 for 8x8 tiles, 32 for 16x16
 } LevelAnimState;
+
+// The loaded level's tiles are 16x16: each fills 2x2 cells of the engine layers
+static bool level16=false;
+
+static inline int tileSetBytes(const LevelTileSet *ts)
+{
+    return (ts->tileSize==16)?32:8;
+}
 
 static uint8_t levelRam[LEVEL_RAM_SIZE] __attribute__((aligned(4)));
 static const LevelDef *level=NULL;
@@ -135,27 +144,41 @@ static inline int foregroundAt(const LevelLayerState *L, int lx, int ly)
     return L->fgList[ix];
 }
 
-// Copy a level tile into its place in the engine layer (and its foreground tile into the foreground layer)
-static void fillCell(const LevelLayerState *L, int tileX, int tileY)
+// Copy a level tile into a cell of the engine layer (and its foreground tile into the foreground layer). On 16x16
+// levels, a cell is a quarter of a level tile: the cell holds the tile's number (the engine layer draws the quarter its
+// position gives), with that quarter's colours
+static void fillCell(const LevelLayerState *L, int cellX, int cellY)
 {
     const LevelLayer *d=L->def;
-    const int r=((tileY&(TILE_LAYER_HEIGHT-1))*TILE_LAYER_WIDTH)+(tileX&(TILE_LAYER_WIDTH-1));
-    const int a=((tileY&(TILE_LAYER_HEIGHT-1))*TILE_LAYER_WIDTH*2)+(tileX&(TILE_LAYER_WIDTH-1));
+    const int r=((cellY&(TILE_LAYER_HEIGHT-1))*TILE_LAYER_WIDTH)+(cellX&(TILE_LAYER_WIDTH-1));
+    const int a=((cellY&(TILE_LAYER_HEIGHT-1))*TILE_LAYER_WIDTH*2)+(cellX&(TILE_LAYER_WIDTH-1));
+    const int tileX=level16?(cellX>>1):cellX;
+    const int tileY=level16?(cellY>>1):cellY;
+    // Index of the cell's two attributes (top, bottom) for tile 0 - add the tile number times attrStep
+    const int quarter=level16?((((cellY&1)<<1)|(cellX&1))*2):0;
+    const int attrStep=level16?8:2;
     int lx, ly;
     const bool inside=localPos(L,tileX,tileY,&lx,&ly);
 
     TileLayer *t=tileLayer+d->layer;
     const int tile=inside?L->tiles[(ly*d->width)+lx]:0;
     t->tileMap[r]=(uint8_t)tile;
-    t->attrMap[a]=L->tileSet->attrs[tile*2];
-    t->attrMap[a+TILE_LAYER_WIDTH]=L->tileSet->attrs[(tile*2)+1];
+    // (a single colour layer, and its foreground, don't use their cells' colours - so they aren't copied)
+    if(!d->singleColour){
+        const uint8_t *at=L->tileSet->attrs+(tile*attrStep)+quarter;
+        t->attrMap[a]=at[0];
+        t->attrMap[a+TILE_LAYER_WIDTH]=at[1];
+    }
 
     if(d->fgLayer>=0){
         TileLayer *f=tileLayer+d->fgLayer;
         const int fg=inside?foregroundAt(L,lx,ly):0;
         f->tileMap[r]=(uint8_t)fg;
-        f->attrMap[a]=L->fgTileSet->attrs[fg*2];
-        f->attrMap[a+TILE_LAYER_WIDTH]=L->fgTileSet->attrs[(fg*2)+1];
+        if(!d->singleColour){
+            const uint8_t *fa=L->fgTileSet->attrs+(fg*attrStep)+quarter;
+            f->attrMap[a]=fa[0];
+            f->attrMap[a+TILE_LAYER_WIDTH]=fa[1];
+        }
     }
 }
 
@@ -210,8 +233,9 @@ static void showAnimFrame(const LevelAnimState *s)
 {
     const int def=s->anim->def;
     const int src=s->anim->frames[s->frame].def;
-    memcpy(s->dst+(def*8),s->src+(src*8),8);
-    memcpy(s->dst+(256*8)+(def*8),s->src+(256*8)+(src*8),8);
+    const int b=s->tileBytes;
+    memcpy(s->dst+(def*b),s->src+(src*b),(size_t)b);
+    memcpy(s->dst+(256*b)+(def*b),s->src+(256*b)+(src*b),(size_t)b);
 }
 
 static uint32_t align4(uint32_t n)
@@ -238,10 +262,14 @@ static void hideActor(int objectIX)
 }
 
 // The frame a switch shows when it's on: the last of its sprite sheet (e.g. a door fully open - the game can play the
-// frames in between as it opens)
+// frames in between as it opens). A level tile shows the next tile along
 static uint8_t onFrame(const LevelDef *lv, const LevelObject *o)
 {
-    return (o->sheet>=0)?(uint8_t)(lv->sheets[o->sheet].frames-1):o->frame;
+    if(o->sheet<0){
+        return o->frame;
+    }
+    const LevelSpriteSheet *sh=lv->sheets+o->sheet;
+    return (sh->tileSet)?(uint8_t)(o->frame+1):(uint8_t)(sh->frames-1);
 }
 
 // Where a level's part of the remembered state starts (after the levels before it in levelList), or -1 if it doesn't
@@ -274,6 +302,8 @@ bool loadLevel(const LevelDef *lv)
                     clearLayerTransform(ids[k]);
                     clearLayerLines(ids[k],0,TILE_LAYER_HEIGHT);
                     setLayerPos(ids[k],SCREEN_WIDTH_PIXELS,0);
+                    setLayerTileSize(ids[k],8);
+                    setLayerColour(ids[k],LAYER_COLOUR_CELLS);
                 }
             }
         }
@@ -296,22 +326,25 @@ bool loadLevel(const LevelDef *lv)
         return false;
     }
     uint32_t used=0;
+    level16=(lv->tileSize==16);
 
     // Tile sets are copied to RAM - animated tiles are animated by rewriting their graphics there (and the layers draw
-    // faster from RAM than flash)
+    // faster from RAM than flash). 4KB for 8x8 tiles, 16KB for 16x16
     for(int n=0;n<lv->tileSetCount;n++){
         const LevelTileSet *ts=lv->tileSets[n];
-        if(used+(256*8*2)>LEVEL_RAM_SIZE){
+        const uint32_t setSize=256u*(uint32_t)tileSetBytes(ts)*2u;
+        if(used+setSize>LEVEL_RAM_SIZE){
             return false;
         }
         tileSetRam[n]=levelRam+used;
-        memcpy(tileSetRam[n],ts->tiles,256*8*2);
-        used+=256*8*2;
+        memcpy(tileSetRam[n],ts->tiles,setSize);
+        used+=setSize;
         for(int a=0;a<ts->animCount && animCount<MAX_LEVEL_ANIMS;a++){
             LevelAnimState *s=anims+animCount++;
             s->anim=ts->anims+a;
             s->src=ts->tiles;
             s->dst=tileSetRam[n];
+            s->tileBytes=(uint8_t)tileSetBytes(ts);
             s->frame=0;
             s->ticksLeft=s->anim->frames[0].ticks;
             showAnimFrame(s);
@@ -359,10 +392,14 @@ bool loadLevel(const LevelDef *lv)
         // The engine layers: a tile layer drawing from the RAM tile set, emptied until the camera fills it
         setLayerType(d->layer,LT_TILE);
         setTileDefSet(d->layer,tileSetRam[d->tileSet]);
+        setLayerTileSize(d->layer,level16?16:8);
+        setLayerColour(d->layer,d->singleColour?d->colour:LAYER_COLOUR_CELLS);
         clearLayerLines(d->layer,0,TILE_LAYER_HEIGHT);
         if(d->fgLayer>=0){
             setLayerType(d->fgLayer,LT_TILE);
             setTileDefSet(d->fgLayer,tileSetRam[d->fgTileSet]);
+            setLayerTileSize(d->fgLayer,level16?16:8);
+            setLayerColour(d->fgLayer,d->singleColour?LAYER_COLOUR_NONE:LAYER_COLOUR_CELLS);
             clearLayerLines(d->fgLayer,0,TILE_LAYER_HEIGHT);
             setLayerFollow(d->fgLayer,d->layer);
         }
@@ -446,8 +483,9 @@ void setLevelCamera(int x, int y)
         // Where the layer goes on screen: its offset, less how far it's scrolled. The engine hides layers placed at or
         // beyond the right or bottom of the screen, and tile layers repeat every 512 pixels, so move it back a
         // whole repeat if it would be there (only its layer space coordinates change)
-        int px=d->offsetX-((x*d->parallaxX)>>8);
-        int py=d->offsetY-((y*d->parallaxY)>>8);
+        const int levelX=d->offsetX-((x*d->parallaxX)>>8);
+        const int levelY=d->offsetY-((y*d->parallaxY)>>8);
+        int px=levelX, py=levelY;
         while(px>=SCREEN_WIDTH_PIXELS){
             px-=TILE_LAYER_WIDTH*8;
         }
@@ -459,9 +497,12 @@ void setLevelCamera(int x, int y)
             syncFollowingLayer(d->fgLayer);
         }
 
-        // Keep the tiles around the middle of the screen in the layer
+        // Keep the tiles around the middle of the screen in the layer - the level's tiles there, so in the level's
+        // coordinates (the layer's less any whole repeats it was moved back by above)
         float cu, cv;
         screenToLayer(d->layer,SCREEN_WIDTH_PIXELS/2,SCREEN_HEIGHT_LINES/2,&cu,&cv);
+        cu-=(float)(levelX-px);
+        cv-=(float)(levelY-py);
         const int winX=floorDiv((int)floorf(cu),8)-(WINDOW_SIZE/2);
         const int winY=floorDiv((int)floorf(cv),8)-(WINDOW_SIZE/2);
         streamLayer(L,winX,winY);
@@ -512,7 +553,13 @@ static void showActor(int objectIX)
     }
     const LevelSpriteSheet *sh=level->sheets+o->sheet;
     setSpriteSize(ix,(SpriteSize)sh->size);
-    setSpriteDef(ix,sh->def,sh->mask);
+    if(sh->tileSet){
+        // Level tiles: the tile set's RAM copy (so animated tiles animate), masks after its 256 tiles
+        const uint8_t *tiles=tileSetRam[sh->tileSet-1];
+        setSpriteDef(ix,tiles,tiles+(256*tileSetBytes(level->tileSets[sh->tileSet-1])));
+    }else{
+        setSpriteDef(ix,sh->def,sh->mask);
+    }
     setSpritePalette(ix,sh->palette);
     setSpriteLayer(ix,actorLayer(o));
     setSpriteSpace(ix,SPRITE_SPACE_LAYER,-1);
@@ -639,14 +686,19 @@ const LevelDef *getLevel(void)
     return level;
 }
 
+int getLevelTileSize(void)
+{
+    return level16?16:8;
+}
+
 int getLevelWidth(void)
 {
-    return level?level->width*8:0;
+    return level?level->width*getLevelTileSize():0;
 }
 
 int getLevelHeight(void)
 {
-    return level?level->height*8:0;
+    return level?level->height*getLevelTileSize():0;
 }
 
 int getLevelTile(int layerIX, int tileX, int tileY)
@@ -679,6 +731,12 @@ uint8_t getLevelTileFlags(int layerIX, int tileX, int tileY)
     return localPos(L,tileX,tileY,&lx,&ly)?L->tileSet->flags[L->tiles[(ly*L->def->width)+lx]]:0;
 }
 
+uint8_t getLevelTileSetFlags(int layerIX, uint8_t tile)
+{
+    const LevelLayerState *L=stateOf(layerIX);
+    return L?L->tileSet->flags[tile]:0;
+}
+
 // The tile at a level pixel, if its flags include any of mask (0: any tile), or -1
 static inline int tilePixel(int layerIX, int x, int y, uint8_t mask)
 {
@@ -686,25 +744,33 @@ static inline int tilePixel(int layerIX, int x, int y, uint8_t mask)
     if(!L){
         return -1;
     }
+    const int shift=level16?4:3;
     int lx, ly;
-    if(!localPos(L,x>>3,y>>3,&lx,&ly)){
+    if(!localPos(L,x>>shift,y>>shift,&lx,&ly)){
         return -1;
     }
     const int tile=L->tiles[(ly*L->def->width)+lx];
     return (mask==0 || (L->tileSet->flags[tile]&mask))?tile:-1;
 }
 
+// A pixel of a tile's graphic as drawn now (animated tiles included): 8x8 tiles a byte a row, 16x16 two (left, right)
+static inline bool tileGraphicPixel(int layerIX, int tile, int x, int y)
+{
+    const uint8_t *g=tileLayer[layerIX].tileDefPtr;
+    const uint8_t b=level16?g[(tile*32)+((y&15)*2)+((x>>3)&1)]:g[(tile*8)+(y&7)];
+    return (b&(0x80u>>(x&7)))!=0;
+}
+
 bool isLevelPixelSet(int layerIX, int x, int y)
 {
     const int tile=tilePixel(layerIX,x,y,0);
-    // The graphic as drawn now (animated tiles included)
-    return tile>0 && (tileLayer[layerIX].tileDefPtr[(tile*8)+(y&7)]&(0x80u>>(x&7)))!=0;
+    return tile>0 && tileGraphicPixel(layerIX,tile,x,y);
 }
 
 bool isLevelPixelSolid(int layerIX, int x, int y)
 {
     const int tile=tilePixel(layerIX,x,y,LEVEL_TILE_SOLID);
-    return tile>0 && (tileLayer[layerIX].tileDefPtr[(tile*8)+(y&7)]&(0x80u>>(x&7)))!=0;
+    return tile>0 && tileGraphicPixel(layerIX,tile,x,y);
 }
 
 void setLevelTile(int layerIX, int tileX, int tileY, uint8_t tile)
@@ -718,15 +784,20 @@ void setLevelTile(int layerIX, int tileX, int tileY, uint8_t tile)
     if(!L->filled){
         return;
     }
-    // Refresh it in the window - everywhere it appears there, if the layer repeats
+    // Refresh its cells in the window (2x2 of them for a 16x16 tile) - everywhere it appears there, if the layer repeats
     const LevelLayer *d=L->def;
-    const int stepX=(d->flags&LEVEL_WRAP_X)?d->width:WINDOW_SIZE*2;
-    const int stepY=(d->flags&LEVEL_WRAP_Y)?d->height:WINDOW_SIZE*2;
-    const int firstX=L->winX+wrapTo(tileX-L->winX,stepX);
-    const int firstY=L->winY+wrapTo(tileY-L->winY,stepY);
-    for(int y=firstY;y<L->winY+WINDOW_SIZE;y+=stepY){
-        for(int x=firstX;x<L->winX+WINDOW_SIZE;x+=stepX){
-            fillCell(L,x,y);
+    const int cells=level16?2:1;
+    const int stepX=(d->flags&LEVEL_WRAP_X)?d->width*cells:WINDOW_SIZE*2;
+    const int stepY=(d->flags&LEVEL_WRAP_Y)?d->height*cells:WINDOW_SIZE*2;
+    for(int cy=0;cy<cells;cy++){
+        for(int cx=0;cx<cells;cx++){
+            const int firstX=L->winX+wrapTo((tileX*cells)+cx-L->winX,stepX);
+            const int firstY=L->winY+wrapTo((tileY*cells)+cy-L->winY,stepY);
+            for(int y=firstY;y<L->winY+WINDOW_SIZE;y+=stepY){
+                for(int x=firstX;x<L->winX+WINDOW_SIZE;x+=stepX){
+                    fillCell(L,x,y);
+                }
+            }
         }
     }
 }
@@ -869,6 +940,55 @@ int enterLevel(int levelID, const char *entrance)
 int getLevelID(void)
 {
     return currentID;
+}
+
+int getLevelType(void)
+{
+    return level?level->type:0;
+}
+
+static const LevelProp *findLevelProp(const LevelDef *lv, int prop)
+{
+    for(int n=0;lv && n<lv->propCount;n++){
+        if(lv->props[n].id==prop){
+            return lv->props+n;
+        }
+    }
+    return NULL;
+}
+
+int32_t getLevelDefInt(const LevelDef *lv, int prop, int32_t def)
+{
+    const LevelProp *p=findLevelProp(lv,prop);
+    if(!p || p->type==LEVEL_PROP_TYPE_STRING){
+        return def;
+    }
+    return (p->type==LEVEL_PROP_TYPE_FLOAT)?(int32_t)p->v.f:p->v.i;
+}
+
+const char *getLevelDefString(const LevelDef *lv, int prop, const char *def)
+{
+    const LevelProp *p=findLevelProp(lv,prop);
+    return (p && p->type==LEVEL_PROP_TYPE_STRING)?p->v.s:def;
+}
+
+int32_t getLevelPropInt(int prop, int32_t def)
+{
+    return getLevelDefInt(level,prop,def);
+}
+
+float getLevelPropFloat(int prop, float def)
+{
+    const LevelProp *p=findLevelProp(level,prop);
+    if(!p || p->type==LEVEL_PROP_TYPE_STRING){
+        return def;
+    }
+    return (p->type==LEVEL_PROP_TYPE_FLOAT)?p->v.f:(float)p->v.i;
+}
+
+const char *getLevelPropString(int prop, const char *def)
+{
+    return getLevelDefString(level,prop,def);
 }
 
 bool useLevelSwitch(int objectIX)

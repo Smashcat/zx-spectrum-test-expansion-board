@@ -411,6 +411,16 @@ static inline void setSpritePalette(int ix, int p)
     spriteList[ix].paletteIX=p;
 }
 
+/// @brief Show a tile from a tile layer's tile set as the sprite: 8x8 (SIZE_8X8) or 16x16 (SIZE_16X16), by the layer's
+/// tile size. Tile graphics are laid out like sprite frames, so this points the sprite at the layer's tile set and
+/// makes the tile its frame - nothing is copied, and a level's animated tiles animate on the sprite too. The sprite
+/// keeps its palette (tile colours aren't used)
+/// @param ix Sprite index
+/// @param layerIX The tile layer whose tile set to use
+/// @param tile Tile number (0-255)
+/// @return false if the layer has no tile set
+bool setSpriteTile(int ix, int layerIX, int tile);
+
 /// @brief Rotate a sprite around its centre. Works together with setSpriteScale. An angle of zero uses the
 /// faster unrotated renderers. Attributes are only set on the 8x4 cells the rotated sprite covers, using the
 /// palette row for the part of the sprite at the centre of each cell

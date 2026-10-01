@@ -50,21 +50,21 @@ static const LevelTileSet *const tileSets[]={
 };
 
 static const LevelLayer layers[]={
-    {layer0Data,130,64,40,0,0,0,0,64,64,0,0,0,4,-1,1,"Sky"},
-    {layer1Data,77,64,18,0,22,0,0,128,128,0,0,0,3,-1,1,"Hills"},
-    {layer2Data,356,192,40,0,0,0,0,256,256,99,0,0,2,1,0,"Level"},
+    {layer0Data,130,64,40,0,0,0,0,64,64,0,0,0,4,-1,1,"Sky",0,0x00},
+    {layer1Data,77,64,18,0,22,0,0,128,128,0,0,0,3,-1,1,"Hills",0,0x00},
+    {layer2Data,356,192,40,0,0,0,0,256,256,99,0,0,2,1,0,"Level",0,0x00},
 };
 
 // Sprite sheets
 static const LevelSpriteSheet sheets[]={
-    {sprite24x24Def,mask24x24Def,8,5,16},      // "player" (SIZE_24X24)
-    {sprite24x24Def,mask24x24Def,8,7,16},      // "enemy" (SIZE_24X24)
-    {platformSpriteDef,platformSpriteMaskDef,14,6,1},      // "platform" (SIZE_32X8)
-    {pistonHeadDef,pistonHeadMaskDef,14,9,1},      // "piston" (SIZE_32X8)
-    {leverDef,leverMaskDef,6,5,2},      // "lever" (SIZE_16X16)
-    {plateDef,plateMaskDef,4,9,2},      // "plate" (SIZE_16X8)
-    {gateDoorDef,gateDoorMaskDef,15,10,4},      // "gateDoor" (SIZE_16X32)
-    {exitDoorDef,exitDoorMaskDef,15,11,4},      // "exitDoor" (SIZE_16X32)
+    {sprite24x24Def,mask24x24Def,8,5,16,0},      // "player" (SIZE_24X24)
+    {sprite24x24Def,mask24x24Def,8,7,16,0},      // "enemy" (SIZE_24X24)
+    {platformSpriteDef,platformSpriteMaskDef,14,6,1,0},      // "platform" (SIZE_32X8)
+    {pistonHeadDef,pistonHeadMaskDef,14,9,1,0},      // "piston" (SIZE_32X8)
+    {leverDef,leverMaskDef,6,5,2,0},      // "lever" (SIZE_16X16)
+    {plateDef,plateMaskDef,4,9,2,0},      // "plate" (SIZE_16X8)
+    {gateDoorDef,gateDoorMaskDef,15,10,4,0},      // "gateDoor" (SIZE_16X32)
+    {exitDoorDef,exitDoorMaskDef,15,11,4,0},      // "exitDoor" (SIZE_16X32)
 };
 
 // Objects' properties and paths
@@ -110,4 +110,7 @@ static const LevelObject objects[]={
     {LEVEL_CLASS_ENTRANCE,-1,0,0x00,2,0,0,56,261,0,0,NULL,NULL,"cave door",-1,0,0,0,0},    // 19: Tiled object 24
 };
 
-const LevelDef level_demo={"demo",192,40,17268,1,3,8,20,tileSets,layers,sheets,objects,1,2};
+// The level's own properties
+static const LevelProp levelProps[]={{LEVEL_PROP_LEVEL_TYPE,LEVEL_PROP_TYPE_INT,{.i=0}},{LEVEL_PROP_LEVEL_NAME,LEVEL_PROP_TYPE_STRING,{.s="Green Hills"}},{LEVEL_PROP_LEVEL_DESCRIPTION,LEVEL_PROP_TYPE_STRING,{.s="Pistons, a lift and a locked door"}}};
+
+const LevelDef level_demo={"demo",192,40,17268,1,3,8,20,tileSets,layers,sheets,objects,1,2,8,levelProps,3,0};

@@ -16,7 +16,8 @@ void initSprites(int numSprites)
         deleteSprites();
     }
     deleteSpriteSets();
-    spriteList=(Sprite *)malloc(numSprites*sizeof(Sprite));
+    // Cleared first, so everything not set below starts at 0 (e.g. the palette, until setSpritePalette)
+    spriteList=(Sprite *)calloc((size_t)numSprites,sizeof(Sprite));
     totalSprites=numSprites;
     for(int n=0;n<numSprites;n++){
         Sprite *s=spriteList+n;
@@ -337,6 +338,22 @@ void setSpriteSize(int ix, SpriteSize st){
     if(s->space==SPRITE_SPACE_LAYER){
         placeSprite(s);
     }
+}
+
+bool setSpriteTile(int ix, int layerIX, int tile)
+{
+    if(layerIX<0 || layerIX>=MAX_TILE_LAYERS || tileLayer[layerIX].tileDefPtr==NULL){
+        return false;
+    }
+    const TileLayer *tL=tileLayer+layerIX;
+    const SpriteSize size=tL->tile16?SIZE_16X16:SIZE_8X8;
+    const int w=tL->tile16?16:8;
+    if(spriteList[ix].width!=w || spriteList[ix].height!=w){
+        setSpriteSize(ix,size);
+    }
+    setSpriteDef(ix,tL->tileDefPtr,tL->tileDefPtr+(256*(w*w/8)));      // Masks follow the 256 tiles
+    spriteList[ix].frame=(int16_t)(tile&0xff);
+    return true;
 }
 
 void setSpriteRotation(int ix, float angle)

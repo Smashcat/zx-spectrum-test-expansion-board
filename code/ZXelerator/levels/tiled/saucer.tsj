@@ -1,0 +1,29 @@
+{
+	"columns":	2,
+	"image":	"saucer.png",
+	"imageheight":	16,
+	"imagewidth":	32,
+	"margin":	0,
+	"name":	"saucer",
+	"objectalignment":	"center",
+	"properties":	[{
+			"name":	"engineMask",
+			"type":	"string",
+			"value":	"saucerMaskDef"
+		}, {
+			"name":	"engineSprite",
+			"type":	"string",
+			"value":	"saucerDef"
+		}, {
+			"name":	"palette",
+			"type":	"int",
+			"value":	0
+		}],
+	"spacing":	0,
+	"tilecount":	2,
+	"tiledversion":	"1.12.2",
+	"tileheight":	16,
+	"tilewidth":	16,
+	"type":	"tileset",
+	"version":	"1.10"
+}

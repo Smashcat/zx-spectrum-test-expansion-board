@@ -177,6 +177,237 @@ static void testTileLayerIdentity(void)
     printf("Tile layer identity: %d comparisons\n",tests);
 }
 
+// ---------------------------------------------------------------------------
+// 16x16 tile layers
+// ---------------------------------------------------------------------------
+
+// 64 random 16x16 tiles (tile 0 empty), and the same graphics as 8x8 tiles: 8x8 tile t*4+q is quarter q (top left, top
+// right, bottom left, bottom right) of 16x16 tile t. A 16x16 layer and an 8x8 layer whose cells hold t*4+q then show
+// exactly the same picture - so every renderer and pixel reader can be checked on 16x16 layers against the 8x8 code
+static uint8_t tiles16[256*32*2] __attribute__((aligned(4)));
+static uint8_t tiles16As8[256*8*2] __attribute__((aligned(4)));
+#define L16     1       // The 16x16 layer
+#define L16AS8  2       // The same picture, as an 8x8 layer
+
+static void build16Layers(void)
+{
+    memset(tiles16,0,sizeof(tiles16));
+    memset(tiles16As8,0,sizeof(tiles16As8));
+    for(int t=1;t<64;t++){
+        for(int n=0;n<32;n++){
+            tiles16[(t*32)+n]=(uint8_t)rng();
+            tiles16[(256*32)+(t*32)+n]=(uint8_t)rng();
+        }
+    }
+    memset(tiles16+(256*32),0xff,32);       // Tile 0: empty, and see-through
+    for(int t=0;t<64;t++){
+        for(int q=0;q<4;q++){
+            for(int r=0;r<8;r++){
+                const int src=(t*32)+((((q>>1)*8)+r)*2)+(q&1);
+                tiles16As8[((t*4+q)*8)+r]=tiles16[src];
+                tiles16As8[(256*8)+((t*4+q)*8)+r]=tiles16[(256*32)+src];
+            }
+        }
+    }
+    setTileDefSet(L16,tiles16);
+    setLayerTileSize(L16,16);
+    setTileDefSet(L16AS8,tiles16As8);
+    for(int ty=0;ty<TILE_LAYER_HEIGHT/2;ty++){
+        for(int tx=0;tx<TILE_LAYER_WIDTH/2;tx++){
+            const uint8_t t=(rng()%5==0)?0:(uint8_t)(1+(rng()%63));
+            for(int q=0;q<4;q++){
+                const int cx=(tx*2)+(q&1), cy=(ty*2)+(q>>1);
+                const uint8_t top=(uint8_t)(0x40|((cx*3+cy)&0x3f)), bottom=(uint8_t)(0x40|((cx+cy*7)&0x3f));
+                setLayerTile(L16,t,top,bottom,cx,cy);
+                setLayerTile(L16AS8,(uint8_t)((t*4)+q),top,bottom,cx,cy);
+            }
+        }
+    }
+}
+
+// Both layers drawn as they are set up now - the same pixels, mask and colours
+static bool same16Render(void)
+{
+    syncFollowingLayers();
+    renderLayerOnly(L16);
+    saveReference();
+    renderLayerOnly(L16AS8);
+    return memcmp(refPix,scratchPixRam,sizeof(refPix))==0 && memcmp(refMask,scratchMaskRam,sizeof(refMask))==0 &&
+        memcmp(refAttr,renderAttrBuffer,sizeof(refAttr))==0;
+}
+
+// The fast renderer straight from the 16x16 graphics: screen pixel x,y shows layer pixel (x-layerX, y-layerY)
+static bool fast16MatchesReference(int px, int py)
+{
+    for(int y=0;y<SCREEN_HEIGHT_LINES;y++){
+        for(int cx=0;cx<SCREEN_WIDTH_CELLS;cx++){
+            uint8_t pix=0, msk=0;
+            for(int b=0;b<8;b++){
+                const uint32_t lx=(uint32_t)((cx*8)+b-px)&511, ly=(uint32_t)(y-py)&511;
+                const uint32_t cell=((ly>>3)*TILE_LAYER_WIDTH)+(lx>>3);
+                const uint32_t byte=((uint32_t)tileLayer[L16].tileMap[cell]*32)+((ly&15)*2)+((lx>>3)&1);
+                pix=(uint8_t)((pix<<1)|((tiles16[byte]>>(7-(lx&7)))&1));
+                msk=(uint8_t)((msk<<1)|((tiles16[(256*32)+byte]>>(7-(lx&7)))&1));
+            }
+            if(scratchPixRam[(y*SCREEN_WIDTH_CELLS)+cx]!=pix || scratchMaskRam[(y*SCREEN_WIDTH_CELLS)+cx]!=msk){
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+static void test16x16Layers(void)
+{
+    initLayers();
+    rngState=1616;
+    build16Layers();
+    int tests=0;
+
+    // Scrolled (the paired column renderer - starting on either half of a tile, and the right edge's carry), against
+    // the graphics directly and against the 8x8 layer, as are the line table and matrix paths with nothing transformed
+    for(int y=-700;y<SCREEN_HEIGHT_LINES;y+=37){
+        for(int x=-700;x<SCREEN_WIDTH_PIXELS;x+=29){
+            clearLayerTransform(L16);
+            clearLayerTransform(L16AS8);
+            setLayerPos(L16,x,y);
+            setLayerPos(L16AS8,x,y);
+            renderLayerOnly(L16);
+            check(fast16MatchesReference(x,y),"16x16 layer, scrolled, against its graphics",x,y);
+            check(same16Render(),"16x16 layer, scrolled, as the same 8x8 layer",x,y);
+            buildIdentityLines(x,y);
+            setLayerLineTransforms(L16,identityLines);
+            setLayerLineTransforms(L16AS8,identityLines);
+            check(same16Render(),"16x16 layer, identity line table",x,y);
+            ++tests;
+        }
+    }
+
+    // Rotated and scaled
+    for(int n=0;n<300;n++){
+        const float a=(float)(rng()%628)/100.0f, sx=0.4f+((float)(rng()%250)/100.0f), sy=0.4f+((float)(rng()%250)/100.0f);
+        const int x=(int)(rng()%1200)-600, y=(int)(rng()%1200)-600;
+        for(int l=L16;l<=L16AS8;l++){
+            clearLayerTransform(l);
+            setLayerPos(l,x,y);
+            setLayerTransform(l,a,sx,sy);
+        }
+        check(same16Render(),"16x16 layer, rotated and scaled",x,y);
+        ++tests;
+    }
+
+    // Mode 7: perspective floors from all over the layer, heights and headings
+    static LayerLineTransform floor16[SCREEN_HEIGHT_LINES];
+    for(int n=0;n<200;n++){
+        buildLayerPerspective(floor16,(float)(rng()%2048)-1024.0f,(float)(rng()%2048)-1024.0f,(float)(rng()%628)/100.0f,
+            8.0f+(float)(rng()%120),20.0f+(float)(rng()%80),64.0f+(float)(rng()%160));
+        setLayerLineTransforms(L16,floor16);
+        setLayerLineTransforms(L16AS8,floor16);
+        check(same16Render(),"16x16 layer, Mode 7 floor",n,0);
+        ++tests;
+    }
+
+    // Collision readers: the same pixels from both layers, on screen (transformed or not) and in the layers' own pixels
+    int bad=0;
+    for(int n=0;n<4000;n++){
+        for(int l=L16;l<=L16AS8;l++){
+            clearLayerTransform(l);
+            setLayerPos(l,-300,-200);
+            if(n&1){
+                setLayerTransform(l,0.7f,1.3f,0.8f);
+            }
+        }
+        const int x=(int)(rng()%300)-20, y=(int)(rng()%200)-4, k=1+(int)(rng()%32);
+        bad+=(getLayerPixelsN(L16,x,y,k)!=getLayerPixelsN(L16AS8,x,y,k))?1:0;
+        const int lx=(int)(rng()%2000)-1000, ly=(int)(rng()%2000)-1000;
+        bad+=(getLayerMapPixels(L16,lx,ly,k)!=getLayerMapPixels(L16AS8,lx,ly,k))?1:0;
+        bad+=(isLayerMapPixelSet(L16,lx,ly)!=isLayerMapPixelSet(L16AS8,lx,ly))?1:0;
+        bad+=(isLayerPixelSetAt(L16,x,y)!=isLayerPixelSetAt(L16AS8,x,y))?1:0;
+    }
+    check(bad==0,"16x16 layer collision readers, as the same 8x8 layer",bad,0);
+
+    // Empty tiles (for skipping collision checks): a cell is only reported empty if its whole 16x16 tile is
+    bad=0;
+    for(int cy=0;cy<TILE_LAYER_HEIGHT;cy++){
+        for(int cx=0;cx<TILE_LAYER_WIDTH;cx++){
+            const int t=tileLayer[L16].tileMap[(cy*TILE_LAYER_WIDTH)+cx];
+            bad+=(isLayerTileEmpty(L16,cx,cy)!=(t==0))?1:0;
+        }
+    }
+    check(bad==0,"16x16 layer empty tiles",bad,0);
+    clearLayerTransform(L16);
+    clearLayerTransform(L16AS8);
+    printf("16x16 tile layers: %d renders (scrolled, line tables, rotated, scaled, Mode 7) the same as 8x8, and collision readers\n",
+        tests);
+}
+
+// Single colour layers: the same pixels, but the whole screen in the layer's colour (scrolled, rotated, and on the
+// lines of a Mode 7 floor that are drawn) - or, with no colour, the colours left as they were
+static void testLayerColour(void)
+{
+    initLayers();
+    rngState=7070;
+    build16Layers();
+    static uint8_t attrsBefore[SCREEN_WIDTH_CELLS*ATTR_HEIGHT_CELLS];
+    static LayerLineTransform floorLines16[SCREEN_HEIGHT_LINES];
+    buildLayerPerspective(floorLines16,300.0f,200.0f,0.5f,30.0f,60.0f,128.0f);
+    int tests=0;
+    for(int mode=0;mode<3;mode++){
+        for(int l=L16;l<=L16AS8;l++){
+            for(int n=0;n<20;n++){
+                const int x=(int)(rng()%1000)-500, y=(int)(rng()%1000)-500;
+                clearLayerTransform(l);
+                setLayerPos(l,x,y);
+                if(mode==1){
+                    setLayerTransform(l,(float)(rng()%628)/100.0f,1.2f,0.9f);
+                }else if(mode==2){
+                    setLayerLineTransforms(l,floorLines16);
+                }
+
+                // Per cell colours, as reference
+                setLayerColour(l,LAYER_COLOUR_CELLS);
+                renderLayerOnly(l);
+                saveReference();
+
+                // One colour: the same pixels and mask, and every cell that colour - except, on the floor, above the
+                // horizon (lines the table leaves blank), which keep what was there
+                setLayerColour(l,0x45);
+                initScratchBuffers(true);
+                memset(renderAttrBuffer,0x3A,sizeof(attrsBefore));
+                blitLayerToScratchBuffers(l);
+                bool ok=memcmp(refPix,scratchPixRam,sizeof(refPix))==0 && memcmp(refMask,scratchMaskRam,sizeof(refMask))==0;
+                // (a scrolled layer placed at or beyond the right or bottom of the screen is hidden, so colours nothing)
+                const bool hidden=(mode==0) && (x>=SCREEN_WIDTH_PIXELS || y>=SCREEN_HEIGHT_LINES);
+                for(int cy=0;cy<ATTR_HEIGHT_CELLS && ok;cy++){
+                    const bool drawn=!hidden && ((mode!=2) || floorLines16[(cy*ATTR_HEIGHT_PIXELS)+(ATTR_HEIGHT_PIXELS/2)].enabled);
+                    for(int cx=0;cx<SCREEN_WIDTH_CELLS;cx++){
+                        ok=ok && renderAttrBuffer[(cy*SCREEN_WIDTH_CELLS)+cx]==(drawn?0x45:0x3A);
+                    }
+                }
+                check(ok,"single colour layer",mode,n);
+
+                // No colour: pixels only, the colours untouched
+                setLayerColour(l,LAYER_COLOUR_NONE);
+                initScratchBuffers(true);
+                memset(renderAttrBuffer,0x3A,sizeof(attrsBefore));
+                memcpy(attrsBefore,renderAttrBuffer,sizeof(attrsBefore));
+                blitLayerToScratchBuffers(l);
+                check(memcmp(refPix,scratchPixRam,sizeof(refPix))==0 &&
+                    memcmp(attrsBefore,renderAttrBuffer,sizeof(attrsBefore))==0,"layer with no colour",mode,n);
+
+                // And back to its cells' colours
+                setLayerColour(l,LAYER_COLOUR_CELLS);
+                renderLayerOnly(l);
+                check(memcmp(refAttr,renderAttrBuffer,sizeof(refAttr))==0,"layer back to cell colours",mode,n);
+                setLayerLineTransforms(l,NULL);
+                ++tests;
+            }
+        }
+    }
+    initLayers();
+    printf("Single colour layers: %d (8x8 and 16x16 - scrolled, rotated, Mode 7), and layers with no colour\n",tests);
+}
+
 // The colour of every screen pixel (0-15, bright black counted as black), from the render buffers
 static uint8_t colourRef[SCREEN_WIDTH_PIXELS*SCREEN_HEIGHT_LINES];
 static uint8_t colourOut[SCREEN_WIDTH_PIXELS*SCREEN_HEIGHT_LINES];
@@ -336,6 +567,71 @@ static void testSpriteIdentity(SpriteSize size, const uint8_t *def, const uint8_
         }
     }
     printf("Sprite identity (%s): %d comparisons\n",name,tests);
+}
+
+// Tile sets as sprite graphics: 8x8 and 16x16 tiles are laid out like 8x8 and 16x16 sprite frames (masks 256 tiles
+// on), so a sprite can draw tile n as frame n. Every pixel checked against the tile data, mask included, through the
+// fast and the transformed sprite renderers
+static void testTileSprites(void)
+{
+    static const struct { SpriteSize size; const uint8_t *tiles; int bytes; const char *name; } sets[]={
+        {SIZE_8X8,levelDemoTileDef,8,"8x8"},
+        {SIZE_16X16,levelDemo16TileDef,32,"16x16"},
+    };
+    int tests=0;
+    for(int s=0;s<2;s++){
+        // Through setSpriteTile, from a tile layer of that tile size
+        initLayers();
+        initSprites(1);
+        setTileDefSet(3,sets[s].tiles);
+        setLayerTileSize(3,(s==1)?16:8);
+        setSpriteTile(0,3,1);
+        setSpriteLayer(0,0);
+        setSpritePalette(0,2);
+        const int w=spriteList[0].width, h=spriteList[0].height, bpr=w>>3;
+        for(int tile=1;tile<38;tile++){
+            check(setSpriteTile(0,3,tile) && spriteList[0].frame==tile,"setSpriteTile",s,tile);
+            const uint8_t *def=sets[s].tiles+(tile*sets[s].bytes);
+            const uint8_t *mask=def+(256*sets[s].bytes);
+            for(int n=0;n<12;n++){
+                const int x=(int)(rng()%(SCREEN_WIDTH_PIXELS+w))-(w/2), y=(int)(rng()%(SCREEN_HEIGHT_LINES+h))-(h/2);
+                for(int rotated=0;rotated<2;rotated++){
+                    for(int i=0;i<(int)sizeof(refPix);i++){
+                        renderBuffer[i]=(uint8_t)((i*37)^(i>>5));
+                    }
+                    memcpy(refMask,renderBuffer,sizeof(refMask));
+                    spriteList[0].isRotated=0;
+                    setSpriteRotation(0,0.0f);
+                    if(rotated){
+                        spriteList[0].isRotated=1;
+                        spriteList[0].angle=0.0f;
+                        updateSpriteTransform(spriteList);
+                    }
+                    setSpritePos(0,(float)x,(float)y);
+                    blitSpritesToRenderBuffer(0);
+                    // The position is the sprite's centre
+                    bool ok=true;
+                    for(int py=0;py<SCREEN_HEIGHT_LINES && ok;py++){
+                        for(int px=0;px<SCREEN_WIDTH_PIXELS && ok;px++){
+                            const int i=(py*SCREEN_WIDTH_CELLS)+(px>>3);
+                            const uint8_t bit=(uint8_t)(0x80>>(px&7));
+                            bool want=(refMask[i]&bit)!=0;
+                            const int c=px-(x-(w/2)), r=py-(y-(h/2));
+                            if(c>=0 && c<w && r>=0 && r<h){
+                                const int b=(r*bpr)+(c>>3);
+                                const uint8_t tb=(uint8_t)(0x80>>(c&7));
+                                want=(want && (mask[b]&tb)) || (def[b]&tb);
+                            }
+                            ok=(((renderBuffer[i]&bit)!=0)==want);
+                        }
+                    }
+                    check(ok,sets[s].name,tile,rotated);
+                    ++tests;
+                }
+            }
+        }
+    }
+    printf("Tiles as sprites (8x8 and 16x16 tile sets): %d tiles drawn, every pixel checked\n",tests);
 }
 
 // A captured frame shown on a layer on its own must reproduce the original frame exactly - both untransformed,
@@ -1834,12 +2130,11 @@ static void buildTestLevel(void)
 
 // Every tile within 28 tiles of the middle of the screen (inside the 64x64 window around it) is in the engine layer,
 // with its colours - and the foreground's
-static int checkLevelWindow(int layer)
+// (cu,cv: the level pixel at the middle of the screen, for this layer - from the camera, its parallax and offset)
+static int checkLevelWindow(int layer, int cu, int cv)
 {
     const TileLayer *t=tileLayer+layer;
-    float cu, cv;
-    screenToLayer(layer,SCREEN_WIDTH_PIXELS/2,SCREEN_HEIGHT_LINES/2,&cu,&cv);
-    const int cx=(int)floorf(cu/8.0f), cy=(int)floorf(cv/8.0f);
+    const int cx=cu>>3, cy=cv>>3;
     int bad=0;
     for(int ty=cy-28;ty<=cy+28;ty++){
         for(int tx=cx-28;tx<=cx+28;tx++){
@@ -1898,7 +2193,9 @@ static void testLevelStreaming(void)
             clearLayerTransform(2);
         }
         setLevelCamera(camX,camY);
-        const int b=checkLevelWindow(2)+checkLevelWindow(4);
+        // (the back layer: half speed, offset 3,-5)
+        const int b=checkLevelWindow(2,camX+128,camY+96)+
+            checkLevelWindow(4,128-3+((camX*128)>>8),96+5+((camY*128)>>8));
         badMoves+=b?1:0;
         ++moves;
         if(b){
@@ -1956,6 +2253,158 @@ static void testLevelStreaming(void)
 }
 
 static void saveScreenBMP(const char *name);
+
+// Every cell of a 16x16 level's layer (and its foreground) within 28 cells of the middle of the screen holds its 16x16
+// tile, with that quarter's colours
+// (cu,cv: the level pixel at the middle of the screen, for this layer)
+static int checkLevel16Window(int layer, int fgLayer, const LevelTileSet *ts, int cu, int cv)
+{
+    const TileLayer *t=tileLayer+layer;
+    const int ccx=cu>>3, ccy=cv>>3;
+    int bad=0;
+    for(int cy=ccy-28;cy<=ccy+28;cy++){
+        for(int cx=ccx-28;cx<=ccx+28;cx++){
+            const int r=((cy&63)*TILE_LAYER_WIDTH)+(cx&63);
+            const int a=((cy&63)*TILE_LAYER_WIDTH*2)+(cx&63);
+            const int q=((cy&1)<<1)|(cx&1);
+            const int tile=getLevelTile(layer,cx>>1,cy>>1);
+            // (a single colour layer's cells' colours aren't copied - they stay as the layer was cleared)
+            const bool cells=(t->colour<0);
+            bad+=(t->tileMap[r]!=tile || t->attrMap[a]!=(cells?ts->attrs[(tile*8)+(q*2)]:0x80) ||
+                t->attrMap[a+TILE_LAYER_WIDTH]!=(cells?ts->attrs[(tile*8)+(q*2)+1]:0x80))?1:0;
+            if(fgLayer>=0){
+                bad+=(tileLayer[fgLayer].tileMap[r]!=getLevelForegroundTile(layer,cx>>1,cy>>1))?1:0;
+            }
+        }
+    }
+    return bad;
+}
+
+// A level of 16x16 tiles (levels/tiled/demo16.tmx): streamed into the 8x8 cell engine layers 2x2 cells a tile, as the
+// camera moves, rotation included
+static void testLevel16(void)
+{
+    initLayers();
+    initSprites(20);
+    check(loadLevel(&level_demo16) && getLevelTileSize()==16 && getLevelWidth()==80*16 && tileLayer[2].tile16,
+        "16x16 level loads",getLevelTileSize(),16);
+    const LevelTileSet *ts=level_demo16.tileSets[0];
+    // The level's own properties (its map's, in Tiled): its type, name and description - and any level's, unloaded
+    check(getLevelType()==LEVEL_TYPE_PLATFORM && strcmp(getLevelPropString(LEVEL_PROP_LEVEL_NAME,""),"Big Tiles")==0 &&
+        getLevelPropString(LEVEL_PROP_LEVEL_DESCRIPTION,"")[0] && getLevelPropInt(LEVEL_PROP_SPEED,-7)==-7 &&
+        strcmp(getLevelPropString(LEVEL_PROP_SPEED,"none"),"none")==0,"level properties",getLevelType(),0);
+    check(levelList[LEVEL_ID_FLIGHT]->type==LEVEL_TYPE_SHOOTER &&
+        getLevelDefInt(levelList[LEVEL_ID_FLIGHT],LEVEL_PROP_LEVEL_TYPE,-1)==LEVEL_TYPE_SHOOTER &&
+        strcmp(getLevelDefString(levelList[LEVEL_ID_FLIGHT],LEVEL_PROP_LEVEL_NAME,""),"Sky Tunnel")==0 &&
+        levelList[LEVEL_ID_DEMO]->type==LEVEL_TYPE_PLATFORM,"level types",levelList[LEVEL_ID_FLIGHT]->type,1);
+    // Its sky is one colour, its level and foreground draw their pixels only
+    check(tileLayer[4].colour==0x4F && tileLayer[2].colour==LAYER_COLOUR_NONE && tileLayer[1].colour==LAYER_COLOUR_NONE,
+        "16x16 level's single colour layers",tileLayer[4].colour,0x4F);
+    check(getLevelTile(2,0,17)==1 && getLevelTile(2,14,16)==4 && getLevelForegroundTile(2,42,12)==17,
+        "16x16 level tiles",getLevelTile(2,14,16),4);
+    check(getLevelTile(4,3+16*4,2)==27,"16x16 level's repeating sky",getLevelTile(4,3+16*4,2),27);
+    check((getLevelTileFlags(2,5,17)&LEVEL_TILE_SOLID) && (getLevelTileFlags(2,16,12)&LEVEL_TILE_COLLECT),
+        "16x16 level tile flags",0,0);
+    // Tile types (Tiled's TileType enum, in bits 4-7), alongside the other flags: the conveyors and springboard
+    check(LEVEL_TILE_TYPE(getLevelTileFlags(2,6,17))==TILE_TYPE_CONVEYOR_RIGHT &&
+        LEVEL_TILE_TYPE(getLevelTileFlags(2,36,17))==TILE_TYPE_CONVEYOR_LEFT &&
+        LEVEL_TILE_TYPE(getLevelTileFlags(2,62,16))==TILE_TYPE_SUPER_JUMP && (getLevelTileFlags(2,62,16)&LEVEL_TILE_SOLID) &&
+        LEVEL_TILE_TYPE(getLevelTileFlags(2,5,17))==TILE_TYPE_NONE &&
+        LEVEL_TILE_TYPE(getLevelTileSetFlags(2,40))==TILE_TYPE_SUPER_JUMP && getLevelTileSetFlags(2,35)==0,
+        "16x16 level tile types",getLevelTileFlags(2,6,17),0x21);
+    // The ground's grass is in its top row of pixels; a 16x16 slope rises a pixel a pixel across the whole tile
+    check(!isLevelPixelSolid(2,5*16,17*16) && isLevelPixelSolid(2,5*16+1,17*16) && isLevelPixelSolid(2,5*16,17*16+2),
+        "16x16 level pixels",0,0);
+    check(isLevelPixelSolid(2,14*16+15,16*16) && !isLevelPixelSolid(2,14*16+14,16*16) &&
+        isLevelPixelSolid(2,14*16,16*16+15) && !isLevelPixelSolid(2,14*16,16*16+14),"16x16 slope",0,0);
+
+    // Camera moves: wandering, jumping, the level rotating and scaling
+    int bad=0, badPixels=0;
+    int camX=0, camY=0;
+    for(int n=0;n<1500;n++){
+        if(rng()%10){
+            camX+=(int)(rng()%41)-20;
+            camY+=(int)(rng()%41)-20;
+        }else{
+            camX=(int)(rng()%1600)-200;
+            camY=(int)(rng()%600)-200;
+        }
+        if(n%300==150){
+            setLayerTransform(2,(float)(rng()%628)/100.0f,0.8f,0.8f);
+        }else if(n%300==0){
+            clearLayerTransform(2);
+        }
+        setLevelCamera(camX,camY);
+        // (the sky: a quarter speed)
+        bad+=checkLevel16Window(2,1,ts,camX+128,camY+96)?1:0;
+        bad+=checkLevel16Window(4,-1,ts,128+((camX*64)>>8),96+((camY*64)>>8))?1:0;
+        // The level's pixels (from the level in RAM) are the drawn layer's (from its cells - 512 pixels a repeat)
+        for(int k=0;k<20;k++){
+            const int x=camX+(int)(rng()%256), y=camY+(int)(rng()%192);
+            badPixels+=(isLevelPixelSet(2,x,y)!=isLayerMapPixelSet(2,x,y))?1:0;
+        }
+    }
+    clearLayerTransform(2);
+    check(bad==0,"16x16 level streamed into the layer",bad,0);
+    check(badPixels==0,"16x16 level pixels are the layer's",badPixels,0);
+
+    // A tile changed fills all 4 of its cells
+    setLevelCamera(100,100);
+    setLevelTile(2,12,10,3);
+    bad=0;
+    for(int q=0;q<4;q++){
+        const int cx=24+(q&1), cy=20+(q>>1);
+        bad+=(tileLayer[2].tileMap[((cy&63)*TILE_LAYER_WIDTH)+(cx&63)]!=3)?1:0;
+    }
+    check(bad==0 && getLevelTile(2,12,10)==3,"setLevelTile on a 16x16 level",bad,0);
+
+    // Animated 16x16 tiles: the water surface (7) shows its second frame (8) after 5 frames - all 32 bytes, and mask
+    const uint8_t *ram=tileLayer[2].tileDefPtr;
+    for(int n=0;n<5;n++){
+        updateLevel();
+    }
+    check(memcmp(ram+(7*32),levelDemo16TileDef+(8*32),32)==0 &&
+        memcmp(ram+(256*32)+(7*32),levelDemo16TileDef+(256*32)+(8*32),32)==0,"16x16 tiles animate",0,0);
+
+    // Level tiles placed as tile objects: sprites of the tile set's RAM copy (so they animate too), the tile their frame
+    const int lift=findLevelObjectByName("brick lift"), torch=findLevelObjectByName("torch");
+    check(lift>=0 && torch>=0,"16x16 level's tile objects",lift,torch);
+    for(int n=0;n<2;n++){
+        const int obj=n?torch:lift;
+        const LevelActor *a=getLevelActor(obj);
+        setLevelCamera((int)a->x-128,(int)a->y-96);
+        updateLevel();
+        const int ix=a->sprite;
+        check(ix>=0 && spriteList[ix].defPtr==ram && spriteList[ix].maskPtr==ram+(256*32) &&
+            spriteList[ix].width==16 && spriteList[ix].height==16 && spriteList[ix].frame==(n?30:3),
+            "tile object is a sprite of its level tile",n,ix);
+    }
+    // setSpriteTile: a layer's tile as a sprite
+    const int tileSprite=allocateSprite();
+    check(setSpriteTile(tileSprite,2,12) && spriteList[tileSprite].defPtr==ram && spriteList[tileSprite].frame==12 &&
+        spriteList[tileSprite].width==16 && spriteList[tileSprite].maskPtr==ram+(256*32),"setSpriteTile",0,0);
+    check(!setSpriteTile(tileSprite,0,12) && !setSpriteTile(tileSprite,MAX_TILE_LAYERS,1),"setSpriteTile, no tile set",0,0);
+    freeSprite(tileSprite);
+
+    // Pictures: the level, and a Mode 7 floor of 16x16 tiles
+    initSprites(1);
+    setLevelCamera(160,80);
+    initScratchBuffers(true);
+    compositeScene();
+    saveScreenBMP("level_demo16.bmp");
+    static LayerLineTransform floor16[SCREEN_HEIGHT_LINES];
+    buildLayerPerspective(floor16,480.0f,250.0f,0.4f,40.0f,40.0f,128.0f);
+    setLayerLineTransforms(2,floor16);
+    setLayerPos(4,SCREEN_WIDTH_PIXELS,0);
+    setLayerPos(1,SCREEN_WIDTH_PIXELS,0);
+    tileLayer[1].follow=-1;
+    initScratchBuffers(true);
+    compositeScene();
+    saveScreenBMP("mode7_floor16.bmp");
+    setLayerLineTransforms(2,NULL);
+    initLayers();
+    printf("16x16 level: tiles, flags, pixels, 1500 camera moves (rotated and scaled too), tile changes, animation\n");
+}
 
 static int shows=0, hides=0, lastShown=-1, lastHidden=-1;
 static void onShow(int objectIX, int spriteIX)
@@ -2458,6 +2907,8 @@ int main(int argc, char *argv[])
 
     testClipSpan();
     testTileLayerIdentity();
+    test16x16Layers();
+    testLayerColour();
     testBitmapLayerIdentity(titleScreenBitmap,titleScreenAttr,"title screen bitmap");
     testBitmapLayerIdentity(gameBackground0Bitmap,NULL,"background bitmap");
     buildNarrowBitmap();
@@ -2471,6 +2922,7 @@ int main(int argc, char *argv[])
     testSpriteIdentity(SIZE_32X8,platformSpriteDef,platformSpriteMaskDef,1,"32x8");
     testSpriteIdentity(SIZE_16X32,gateDoorDef,gateDoorMaskDef,4,"16x32");
 
+    testTileSprites();
     testFrameSnapshot();
     testSpriteSets();
     testSpriteSpriteCollisions();
@@ -2484,6 +2936,7 @@ int main(int argc, char *argv[])
     testDemoLevel();
     testLevelActors();
     testLevelSwitches();
+    testLevel16();
     for(int space=0;space<2;space++){
         testSpace=space?PARTICLE_SPACE_LAYER:PARTICLE_SPACE_SCREEN;
         printf("Particles in %s space:\n",space?"layer":"screen");

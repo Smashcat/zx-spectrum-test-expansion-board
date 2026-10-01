@@ -41,6 +41,20 @@
     ],
     "propertyTypes": [
         {
+            "id": 14,
+            "name": "TileType",
+            "storageType": "string",
+            "type": "enum",
+            "values": [
+                "none",
+                "conveyorLeft",
+                "conveyorRight",
+                "superJump",
+                "grapplePoint"
+            ],
+            "valuesAsFlags": false
+        },
+        {
             "id": 1,
             "name": "ZXColour",
             "storageType": "string",
@@ -350,6 +364,167 @@
             "type": "class",
             "useAs": [
                 "object"
+            ]
+        },
+        {
+            "id": 15,
+            "name": "LevelType",
+            "storageType": "string",
+            "type": "enum",
+            "values": [
+                "platform",
+                "shooter"
+            ],
+            "valuesAsFlags": false
+        },
+        {
+            "color": "#ffa0a0a4",
+            "drawFill": true,
+            "id": 16,
+            "members": [
+                {
+                    "name": "levelType",
+                    "propertyType": "LevelType",
+                    "type": "string",
+                    "value": "platform"
+                },
+                {
+                    "name": "levelName",
+                    "type": "string",
+                    "value": ""
+                },
+                {
+                    "name": "levelDescription",
+                    "type": "string",
+                    "value": ""
+                }
+            ],
+            "name": "Level",
+            "type": "class",
+            "useAs": [
+                "map"
+            ]
+        },
+        {
+            "id": 17,
+            "name": "FlyPattern",
+            "storageType": "string",
+            "type": "enum",
+            "values": [
+                "straight",
+                "sine",
+                "swoop",
+                "path",
+                "homing",
+                "launch"
+            ],
+            "valuesAsFlags": false
+        },
+        {
+            "color": "#ffff6060",
+            "drawFill": true,
+            "id": 18,
+            "members": [
+                {
+                    "name": "pattern",
+                    "propertyType": "FlyPattern",
+                    "type": "string",
+                    "value": "straight"
+                },
+                {
+                    "name": "speed",
+                    "type": "float",
+                    "value": 1.5
+                },
+                {
+                    "name": "amplitude",
+                    "type": "int",
+                    "value": 24
+                },
+                {
+                    "name": "period",
+                    "type": "int",
+                    "value": 80
+                },
+                {
+                    "name": "path",
+                    "type": "object",
+                    "value": 0
+                },
+                {
+                    "name": "hp",
+                    "type": "int",
+                    "value": 1
+                },
+                {
+                    "name": "waitForCamera",
+                    "type": "bool",
+                    "value": true
+                },
+                {
+                    "name": "fireRate",
+                    "type": "int",
+                    "value": 0
+                },
+                {
+                    "name": "shotSpeed",
+                    "type": "float",
+                    "value": 1.75
+                },
+                {
+                    "name": "range",
+                    "type": "int",
+                    "value": 80
+                }
+            ],
+            "name": "Flyer",
+            "type": "class",
+            "useAs": [
+                "object",
+                "tile"
+            ]
+        },
+        {
+            "color": "#ffff9030",
+            "drawFill": true,
+            "id": 19,
+            "members": [
+                {
+                    "name": "fireRate",
+                    "type": "int",
+                    "value": 70
+                },
+                {
+                    "name": "shotSpeed",
+                    "type": "float",
+                    "value": 1.75
+                },
+                {
+                    "name": "range",
+                    "type": "int",
+                    "value": 150
+                },
+                {
+                    "name": "turnSpeed",
+                    "type": "float",
+                    "value": 0.05
+                },
+                {
+                    "name": "hp",
+                    "type": "int",
+                    "value": 3
+                },
+                {
+                    "name": "ceiling",
+                    "type": "bool",
+                    "value": false
+                }
+            ],
+            "name": "Turret",
+            "type": "class",
+            "useAs": [
+                "object",
+                "tile"
             ]
         }
     ]

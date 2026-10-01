@@ -1,26 +1,26 @@
 { "columns":16,
- "image":"demoTiles.png",
- "imageheight":128,
- "imagewidth":128,
+ "image":"demo16Tiles.png",
+ "imageheight":256,
+ "imagewidth":256,
  "margin":0,
- "name":"demoTiles",
+ "name":"demo16Tiles",
  "properties":[
-        { "name":"engineTiles", "type":"string", "value":"levelDemoTileDef" },
+        { "name":"engineTiles", "type":"string", "value":"levelDemo16TileDef" },
         { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"white" },
         { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"black" }
  ],
  "spacing":0,
  "tilecount":256,
  "tiledversion":"1.12.2",
- "tileheight":8,
+ "tileheight":16,
  "tiles":[
         { "id":1, "properties":[
             { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"green" },
             { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"blue" },
             { "name":"bright", "type":"bool", "value":true },
-            { "name":"inkBottom", "propertytype":"ZXColour", "type":"string", "value":"red" },
-            { "name":"paperBottom", "propertytype":"ZXColour", "type":"string", "value":"black" },
-            { "name":"brightBottom", "type":"bool", "value":false },
+            { "name":"inkRow1", "propertytype":"ZXColour", "type":"string", "value":"red" },
+            { "name":"paperRow1", "propertytype":"ZXColour", "type":"string", "value":"black" },
+            { "name":"brightRow1", "type":"bool", "value":false },
             { "name":"solid", "type":"bool", "value":true } ] },
         { "id":2, "properties":[
             { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"red" },
@@ -43,10 +43,10 @@
             { "name":"inkBottom", "propertytype":"ZXColour", "type":"string", "value":"red" },
             { "name":"solid", "type":"bool", "value":true } ] },
         { "id":6, "properties":[
-            { "name":"bright", "type":"bool", "value":true },
             { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"yellow" },
             { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"blue" },
-            { "name":"transparentBottom", "type":"bool", "value":true },
+            { "name":"bright", "type":"bool", "value":true },
+            { "name":"transparentRow1", "type":"bool", "value":true },
             { "name":"platform", "type":"bool", "value":true } ] },
         { "id":7,
           "animation":[
@@ -58,7 +58,7 @@
             { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"white" },
             { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"blue" },
             { "name":"bright", "type":"bool", "value":true },
-            { "name":"brightBottom", "type":"bool", "value":false },
+            { "name":"brightRow1", "type":"bool", "value":false },
             { "name":"hazard", "type":"bool", "value":true } ] },
         { "id":11, "properties":[
             { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"white" },
@@ -83,14 +83,6 @@
             { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"white" },
             { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"black" },
             { "name":"bright", "type":"bool", "value":true } ] },
-        { "id":18, "properties":[
-            { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"white" },
-            { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"black" },
-            { "name":"bright", "type":"bool", "value":true } ] },
-        { "id":19, "properties":[
-            { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"white" },
-            { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"black" },
-            { "name":"bright", "type":"bool", "value":true } ] },
         { "id":20, "properties":[
             { "name":"transparent", "type":"bool", "value":true },
             { "name":"transparentBottom", "type":"bool", "value":false },
@@ -98,21 +90,21 @@
             { "name":"paperBottom", "propertytype":"ZXColour", "type":"string", "value":"blue" },
             { "name":"brightBottom", "type":"bool", "value":true } ] },
         { "id":21, "properties":[
-            { "name":"bright", "type":"bool", "value":true },
             { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"green" },
-            { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"blue" } ] },
+            { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"blue" },
+            { "name":"bright", "type":"bool", "value":true } ] },
         { "id":22, "properties":[
-            { "name":"bright", "type":"bool", "value":true },
             { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"green" },
-            { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"blue" } ] },
+            { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"blue" },
+            { "name":"bright", "type":"bool", "value":true } ] },
         { "id":23, "properties":[
-            { "name":"bright", "type":"bool", "value":true },
             { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"green" },
-            { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"blue" } ] },
+            { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"blue" },
+            { "name":"bright", "type":"bool", "value":true } ] },
         { "id":24, "properties":[
-            { "name":"bright", "type":"bool", "value":true },
             { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"white" },
-            { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"blue" } ] },
+            { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"blue" },
+            { "name":"bright", "type":"bool", "value":true } ] },
         { "id":25,
           "animation":[
             { "duration":1200, "tileid":25 },
@@ -129,20 +121,18 @@
             { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"white" },
             { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"blue" },
             { "name":"bright", "type":"bool", "value":true } ] },
-        { "id":29, "properties":[
-            { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"white" },
-            { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"blue" },
-            { "name":"bright", "type":"bool", "value":true } ] },
         { "id":30,
           "animation":[
             { "duration":120, "tileid":30 },
             { "duration":120, "tileid":31 },
             { "duration":120, "tileid":32 } ],
           "properties":[
-            { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"yellow" },
-            { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"blue" },
-            { "name":"bright", "type":"bool", "value":true },
-            { "name":"inkBottom", "propertytype":"ZXColour", "type":"string", "value":"red" } ] },
+            { "name":"transparent", "type":"bool", "value":true },
+            { "name":"transparentBottom", "type":"bool", "value":false },
+            { "name":"inkBottom", "propertytype":"ZXColour", "type":"string", "value":"yellow" },
+            { "name":"paperBottom", "propertytype":"ZXColour", "type":"string", "value":"blue" },
+            { "name":"brightBottom", "type":"bool", "value":true },
+            { "name":"inkRow3", "propertytype":"ZXColour", "type":"string", "value":"red" } ] },
         { "id":33, "properties":[
             { "name":"transparent", "type":"bool", "value":true },
             { "name":"transparentBottom", "type":"bool", "value":false },
@@ -150,48 +140,44 @@
             { "name":"paperBottom", "propertytype":"ZXColour", "type":"string", "value":"blue" },
             { "name":"brightBottom", "type":"bool", "value":true },
             { "name":"hazard", "type":"bool", "value":true } ] },
-        { "id":34, "properties":[
-            { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"white" },
+        { "id":34,
+          "animation":[
+            { "duration":80, "tileid":34 },
+            { "duration":80, "tileid":35 },
+            { "duration":80, "tileid":36 },
+            { "duration":80, "tileid":37 } ],
+          "properties":[
+            { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"yellow" },
             { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"blue" },
             { "name":"bright", "type":"bool", "value":true },
-            { "name":"solid", "type":"bool", "value":true } ] },
-        { "id":35, "properties":[
-            { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"white" },
+            { "name":"solid", "type":"bool", "value":true },
+            { "name":"tileType", "propertytype":"TileType", "type":"string", "value":"conveyorRight" } ] },
+        { "id":38,
+          "animation":[
+            { "duration":80, "tileid":37 },
+            { "duration":80, "tileid":36 },
+            { "duration":80, "tileid":35 },
+            { "duration":80, "tileid":34 } ],
+          "properties":[
+            { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"yellow" },
             { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"blue" },
             { "name":"bright", "type":"bool", "value":true },
-            { "name":"solid", "type":"bool", "value":true } ] },
-        { "id":36, "properties":[
-            { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"white" },
-            { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"blue" },
-            { "name":"bright", "type":"bool", "value":true },
-            { "name":"solid", "type":"bool", "value":true } ] },
-        { "id":37, "properties":[
-            { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"white" },
-            { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"blue" },
-            { "name":"bright", "type":"bool", "value":true },
-            { "name":"solid", "type":"bool", "value":true } ] },
-        { "id":38, "properties":[
-            { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"white" },
-            { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"blue" },
-            { "name":"bright", "type":"bool", "value":true },
-            { "name":"solid", "type":"bool", "value":true } ] },
+            { "name":"solid", "type":"bool", "value":true },
+            { "name":"tileType", "propertytype":"TileType", "type":"string", "value":"conveyorLeft" } ] },
         { "id":39, "properties":[
-            { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"white" },
+            { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"red" },
             { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"blue" },
             { "name":"bright", "type":"bool", "value":true },
-            { "name":"solid", "type":"bool", "value":true } ] },
+            { "name":"solid", "type":"bool", "value":true },
+            { "name":"tileType", "propertytype":"TileType", "type":"string", "value":"superJump" } ] },
         { "id":40, "properties":[
-            { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"white" },
+            { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"red" },
             { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"blue" },
             { "name":"bright", "type":"bool", "value":true },
-            { "name":"solid", "type":"bool", "value":true } ] },
-        { "id":41, "properties":[
-            { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"white" },
-            { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"blue" },
-            { "name":"bright", "type":"bool", "value":true },
-            { "name":"solid", "type":"bool", "value":true } ] }
+            { "name":"solid", "type":"bool", "value":true },
+            { "name":"tileType", "propertytype":"TileType", "type":"string", "value":"superJump" } ] }
  ],
- "tilewidth":8,
+ "tilewidth":16,
  "type":"tileset",
  "version":"1.10"
 }

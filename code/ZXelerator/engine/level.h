@@ -15,7 +15,11 @@
 #define LEVEL_TILE_PLATFORM     0x02    // "platform" - solid from above only
 #define LEVEL_TILE_HAZARD       0x04    // "hazard"
 #define LEVEL_TILE_COLLECT      0x08    // "collect" - pickups
-// Bits 4-7 are free for the game: set with the "flags" property (its bits are ORed in)
+// Bits 4-7: the tile's type, 0-15 - its "tileType" (the TileType enum in the Tiled project: TILE_TYPE_... in
+// levels/levelObjects.h), for the game to give meaning to, e.g. conveyors or springboards
+#define LEVEL_TILE_TYPE_SHIFT   4
+#define LEVEL_TILE_TYPE(flags)  ((flags)>>LEVEL_TILE_TYPE_SHIFT)
+// (a tile's "flags" property, an int, is ORed in too)
 
 /// @brief LevelLayer flags
 #define LEVEL_WRAP_X            0x01    // The layer's tiles repeat across (e.g. parallax backgrounds)
@@ -41,12 +45,17 @@ typedef struct LevelAnim {
 typedef struct LevelTileSet {
     /// @brief Engine tile graphics - 256 tiles then their 256 masks (e.g. defaultTileDef)
     const uint8_t *tiles;
-    /// @brief Top and bottom half attributes of each tile (512 bytes)
+    /// @brief Attributes: for 8x8 tiles, the top and bottom half of each tile (512 bytes); for 16x16 tiles, the top and
+    /// bottom half of each quarter of each tile (2048 bytes - tile*8 + quarter*2, quarters top left, top right, bottom
+    /// left, bottom right)
     const uint8_t *attrs;
     /// @brief LEVEL_TILE_ flags of each tile (256 bytes)
     const uint8_t *flags;
     uint8_t animCount;
     const LevelAnim *anims;
+    /// @brief 8 or 16 (0 is 8): 16x16 tile sets are 256 tiles of 32 bytes (2 bytes a row, left then right), then their
+    /// 256 masks - 16KB
+    uint8_t tileSize;
 } LevelTileSet;
 
 /// @brief One tile layer of a level (and the foreground tiles drawn in front of its sprites, if it has any)
@@ -80,10 +89,17 @@ typedef struct LevelLayer {
     uint8_t flags;
     /// @brief The Tiled layer's name
     const char *name;
+    /// @brief If not 0, the layer is one colour (its "ink", "paper", "bright" or "transparent" properties in Tiled):
+    /// colour, for the whole layer (see setLayerColour) - its tiles' colours aren't used, and its foreground (in front)
+    /// draws its pixels only
+    uint8_t singleColour;
+    uint8_t colour;
 } LevelLayer;
 
-/// @brief Sprite graphics used by the level's objects (from a sprite tile set in Tiled)
+/// @brief Sprite graphics used by the level's objects (from a sprite tile set in Tiled, or a level tile set - tile
+/// objects placed with level tiles are sprites of those tiles)
 typedef struct LevelSpriteSheet {
+    /// @brief Graphics and mask (NULL for a level tile set's: those are its tiles in RAM, so animate)
     const uint8_t *def;
     const uint8_t *mask;
     /// @brief SpriteSize
@@ -91,6 +107,8 @@ typedef struct LevelSpriteSheet {
     /// @brief Palette the sprites are drawn with
     uint8_t palette;
     uint8_t frames;
+    /// @brief 0, or 1 + the level tile set (index into LevelDef tileSets) whose tiles are the frames
+    uint8_t tileSet;
 } LevelSpriteSheet;
 
 /// @brief LevelProp types
@@ -186,6 +204,15 @@ typedef struct LevelDef {
     /// (one per LEVEL_OBJ_PERSIST object)
     uint16_t id;
     uint16_t stateBytes;
+    /// @brief The size of its tiles, 8 or 16 (0 is 8) - its layers' sizes, tile positions and tile lookups are in these
+    /// tiles. Each 16x16 tile fills 2x2 cells of the engine's 8x8 cell layers (see setLayerTileSize)
+    uint8_t tileSize;
+    /// @brief The level's own properties (the map's, in Tiled: e.g. the Level class's levelName and levelDescription)
+    const LevelProp *props;
+    uint8_t propCount;
+    /// @brief Its type - its "levelType" property (the LevelType enum in the Tiled project: LEVEL_TYPE_... in
+    /// levels/levelObjects.h), 0 if not set. For the game, e.g. to tell platform stages from flying ones
+    uint8_t type;
 } LevelDef;
 
 /// @brief Every level converted, by LEVEL_ID_... (from levels/levelList.c, written by the level converter). Levels that
@@ -273,6 +300,9 @@ const LevelDef *getLevel(void);
 int getLevelWidth(void);
 int getLevelHeight(void);
 
+/// @brief The size of the level's tiles: 8 or 16. Tile positions (getLevelTile etc) are in these
+int getLevelTileSize(void);
+
 /// @brief The tile at a tile position in the level, from the level in RAM (so anywhere in the level, on screen or not)
 /// @param layerIX The engine layer the level layer is shown on
 /// @return The tile number (0 for none), or -1 if layerIX isn't a level layer
@@ -285,6 +315,10 @@ int getLevelForegroundTile(int layerIX, int tileX, int tileY);
 
 /// @brief The LEVEL_TILE_ flags of the tile at a tile position (0 if none)
 uint8_t getLevelTileFlags(int layerIX, int tileX, int tileY);
+
+/// @brief The LEVEL_TILE_ flags of a tile number in a layer's tile set, wherever it is (0 if the layer isn't a level
+/// layer) - e.g. to check a tile before setLevelTile puts it in
+uint8_t getLevelTileSetFlags(int layerIX, uint8_t tile);
 
 /// @brief True if the tile at a level pixel has a pixel set there (in its graphic as drawn now, animated tiles included),
 /// whatever its flags
@@ -363,6 +397,17 @@ int enterLevel(int levelID, const char *entrance);
 
 /// @brief The loaded level's LEVEL_ID_..., or -1
 int getLevelID(void);
+
+/// @brief The loaded level's type: its "levelType" (LEVEL_TYPE_... in levels/levelObjects.h), 0 if none is loaded
+int getLevelType(void);
+
+/// @brief The loaded level's own properties (its map's properties in Tiled, by LEVEL_PROP_... - e.g. LEVEL_PROP_LEVEL_NAME),
+/// or def if it doesn't have it. Any level in levelList can be read without loading it: getLevelDefString etc
+int32_t getLevelPropInt(int prop, int32_t def);
+float getLevelPropFloat(int prop, float def);
+const char *getLevelPropString(int prop, const char *def);
+int32_t getLevelDefInt(const LevelDef *lv, int prop, int32_t def);
+const char *getLevelDefString(const LevelDef *lv, int prop, const char *def);
 
 /// @brief Use a switch, as its mode says (turn on, toggle, or turn on for its time). The handler's called if it
 /// changes (a timed switch used again while on just restarts its time)

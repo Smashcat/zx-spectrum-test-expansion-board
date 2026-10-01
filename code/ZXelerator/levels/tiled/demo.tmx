@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="192" height="40" tilewidth="8" tileheight="8" infinite="0" nextlayerid="6" nextobjectid="30">
+<map version="1.10" class="Level" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="192" height="40" tilewidth="8" tileheight="8" infinite="0" nextlayerid="6" nextobjectid="30">
+ <properties>
+  <property name="levelName" value="Green Hills"/>
+  <property name="levelDescription" value="Pistons, a lift and a locked door"/>
+ </properties>
  <tileset firstgid="1" source="demoTiles.tsj"/>
  <tileset firstgid="257" source="player.tsj"/>
  <tileset firstgid="273" source="enemy.tsj"/>

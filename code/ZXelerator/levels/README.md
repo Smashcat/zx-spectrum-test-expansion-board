@@ -28,7 +28,7 @@ Open `levels/tiled/ZXelerator.tiled-project` in Tiled (File > Open Project). The
 - **Shift+F5 - Convert all levels**
 - **F6 - Redraw tile set image**: with a tile set open, saves it and redraws its image in the colours set on
   its tiles.
-- The **ZXColour** property type, for tile colours.
+- The **ZXColour** property type, for tile colours, and **TileType**, for tile types.
 
 The commands run `pc/build/Release/levelconv.exe`, so build the PC project first (`pc\build.bat`). If the
 repository is somewhere other than `G:/repos/Speccy`, change the paths in Project > Project Properties >
@@ -39,6 +39,19 @@ Commands.
 Tile graphics come from the engine: 256 8x8 tiles and their masks, as a `const uint8_t name[4096]` array
 declared in `engine/tileDefs.h` (the converter finds every such array when it's built). Tile 0 is always
 empty.
+
+**16x16 tiles:** a map's tile size (8x8 or 16x16, set when making the map in Tiled) is its levels' tile size.
+A 16x16 level stores a byte per 16x16 tile, a quarter of the RAM of the same level in 8x8 tiles, and up to 256
+different 16x16 tiles. Its tile sets are `const uint8_t name[16384]` arrays: 256 tiles of 32 bytes, each pixel row
+2 bytes (left, then right, as 16 wide sprites), then 256 masks the same way. `levelconv tileset` makes 16x16 Tiled
+tile sets from them. The engine's layers are still 8x8 cells: each 16x16 tile fills 2x2 cells, and the renderers
+draw each cell's quarter of it (`setLayerTileSize`). Scrolling, rotation, Mode 7, foregrounds, animated tiles and
+collisions all work the same, and 8x8 levels and layers (e.g. text) work alongside. A 16x16 tile spans 4 rows of
+attributes (4 pixels each): `ink`, `paper`, `bright` and `transparent` set its top row, `...Row1` to `...Row3` its
+others (each as the row above if not set, with `...Bottom` setting the bottom half). In a 16x16 level, tile
+positions (`getLevelTile`, `setLevelTile` etc) are in 16x16 tiles, and `getLevelTileSize` gives the size. The
+loaded tile set takes 16KB of the level RAM (4KB for 8x8). `demo16.tmx`, through the cave's second door, is a
+16x16 level.
 
 **Themes:** a tile set is its own file, shared by every map that uses it. Make one per theme (one engine tile
 graphics array, and its `.tsj` with colours, flags and animations), and every level in that theme uses it; change
@@ -66,15 +79,68 @@ all at once), then press F6 to redraw the image:
 | `platform` | bool | Solid from above only (`LEVEL_TILE_PLATFORM`) |
 | `hazard` | bool | `LEVEL_TILE_HAZARD` |
 | `collect` | bool | Pickups (`LEVEL_TILE_COLLECT`) |
-| `flags` | int | Bits 4-7 are free for the game - ORed into the tile's flags |
+| `tileType` | TileType | The tile's type (bits 4-7 of its flags), for the game: see below |
+| `flags` | int | ORed into the tile's flags |
 
 `ink`, `paper` and `bright` on the tile set itself are the defaults for its tiles (white on black). The
 engine doesn't act on the flags: they're for the game, through `getLevelTileFlags` and `isLevelPixelSolid`.
+
+**Tile types:** the project's **TileType** enum (Project > Project Properties > Custom Types) names up to 16
+kinds of tile: none, conveyorLeft, conveyorRight, superJump and grapplePoint so far. Add your own values to the
+end, so the numbers of tiles already set don't change. Converting writes them to `levels/levelObjects.h`
+(`TILE_TYPE_CONVEYOR_LEFT` etc), and a tile's type is `LEVEL_TILE_TYPE(getLevelTileFlags(...))`. It combines
+with the other flags: a conveyor is `solid` too. `getLevelTileSetFlags(layer, tile)` gives a tile number's flags,
+wherever it is (e.g. to check a tile before `setLevelTile` puts it in).
+
+In `demo16.tmx`, the level test player is carried along by conveyors (34, animated, going right, and 38, the same
+frames backwards, going left) and bounced up by the springboard (39, higher holding jump). The springboard shows the
+next tile (40, squashed) for a moment, as that's a springboard too.
 
 **Animated tiles** use Tiled's Tile Animation Editor: frames are other tiles of the same tile set (in its
 first 256), and their durations are rounded to 25ths of a second. The tile's own colours are used for
 every frame. Every copy of an animated tile animates together, at no cost per tile. The tile set is
 copied to RAM, and the tile's graphic and mask are rewritten when its frame changes.
+
+### Importing your own graphics (PNG)
+
+Tiles and sprites can be drawn in any paint program and imported from a PNG. Your image is the tile set's image
+in Tiled, so you see exactly what you drew. It stays the source of the graphics: converting a level reads it again
+each time, so edit the image, press F5, and the level and the game's graphics are up to date - no rebuilding the
+converter, and nothing to copy into the engine. Put the image in `levels/tiled`, then:
+
+```bat
+pc\build\Release\levelconv.exe import levels\tiled\caveTiles.png caveTiles 16
+pc\build\Release\levelconv.exe importsprites levels\tiled\bat.png batSprite 16x16 7
+```
+
+- `import <image> <name> [8|16]`: tiles of 8x8 (the default) or 16x16, left to right then down, up to 256. The
+  first (top left) is tile 0, which is always empty - leave it clear.
+- `importsprites <image> <name> <width>x<height> [palette]`: sprite frames of one of the engine's sprite sizes,
+  left to right then down. The palette is the sprites' colours in the game (`engine/palette.c`).
+
+Each makes a Tiled tile set next to the image (`caveTiles.tsj`), and the engine graphics as
+`levels/gfx_<name>.c` and `.h` (the array `<name>`, and for sprites `<name>Mask`), which the game and PC builds
+compile with the levels. Importing again (e.g. after changing the image's size) keeps everything set in Tiled:
+tiles' flags, types, colours and animations.
+
+How the image's pixels become the engine's:
+
+| In the image | In the engine |
+|---|---|
+| Transparent (alpha under half) | Not drawn: what's behind shows (mask clear) |
+| The paper colour (black, unless the tile set's `imagePaper` property says otherwise) | Paper: drawn, a clear pixel |
+| Any other colour | Ink: a set pixel - and what collisions see |
+
+So draw with black (or your `imagePaper` colour) as the background, and the shapes in colours. Colours are matched
+to the nearest Spectrum colour. Each tile's colours come from the image: each 8x4 attribute cell gets the
+paper colour and its most common ink colour, bright if that ink is bright. A cell with more than one ink colour
+can't be shown on the Spectrum; the converter warns about how many there are, and uses the most common. A cell
+that's all transparent leaves the colours under it alone. To choose a tile's colours yourself, give it any of the
+usual colour properties in Tiled (`ink`, `paper`, `bright`, `transparent`, ...) and those are used instead.
+Sprites use their palette, not the image's colours.
+
+Any PNG works (palette, greyscale, RGB or RGBA, any bit depth), except interlaced ones. F6 (redraw the tile set
+image) leaves an imported image alone.
 
 ## Maps
 
@@ -90,12 +156,63 @@ e.g. for notes):
 | `layer` | int | The engine layer (0-4) it's shown on. Lower numbers are drawn in front |
 | `foregroundOf` | string | This layer's tiles are drawn in front of another layer's sprites (see below) |
 | `wrapX`, `wrapY` | bool | The layer repeats across/down (e.g. parallax backgrounds) |
+| `ink`, `paper`, `bright` | ZXColour/bool | One colour for the whole layer instead of its tiles' colours (see below) |
+| `transparent` | bool | The layer has no colour of its own: its pixels show in the colour of the layers behind |
 
 Tiled's **parallax factor** (layer properties) sets how fast a layer scrolls with the camera, and the
 layer **offset** moves it. Groups work too, and their parallax and offsets combine.
 
 Each layer is trimmed to the area its tiles cover. A repeating layer repeats that area, so draw one
 repeat of the background (e.g. 64 tiles across) at the left of the map.
+
+### Level type, name and other level properties
+
+Give a map the **Level** class (Map > Map Properties > Class) for its level's own properties:
+
+| Property | Type | |
+|---|---|---|
+| `levelType` | LevelType | platform (the default) or shooter - add your own kinds of stage to the enum |
+| `levelName` | string | e.g. for a title as the level starts |
+| `levelDescription` | string | |
+
+Add more members to the class (Project > Custom Types) and every level gets them, or add a property to just one
+map. Each becomes a `LEVEL_PROP_...` like object properties. The game reads them with `getLevelType()` (`LEVEL_TYPE_SHOOTER`
+etc. in `levelObjects.h`) and `getLevelPropInt`, `getLevelPropFloat` and `getLevelPropString`. Any level's can be read
+without loading it, e.g. for a level select screen: `levelList[id]->type`, `getLevelDefInt(levelList[id], prop, def)`
+and `getLevelDefString`.
+
+The level test shows the name and then the description as a level starts. On foot in platform levels, it flies
+in shooter levels: O/P/Q/A fly in any direction, with no gravity, and exits are taken by flying into them.
+`flight.tmx`, through the door at the right end of demo16, is a shooter level: a cave tunnel to fly through, in one
+colour.
+
+**Flying enemies:** place **Flyer** objects (e.g. with the saucer sprite sheet). Each sets off towards the player
+when the camera reaches it (`waitForCamera`, on by default), so waves come at the player from whichever side
+they're flying from, and it's gone once it has flown well past them. Its `pattern` (the FlyPattern enum) is one of:
+
+| Pattern | |
+|---|---|
+| straight | Straight across at `speed` |
+| sine | Across, weaving up and down `amplitude` pixels around where it was placed, once every `period` frames |
+| swoop | Straight in, then within 3 x `amplitude` across of the player, curving up or down through them |
+| path | Along its `path` object: a polygon loops; at the end of a polyline it carries on the way it was going |
+| homing | Turning towards the player a little at a time |
+| launch | Waiting on the roof or floor until the player is within `range`, then launching at them and chasing them |
+
+`hp` is how many hits it takes. A flyer with a `fireRate` (frames between shots, 0 for none) shoots at the player
+while they're about on screen, at `shotSpeed`. Launchers (the mine sheet) don't shoot.
+
+**Turrets:** a turret's base is part of the level, a dome tile in the floor or roof (demoTiles 38-39 on the floor,
+40-41 on the roof, both solid). Its gun is a **Turret** object (the turretGun sheet) placed at the middle of the
+dome's flat side, with `ceiling` set for one on the roof. The gun is a sprite rotated to follow the player, turning
+`turnSpeed` radians a frame and only as far as 80 degrees either side of straight out. It fires along the gun,
+from its end, when it's pointing at the player and they're within `range`: every `fireRate` frames, at `shotSpeed`.
+It takes `hp` hits to destroy, which leaves the dome.
+
+In the level test, M fires bullets (sprites) the way the player faces. A bullet that hits a wall sparks back off it.
+One that destroys an enemy blows it apart in particles: a big burst carried on the way the shot was going, and
+smaller ones up, down and back the other way. Enemy shots (sprites) fly straight, puff out on walls, and cost the
+player a life.
 
 ### Foreground tiles
 
@@ -116,6 +233,34 @@ foreground tiles, so a sparse foreground costs little RAM. A tile can be on both
 foreground (a wall behind a pillar), and the layer's tile is the one used for collisions.
 `setLayerFollow` keeps the foreground layer lined up with its layer, however it's scrolled, rotated or
 scaled.
+
+### Single colour layers
+
+Fast scrolling or parallax layers with per-tile colours clash badly, so a layer can be one colour instead.
+Give it any of `ink`, `paper` (ZXColour, default white on black) or `bright` and the whole layer is drawn in
+that colour. Its tiles' colours are ignored and no colour is copied while it scrolls, so it's quicker too.
+Give layers in front of it `transparent` and they add only their pixels, keeping that colour. Anything that
+does set colour on a layer further forward, such as a HUD on layer 0, is drawn over the top in its own colours.
+
+In `demo16.tmx`, Sky is bright white on blue, and Level (with its foreground) is `transparent`:
+
+| Tiled layer | `layer` | |
+|---|---|---|
+| Sky | 4 | `ink` white, `paper` blue, `bright` |
+| Level | 2 | `transparent` |
+| Foreground | 1 | (a foreground of a single colour layer is always pixels only) |
+| (the game's HUD) | 0 | its own colours |
+
+Sprites keep their own palettes. Games can set this on any layer too:
+
+```c
+setLayerColour(4,0x4F);                 // one colour: bright white ink on blue paper (as an attribute byte)
+setLayerColour(2,LAYER_COLOUR_NONE);    // pixels only, keep the colour from behind
+setLayerColour(2,LAYER_COLOUR_CELLS);   // back to each cell's own colour (the default)
+```
+
+When a single colour layer is rotated or scaled with line tables (Mode 7, etc.), only the attribute rows
+of its enabled lines are coloured, so the colour stops at a horizon.
 
 ## Using a level
 
@@ -154,6 +299,18 @@ pc\build\Release\levelconv.exe sprites levels\tiled\enemy.tsj sprite24x24Def mas
 The arguments are the graphics and mask arrays from `engine/spriteDefs.h`, the sprite size, and the palette
 (`engine/palette.c`). F6 redraws a sprite sheet too, e.g. after changing its palette. Place sprites with
 Tiled's Insert Tile tool. Flipping one across sets `LEVEL_OBJ_FLIP_X`, e.g. to face the other way.
+
+**Level tiles as objects:** tiles from a level tile set can be placed with Insert Tile too. They become sprites of
+that tile, 8x8 or 16x16 by the tile set, drawn from the level's RAM copy of the tile set. They cost no extra
+graphics, and animated tiles animate on them too. Use them for moving pieces of the scenery, e.g. a brick that's a
+Platform, or a torch. The tile's own properties (colours, `solid`) aren't the object's. A sprite has a palette rather
+than tile colours: the tile set's `spritePalette` property (int, default 0, no colour of its own) sets it. A tile
+object's tile set doesn't have to be used by any layer, and it can be a different tile size to the map. A switch
+made from a level tile shows the next tile along when it's on. In `demo16.tmx`, the brick lift over the pool and
+the torch on the hill are level tiles.
+
+In code, `setSpriteTile(sprite, layer, tile)` does the same for any sprite: it shows the layer's tile set's tile, at
+the layer's tile size.
 
 **Classes** are set up in the project (Project > Project Properties > Custom Types): e.g. Enemy, Platform,
 Generator, PlayerStart. Each class's members are the properties its objects get, with defaults you can

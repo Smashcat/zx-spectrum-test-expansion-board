@@ -25,24 +25,30 @@ static const LevelTileSet *const tileSets[]={
 };
 
 static const LevelLayer layers[]={
-    {layer0Data,9,48,24,0,0,0,0,256,256,0,0,0,4,-1,0,"Back"},
-    {layer1Data,69,48,24,0,0,0,0,256,256,0,0,0,2,-1,0,"Level"},
+    {layer0Data,9,48,24,0,0,0,0,256,256,0,0,0,4,-1,0,"Back",0,0x00},
+    {layer1Data,69,48,24,0,0,0,0,256,256,0,0,0,2,-1,0,"Level",0,0x00},
 };
 
 // Sprite sheets
 static const LevelSpriteSheet sheets[]={
-    {exitDoorDef,exitDoorMaskDef,15,11,4},      // "exitDoor" (SIZE_16X32)
-    {keyDef,keyMaskDef,4,6,1},      // "key" (SIZE_16X8)
+    {exitDoorDef,exitDoorMaskDef,15,11,4,0},      // "exitDoor" (SIZE_16X32)
+    {keyDef,keyMaskDef,4,6,1,0},      // "key" (SIZE_16X8)
 };
 
 // Objects' properties and paths
 static const LevelProp object1Props[]={{LEVEL_PROP_TO_LEVEL,LEVEL_PROP_TYPE_INT,{.i=1}},{LEVEL_PROP_TO_ENTRANCE,LEVEL_PROP_TYPE_STRING,{.s="cave door"}}};
 static const LevelProp object2Props[]={{LEVEL_PROP_VALUE,LEVEL_PROP_TYPE_INT,{.i=2}},{LEVEL_PROP_PERSIST,LEVEL_PROP_TYPE_INT,{.i=1}}};
+static const LevelProp object3Props[]={{LEVEL_PROP_TO_LEVEL,LEVEL_PROP_TYPE_INT,{.i=2}},{LEVEL_PROP_TO_ENTRANCE,LEVEL_PROP_TYPE_STRING,{.s="from cave"}}};
 
 static const LevelObject objects[]={
     {LEVEL_CLASS_ENTRANCE,-1,0,0x00,2,0,0,60,149,0,0,NULL,NULL,"from demo",-1,0,0,0,0},    // 0: Tiled object 1
     {LEVEL_CLASS_EXIT,0,0,0x00,2,2,0,40,144,16,32,object1Props,NULL,"to demo",-1,0,0,0,0},    // 1: Tiled object 2
     {LEVEL_CLASS_KEY,1,0,0x10,2,2,0,256,68,16,8,object2Props,NULL,"door key",0,2,0,0,0},    // 2: Tiled object 3
+    {LEVEL_CLASS_EXIT,0,0,0x00,2,2,0,344,144,16,32,object3Props,NULL,"to demo16",-1,0,0,0,0},    // 3: Tiled object 4
+    {LEVEL_CLASS_ENTRANCE,-1,0,0x00,2,0,0,344,149,0,0,NULL,NULL,"from demo16",-1,0,0,0,0},    // 4: Tiled object 5
 };
 
-const LevelDef level_cave={"cave",48,24,6496,1,2,2,3,tileSets,layers,sheets,objects,0,1};
+// The level's own properties
+static const LevelProp levelProps[]={{LEVEL_PROP_LEVEL_TYPE,LEVEL_PROP_TYPE_INT,{.i=0}},{LEVEL_PROP_LEVEL_NAME,LEVEL_PROP_TYPE_STRING,{.s="The Cave"}},{LEVEL_PROP_LEVEL_DESCRIPTION,LEVEL_PROP_TYPE_STRING,{.s="Find the key to the locked door"}}};
+
+const LevelDef level_cave={"cave",48,24,6560,1,2,2,5,tileSets,layers,sheets,objects,0,1,8,levelProps,3,0};

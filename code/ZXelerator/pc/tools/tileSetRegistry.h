@@ -7,6 +7,7 @@
 typedef struct TileSetEntry {
     const char *name;
     const uint8_t *tiles;
+    int size;           // 4096 for 8x8 tiles, 16384 for 16x16
 } TileSetEntry;
 
 extern const TileSetEntry tileSetRegistry[];

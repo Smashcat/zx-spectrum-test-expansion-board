@@ -273,7 +273,8 @@ typedef struct TileSet {
     const char *name;
     const char *engineName;
     const uint8_t *tiles;
-    uint8_t attrs[512];
+    int tileSize;               // 8 or 16
+    uint8_t attrs[2048];        // 2 a tile (8x8), or 8 a tile (16x16: top and bottom of each quarter)
     uint8_t flags[256];
     Anim anims[MAX_ANIMS];
     int animCount;
@@ -287,7 +288,14 @@ typedef struct TileSet {
     int spriteW, spriteH, frames, palette;
     const char *alignment;
     bool spriteUsed;
+    bool layerUsed;             // Used by a tile layer (not just tile objects)
     int sheetIndex;
+    // Imported from a PNG (levelconv import / importsprites): its graphics are read from the image each time, and
+    // written to levels/gfx_<engine name>.c - rather than coming from engine/tileDefs.c or spriteDefs.c
+    bool imported;
+    uint8_t *importedData;      // Tiles: graphics then masks. Sprites: graphics, then masks at importedMask
+    uint8_t *importedMask;
+    int importedSize;           // Bytes of graphics (and as many of masks)
 } TileSet;
 
 // Engine sprite sizes (SpriteSize) that sprite sheets can be
@@ -307,6 +315,412 @@ static bool spriteSizeValid(int w, int h)
 static int spriteBytesPerRow(int w)
 {
     return (w==24)?4:(w>>3);
+}
+
+// ---------------------------------------------------------------------------
+// Imported graphics: PNG images turned into engine tiles and sprites
+// ---------------------------------------------------------------------------
+
+// The Spectrum's colours: 0-7, then 8-15 bright
+static const uint8_t zxColours[16][3]={
+    {0,0,0},{0,0,0xD7},{0xD7,0,0},{0xD7,0,0xD7},{0,0xD7,0},{0,0xD7,0xD7},{0xD7,0xD7,0},{0xD7,0xD7,0xD7},
+    {0,0,0},{0,0,0xFF},{0xFF,0,0},{0xFF,0,0xFF},{0,0xFF,0},{0,0xFF,0xFF},{0xFF,0xFF,0},{0xFF,0xFF,0xFF},
+};
+
+// Where maps are (images are looked for there too, for maps read without Tiled)
+static char mapDirectory[1024];
+// Where Tiled exported the map to (its embedded tile sets' images are relative to there, when they're on the same drive)
+static char exportDirectory[1024];
+
+static uint32_t be32(const uint8_t *p)
+{
+    return ((uint32_t)p[0]<<24)|((uint32_t)p[1]<<16)|((uint32_t)p[2]<<8)|p[3];
+}
+
+static int paeth(int a, int b, int c)
+{
+    const int p=a+b-c, pa=abs(p-a), pb=abs(p-b), pc=abs(p-c);
+    return (pa<=pb && pa<=pc)?a:((pb<=pc)?b:c);
+}
+
+// A PNG image as RGBA (8 bits each) - any colour type and bit depth, not interlaced. NULL if it can't be read
+static uint8_t *loadPNG(const char *path, int *outW, int *outH)
+{
+    size_t size=0;
+    uint8_t *file=(uint8_t *)readFile(path,&size);
+    static const uint8_t sig[8]={0x89,'P','N','G','\r','\n',0x1A,'\n'};
+    if(!file || size<8 || memcmp(file,sig,8)!=0){
+        free(file);
+        return NULL;
+    }
+    int w=0, h=0, depth=0, type=0;
+    uint8_t pal[256][4];
+    memset(pal,255,sizeof(pal));
+    int keyR=-1, keyG=-1, keyB=-1;
+    uint8_t *idat=NULL;
+    size_t idatLen=0;
+    for(size_t at=8;at+12<=size;){
+        const uint32_t len=be32(file+at);
+        const uint8_t *t=file+at+4, *d=file+at+8;
+        if(at+12+len>size){
+            break;
+        }
+        if(memcmp(t,"IHDR",4)==0){
+            w=(int)be32(d);
+            h=(int)be32(d+4);
+            depth=d[8];
+            type=d[9];
+            if(d[12]!=0){
+                fail("%s is interlaced - save it without interlacing",path);
+            }
+        }else if(memcmp(t,"PLTE",4)==0){
+            for(uint32_t n=0;n<len/3 && n<256;n++){
+                pal[n][0]=d[n*3];
+                pal[n][1]=d[(n*3)+1];
+                pal[n][2]=d[(n*3)+2];
+            }
+        }else if(memcmp(t,"tRNS",4)==0){
+            if(type==3){
+                for(uint32_t n=0;n<len && n<256;n++){
+                    pal[n][3]=d[n];
+                }
+            }else if(type==0 && len>=2){
+                keyR=keyG=keyB=(d[0]<<8)|d[1];
+            }else if(type==2 && len>=6){
+                keyR=(d[0]<<8)|d[1];
+                keyG=(d[2]<<8)|d[3];
+                keyB=(d[4]<<8)|d[5];
+            }
+        }else if(memcmp(t,"IDAT",4)==0){
+            idat=realloc(idat,idatLen+len);
+            memcpy(idat+idatLen,d,len);
+            idatLen+=len;
+        }else if(memcmp(t,"IEND",4)==0){
+            break;
+        }
+        at+=12+len;
+    }
+    free(file);
+    const int channels=(type==0)?1:((type==2)?3:((type==3)?1:((type==4)?2:((type==6)?4:0))));
+    if(!idat || w<=0 || h<=0 || !channels){
+        free(idat);
+        return NULL;
+    }
+    size_t rawLen=0;
+    uint8_t *raw=(uint8_t *)tinfl_decompress_mem_to_heap(idat,idatLen,&rawLen,TINFL_FLAG_PARSE_ZLIB_HEADER);
+    free(idat);
+    const int bits=channels*depth, stride=((w*bits)+7)/8, step=(bits<8)?1:(bits/8);
+    if(!raw || rawLen<(size_t)(stride+1)*(size_t)h){
+        free(raw);
+        return NULL;
+    }
+    // Undo each row's filter, in place (each row starts with its filter type)
+    for(int y=0;y<h;y++){
+        uint8_t *row=raw+((size_t)y*(stride+1))+1;
+        const uint8_t *up=(y>0)?row-(stride+1):NULL;
+        const int filter=row[-1];
+        for(int x=0;x<stride;x++){
+            const int a=(x>=step)?row[x-step]:0, b=up?up[x]:0, c=(up && x>=step)?up[x-step]:0;
+            row[x]=(uint8_t)(row[x]+((filter==1)?a:((filter==2)?b:((filter==3)?((a+b)>>1):((filter==4)?paeth(a,b,c):0)))));
+        }
+    }
+    uint8_t *rgba=malloc((size_t)w*h*4);
+    const int maxSample=(1<<depth)-1;
+    for(int y=0;y<h;y++){
+        const uint8_t *row=raw+((size_t)y*(stride+1))+1;
+        for(int x=0;x<w;x++){
+            int s[4]={0,0,0,0};
+            for(int c=0;c<channels;c++){
+                if(depth==16){
+                    const uint8_t *p=row+(((x*channels)+c)*2);
+                    s[c]=(p[0]<<8)|p[1];
+                }else if(depth==8){
+                    s[c]=row[(x*channels)+c];
+                }else{
+                    const int bit=((x*channels)+c)*depth;
+                    s[c]=(row[bit>>3]>>(8-depth-(bit&7)))&maxSample;
+                }
+            }
+            uint8_t *o=rgba+(((size_t)y*w)+x)*4;
+            if(type==3){
+                memcpy(o,pal[s[0]&255],4);
+                continue;
+            }
+            // (to 8 bits: the top byte of 16, or a smaller sample scaled up)
+            #define TO8(v) ((uint8_t)((depth==16)?((v)>>8):(((v)*255)/maxSample)))
+            if(type==0 || type==4){
+                o[0]=o[1]=o[2]=TO8(s[0]);
+                o[3]=(type==4)?TO8(s[1]):((s[0]==keyR)?0:255);
+            }else{
+                o[0]=TO8(s[0]);
+                o[1]=TO8(s[1]);
+                o[2]=TO8(s[2]);
+                o[3]=(type==6)?TO8(s[3]):((s[0]==keyR && s[1]==keyG && s[2]==keyB)?0:255);
+            }
+            #undef TO8
+        }
+    }
+    free(raw);
+    *outW=w;
+    *outH=h;
+    return rgba;
+}
+
+// The nearest Spectrum colour to a pixel: 0-7, plus 8 if bright (black is never bright)
+static int zxColourOf(const uint8_t *px)
+{
+    int best=0, bestD=0x7fffffff;
+    for(int n=0;n<16;n++){
+        const int dr=px[0]-zxColours[n][0], dg=px[1]-zxColours[n][1], db=px[2]-zxColours[n][2];
+        const int d=(dr*dr)+(dg*dg)+(db*db);
+        if(d<bestD){
+            best=n;
+            bestD=d;
+        }
+    }
+    return (best==8)?0:best;
+}
+
+// What an image pixel is: transparent (alpha under half - not drawn, what's behind shows), paper (the image's paper
+// colour, black unless set - drawn, but a clear pixel), or ink (any other colour - a set pixel)
+#define IMG_CLEAR   0
+#define IMG_PAPER   1
+#define IMG_INK     2
+static int imagePixel(const uint8_t *rgba, int imgW, int x, int y, int paper)
+{
+    const uint8_t *px=rgba+(((size_t)y*imgW)+x)*4;
+    if(px[3]<128){
+        return IMG_CLEAR;
+    }
+    return ((zxColourOf(px)&7)==paper)?IMG_PAPER:IMG_INK;
+}
+
+// A w x h block of an image (a tile, or a sprite frame) as engine graphics and mask, bpr bytes a row (a 24 wide sprite
+// has a fourth byte, never drawn)
+static void importBlock(const uint8_t *rgba, int imgW, int x0, int y0, int w, int h, int bpr, int paper, uint8_t *pix,
+    uint8_t *mask)
+{
+    memset(pix,0,(size_t)bpr*h);
+    memset(mask,0xFF,(size_t)bpr*h);
+    for(int y=0;y<h;y++){
+        for(int x=0;x<w;x++){
+            const int k=imagePixel(rgba,imgW,x0+x,y0+y,paper);
+            const uint8_t bit=(uint8_t)(0x80>>(x&7));
+            if(k!=IMG_CLEAR){
+                mask[(y*bpr)+(x>>3)]&=(uint8_t)~bit;
+            }
+            if(k==IMG_INK){
+                pix[(y*bpr)+(x>>3)]|=bit;
+            }
+        }
+    }
+}
+
+// An 8x4 attribute cell of an image: ink the most common ink colour, paper the paper colour, bright if the ink is
+// (or, with no ink, the paper is). A cell that's all transparent leaves the colours under it alone (0x80). More than
+// one ink colour in a cell can't be shown - counted in clashes
+static uint8_t importAttr(const uint8_t *rgba, int imgW, int x0, int y0, int paper, int *clashes)
+{
+    int counts[16]={0}, opaque=0, brightPaper=0, inks=0;
+    for(int y=0;y<4;y++){
+        for(int x=0;x<8;x++){
+            const uint8_t *px=rgba+(((size_t)(y0+y)*imgW)+x0+x)*4;
+            if(px[3]<128){
+                continue;
+            }
+            ++opaque;
+            const int c=zxColourOf(px);
+            if((c&7)==paper){
+                brightPaper+=(c&8)?1:0;
+            }else{
+                inks+=(counts[c]++==0)?1:0;
+            }
+        }
+    }
+    if(opaque==0){
+        return 0x80;
+    }
+    int ink=-1;
+    for(int c=0;c<16;c++){
+        ink=(counts[c]>0 && (ink<0 || counts[c]>counts[ink]))?c:ink;
+    }
+    if(inks>1){
+        ++*clashes;
+    }
+    const bool bright=(ink>=0)?((ink&8)!=0):(brightPaper*2>opaque);
+    return (uint8_t)((bright?0x40:0)|(paper<<3)|((ink>=0)?(ink&7):7));
+}
+
+// A tile set's image (its "image", relative to the map or the tile set, or absolute)
+static uint8_t *loadTileSetImage(const cJSON *ts, const char *name, int *w, int *h)
+{
+    const char *image=jsonString(ts,"image","");
+    char path[2100];
+    snprintf(path,sizeof(path),"%s%s",mapDirectory,image);
+    const bool absolute=(image[0]=='/' || image[0]=='\\' || (image[0] && image[1]==':'));
+    uint8_t *rgba=absolute?NULL:loadPNG(path,w,h);
+    if(!rgba && !absolute && exportDirectory[0]){
+        snprintf(path,sizeof(path),"%s%s",exportDirectory,image);
+        rgba=loadPNG(path,w,h);
+    }
+    if(!rgba){
+        rgba=loadPNG(image,w,h);
+    }
+    if(!rgba){
+        fail("tile set \"%s\": can't read its image %s (a PNG)",name,image);
+    }
+    return rgba;
+}
+
+// True if a tile has colours set in Tiled (any ink, paper, bright or transparent property) - which an imported tile
+// set uses instead of its image's
+static bool hasColourProps(const cJSON *tile)
+{
+    const cJSON *p;
+    cJSON_ArrayForEach(p,cJSON_GetObjectItemCaseSensitive(tile,"properties")){
+        const char *n=jsonString(p,"name","");
+        if(strncmp(n,"ink",3)==0 || strncmp(n,"paper",5)==0 || strncmp(n,"bright",6)==0 || strncmp(n,"transparent",11)==0){
+            return true;
+        }
+    }
+    return false;
+}
+
+// The paper colour of an imported image: its "imagePaper" property (a ZXColour), black if not set
+static int importPaper(const cJSON *ts)
+{
+    return property(ts,"imagePaper")?propColour(ts,"imagePaper"):0;
+}
+
+// An imported tile set's tiles, from its image: graphics and masks (8x8: 8 bytes a tile; 16x16: 32, a row of 2 bytes
+// at a time), and the colours of each tile's attribute cells into attrs (as readTileSet keeps them). Tile 0 is
+// always empty. Returns how many cells had clashing colours
+static int importTiles(const uint8_t *rgba, int imgW, int imgH, int size, int paper, const char *name, uint8_t *data,
+    uint8_t *attrs)
+{
+    const int cols=imgW/size, rows=imgH/size, tileBytes=size*size/8;
+    if(imgW%size || imgH%size){
+        fail("tile set \"%s\": its image is %dx%d - not a whole number of %dx%d tiles",name,imgW,imgH,size,size);
+    }
+    if(cols*rows>256){
+        fail("tile set \"%s\": its image has %d tiles - the engine has 256 a tile set",name,cols*rows);
+    }
+    memset(data,0,(size_t)256*tileBytes);
+    memset(data+(256*tileBytes),0xFF,(size_t)256*tileBytes);
+    int clashes=0;
+    for(int t=0;t<cols*rows;t++){
+        const int x0=(t%cols)*size, y0=(t/cols)*size;
+        if(t==0){
+            for(int y=0;y<size;y++){
+                for(int x=0;x<size;x++){
+                    if(imagePixel(rgba,imgW,x0+x,y0+y,paper)!=IMG_CLEAR){
+                        warn("tile set \"%s\": its first tile isn't empty - tile 0 is always empty in the engine (leave "
+                            "the top left tile clear)",name);
+                        y=size;
+                        break;
+                    }
+                }
+            }
+            continue;
+        }
+        importBlock(rgba,imgW,x0,y0,size,size,size/8,paper,data+(t*tileBytes),data+(256*tileBytes)+(t*tileBytes));
+        if(attrs){
+            if(size==16){
+                // 8 a tile: each quarter's top and bottom 8x4 cells
+                for(int q=0;q<4;q++){
+                    for(int half=0;half<2;half++){
+                        attrs[(t*8)+(q*2)+half]=importAttr(rgba,imgW,x0+((q&1)*8),y0+((q>>1)*8)+(half*4),paper,&clashes);
+                    }
+                }
+            }else{
+                attrs[t*2]=importAttr(rgba,imgW,x0,y0,paper,&clashes);
+                attrs[(t*2)+1]=importAttr(rgba,imgW,x0,y0+4,paper,&clashes);
+            }
+        }
+    }
+    return clashes;
+}
+
+// An imported sprite sheet's frames, from its image (frames left to right, then down): graphics, then masks
+static void importSprites(const uint8_t *rgba, int imgW, int imgH, int w, int h, int paper, const char *name,
+    uint8_t *data, uint8_t *mask, int frames)
+{
+    const int cols=imgW/w, bpr=spriteBytesPerRow(w);
+    if(imgW%w || imgH%h){
+        fail("sprite sheet \"%s\": its image is %dx%d - not a whole number of %dx%d frames",name,imgW,imgH,w,h);
+    }
+    for(int f=0;f<frames;f++){
+        importBlock(rgba,imgW,(f%cols)*w,(f/cols)*h,w,h,bpr,paper,data+(f*bpr*h),mask+(f*bpr*h));
+    }
+}
+
+// Write a file only if it's changed (so builds don't recompile what hasn't)
+static void writeIfChanged(const char *path, const char *text)
+{
+    size_t oldSize=0;
+    char *old=readFile(path,&oldSize);
+    const bool same=old && oldSize==strlen(text) && memcmp(old,text,oldSize)==0;
+    free(old);
+    if(same){
+        return;
+    }
+    FILE *f=fopen(path,"wb");
+    if(!f || fputs(text,f)<0){
+        fail("can't write %s",path);
+    }
+    fclose(f);
+}
+
+// Append to a growing string
+static void appendf(char **s, size_t *len, size_t *cap, const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap,fmt);
+    char tmp[512];
+    const int n=vsnprintf(tmp,sizeof(tmp),fmt,ap);
+    va_end(ap);
+    if(*len+(size_t)n+1>*cap){
+        *cap=(*cap+(size_t)n+1)*2;
+        *s=realloc(*s,*cap);
+    }
+    memcpy(*s+*len,tmp,(size_t)n+1);
+    *len+=(size_t)n;
+}
+
+static void appendArray(char **s, size_t *len, size_t *cap, const char *name, const uint8_t *data, int n)
+{
+    appendf(s,len,cap,"const uint8_t %s[%d] __attribute__((aligned(4)))={",name,n);
+    for(int k=0;k<n;k++){
+        appendf(s,len,cap,"%s0x%02X",(k%32)?",":(k?",\n    ":"\n    "),data[k]);
+    }
+    appendf(s,len,cap,"\n};\n");
+}
+
+// The engine graphics of an imported tile set or sprite sheet, as levels/gfx_<name>.c and .h (compiled into the game
+// with the levels)
+static void writeImportedGfx(const char *outDir, const char *image, const char *name, const uint8_t *data,
+    const char *maskName, const uint8_t *mask, int size)
+{
+    char *s=NULL, path[1400];
+    size_t len=0, cap=0;
+    appendf(&s,&len,&cap,"// Generated by levelconv from %s - edit the image and convert again, rather than editing this\n\n"
+        "#include \"gfx_%s.h\"\n\n",image,name);
+    appendArray(&s,&len,&cap,name,data,size);
+    if(maskName){
+        appendf(&s,&len,&cap,"\n");
+        appendArray(&s,&len,&cap,maskName,mask,size);
+    }
+    snprintf(path,sizeof(path),"%sgfx_%s.c",outDir,name);
+    writeIfChanged(path,s);
+    len=0;
+    appendf(&s,&len,&cap,"// Generated by levelconv from %s\n#pragma once\n\n#include <stdint.h>\n\nextern const uint8_t %s[%d];\n",
+        image,name,size);
+    if(maskName){
+        appendf(&s,&len,&cap,"extern const uint8_t %s[%d];\n",maskName,size);
+    }
+    snprintf(path,sizeof(path),"%sgfx_%s.h",outDir,name);
+    writeIfChanged(path,s);
+    free(s);
 }
 
 static const SpriteDefEntry *engineSprite(const char *name)
@@ -331,6 +745,23 @@ static void readSpriteSheet(TileSet *s, const cJSON *ts)
     if(!spriteSizeValid(s->spriteW,s->spriteH)){
         fail("sprite sheet \"%s\" is %dx%d - not an engine sprite size",s->name,s->spriteW,s->spriteH);
     }
+    s->imported=propBool(ts,"imported",false);
+    if(s->imported){
+        // From its image: graphics and masks
+        if(!s->maskName){
+            fail("sprite sheet \"%s\" is imported, but has no \"engineMask\" property (the name of its masks)",s->name);
+        }
+        int w=0, h=0;
+        uint8_t *rgba=loadTileSetImage(ts,s->name,&w,&h);
+        s->importedSize=s->frames*spriteBytesPerRow(s->spriteW)*s->spriteH;
+        s->importedData=malloc((size_t)s->importedSize);
+        s->importedMask=malloc((size_t)s->importedSize);
+        importSprites(rgba,w,h,s->spriteW,s->spriteH,importPaper(ts),s->name,s->importedData,s->importedMask,s->frames);
+        free(rgba);
+        s->spriteData=s->importedData;
+        s->maskData=s->importedMask;
+        return;
+    }
     const SpriteDefEntry *d=engineSprite(s->spriteName);
     const SpriteDefEntry *m=s->maskName?engineSprite(s->maskName):NULL;
     if(!d){
@@ -348,14 +779,20 @@ static void readSpriteSheet(TileSet *s, const cJSON *ts)
     s->maskData=m->data;
 }
 
-static const uint8_t *engineTiles(const char *name)
+static const TileSetEntry *engineTiles(const char *name)
 {
     for(const TileSetEntry *e=tileSetRegistry;e->name;e++){
         if(strcmp(e->name,name)==0){
-            return e->tiles;
+            return e;
         }
     }
     return NULL;
+}
+
+// Bytes of a tile set's attributes: 2 per 8x8 tile, 8 per 16x16 (the top and bottom of each quarter)
+static int attrBytes(const TileSet *s)
+{
+    return (s->tileSize==16)?2048:512;
 }
 
 static const cJSON *tileEntry(const cJSON *ts, int id)
@@ -369,33 +806,36 @@ static const cJSON *tileEntry(const cJSON *ts, int id)
     return NULL;
 }
 
-// A half's attribute, from a tile's properties (and the tile set's, as defaults): ink, paper, bright, transparent - the
-// bottom half's (suffix "Bottom") default to the top's
-static uint8_t halfAttr(const cJSON *tile, const cJSON *ts, bool bottom, uint8_t top)
+// An attribute from a tile's properties: ink, paper, bright and transparent, with a suffix ("" for the top, "Bottom"
+// for the bottom half, "Row1"-"Row3" for 16x16 tiles' rows). Anything not set is as fallback - or, with no fallback
+// (-1), the tile set's own properties, as defaults
+static uint8_t suffixAttr(const cJSON *tile, const cJSON *ts, const char *suffix, int fallback)
 {
     int ink=-1, paper=-1;
     int bright=-1, transparent=-1;
     if(tile){
-        ink=propColour(tile,bottom?"inkBottom":"ink");
-        paper=propColour(tile,bottom?"paperBottom":"paper");
-        const cJSON *b=property(tile,bottom?"brightBottom":"bright");
-        bright=b?propBool(tile,bottom?"brightBottom":"bright",false):-1;
-        const cJSON *t=property(tile,bottom?"transparentBottom":"transparent");
-        transparent=t?propBool(tile,bottom?"transparentBottom":"transparent",false):-1;
+        char name[64];
+        snprintf(name,sizeof(name),"ink%s",suffix);
+        ink=propColour(tile,name);
+        snprintf(name,sizeof(name),"paper%s",suffix);
+        paper=propColour(tile,name);
+        snprintf(name,sizeof(name),"bright%s",suffix);
+        bright=property(tile,name)?(propBool(tile,name,false)?1:0):-1;
+        snprintf(name,sizeof(name),"transparent%s",suffix);
+        transparent=property(tile,name)?(propBool(tile,name,false)?1:0):-1;
     }
-    if(bottom){
-        // Anything not set for the bottom half is as the top half
+    if(fallback>=0){
         if(ink<0){
-            ink=top&7;
+            ink=fallback&7;
         }
         if(paper<0){
-            paper=(top>>3)&7;
+            paper=(fallback>>3)&7;
         }
         if(bright<0){
-            bright=(top>>6)&1;
+            bright=(fallback>>6)&1;
         }
         if(transparent<0){
-            transparent=(top>>7)&1;
+            transparent=(fallback>>7)&1;
         }
     }else{
         if(ink<0){
@@ -416,6 +856,8 @@ static uint8_t halfAttr(const cJSON *tile, const cJSON *ts, bool bottom, uint8_t
     return (uint8_t)((transparent?0x80:0)|(bright?0x40:0)|(paper<<3)|ink);
 }
 
+static long enumValue(const char *typeName, const cJSON *v, const char *where);
+
 // Colours, flags and animations of a Tiled tile set
 static void readTileSet(TileSet *s, const cJSON *ts)
 {
@@ -428,18 +870,70 @@ static void readTileSet(TileSet *s, const cJSON *ts)
         return;
     }
     s->engineName=propString(ts,"engineTiles");
-    s->tiles=s->engineName?engineTiles(s->engineName):NULL;
-    if(jsonInt(ts,"tilewidth",8)!=8 || jsonInt(ts,"tileheight",8)!=8){
-        fail("tile set \"%s\" has to have 8x8 tiles",s->name);
+    s->tileSize=jsonInt(ts,"tilewidth",8);
+    if((s->tileSize!=8 && s->tileSize!=16) || jsonInt(ts,"tileheight",8)!=s->tileSize){
+        fail("tile set \"%s\" has to have 8x8 or 16x16 tiles",s->name);
+    }
+    // As tile objects: sprites of its tiles, 8x8 or 16x16, in its "spritePalette" (0, the default, has no colour)
+    s->spriteW=s->tileSize;
+    s->spriteH=s->tileSize;
+    s->frames=s->tileCount;
+    s->palette=propInt(ts,"spritePalette",0);
+    s->alignment=jsonString(ts,"objectalignment","unspecified");
+    // Imported from a PNG: the graphics (and the colours of tiles without colour properties) come from the image
+    s->imported=propBool(ts,"imported",false);
+    static uint8_t imageAttrs[2048];
+    if(s->imported){
+        if(!s->engineName){
+            fail("tile set \"%s\" is imported, but has no \"engineTiles\" property (the name of its graphics)",s->name);
+        }
+        int w=0, h=0;
+        uint8_t *rgba=loadTileSetImage(ts,s->name,&w,&h);
+        s->importedSize=256*s->tileSize*s->tileSize/8;
+        s->importedData=malloc((size_t)s->importedSize*2);
+        memset(imageAttrs,0x80,sizeof(imageAttrs));
+        const int clashes=importTiles(rgba,w,h,s->tileSize,importPaper(ts),s->name,s->importedData,imageAttrs);
+        if(clashes){
+            warn("tile set \"%s\": %d attribute cells (8x4 pixels) of its image have more than one ink colour - each "
+                "shows its most common",s->name,clashes);
+        }
+        free(rgba);
+        s->tiles=s->importedData;
+    }
+    const TileSetEntry *e=(s->engineName && !s->imported)?engineTiles(s->engineName):NULL;
+    if(!s->imported){
+        s->tiles=e?e->tiles:NULL;
+    }
+    if(e && e->size!=256*s->tileSize*s->tileSize/4){
+        fail("tile set \"%s\" has %dx%d tiles, but %s is %d bytes - %s tile graphics are %d",s->name,s->tileSize,
+            s->tileSize,s->engineName,e->size,(s->tileSize==16)?"16x16":"8x8",256*s->tileSize*s->tileSize/4);
     }
     if(s->tileCount>256){
         fail("tile set \"%s\" has %d tiles - the engine has 256 per tile set",s->name,s->tileCount);
     }
     for(int n=0;n<256;n++){
         const cJSON *tile=tileEntry(ts,n);
-        const uint8_t top=halfAttr(tile,ts,false,0);
-        s->attrs[n*2]=top;
-        s->attrs[(n*2)+1]=halfAttr(tile,ts,true,top);
+        const uint8_t top=suffixAttr(tile,ts,"",-1);
+        if(s->tileSize==16){
+            // Its 4 rows of attributes (4 pixels each): the top, then each row as the one above unless set - "Bottom"
+            // being the bottom half's (rows 2 and 3). The top quarters are rows 0 and 1, the bottom quarters 2 and 3,
+            // and left and right are the same
+            const uint8_t row1=suffixAttr(tile,ts,"Row1",top);
+            const uint8_t row2=suffixAttr(tile,ts,"Row2",suffixAttr(tile,ts,"Bottom",row1));
+            const uint8_t row3=suffixAttr(tile,ts,"Row3",row2);
+            const uint8_t rows[4]={top,row1,row2,row3};
+            for(int q=0;q<4;q++){
+                s->attrs[(n*8)+(q*2)]=rows[(q>>1)*2];
+                s->attrs[(n*8)+(q*2)+1]=rows[((q>>1)*2)+1];
+            }
+        }else{
+            s->attrs[n*2]=top;
+            s->attrs[(n*2)+1]=suffixAttr(tile,ts,"Bottom",top);
+        }
+        if(s->imported && !hasColourProps(tile)){
+            const int k=(s->tileSize==16)?8:2;
+            memcpy(s->attrs+(n*k),imageAttrs+(n*k),(size_t)k);
+        }
         uint8_t f=0;
         if(tile){
             f|=propBool(tile,"solid",false)?LEVEL_TILE_SOLID:0;
@@ -447,12 +941,25 @@ static void readTileSet(TileSet *s, const cJSON *ts)
             f|=propBool(tile,"hazard",false)?LEVEL_TILE_HAZARD:0;
             f|=propBool(tile,"collect",false)?LEVEL_TILE_COLLECT:0;
             f|=(uint8_t)propInt(tile,"flags",0);
+            // Its type (the project's TileType enum, or a number) in bits 4-7
+            const cJSON *type=property(tile,"tileType");
+            if(type){
+                char where[300];
+                snprintf(where,sizeof(where),"tile set \"%s\" tile %d",s->name,n);
+                long t=enumValue("TileType",type,where);
+                if(t<0){
+                    t=cJSON_IsNumber(type)?(long)type->valuedouble:(cJSON_IsString(type)?atol(type->valuestring):0);
+                }
+                if(t<0 || t>15){
+                    fail("%s: tileType is %ld - tile types are 0-15",where,t);
+                }
+                f=(uint8_t)((f&0x0f)|(t<<4));
+            }
         }
         s->flags[n]=f;
     }
     // Tile 0 is always empty, with attributes that leave the colours under it alone
-    s->attrs[0]=0x80;
-    s->attrs[1]=0x80;
+    memset(s->attrs,0x80,(s->tileSize==16)?8:2);
     s->flags[0]=0;
 
     s->animCount=0;
@@ -508,11 +1015,14 @@ typedef struct OutLayer {
     uint8_t *packed;
     int packedSize;
     int unpackedSize;
+    // One colour for the whole layer (its "ink", "paper", "bright" or "transparent" properties), if set
+    int singleColour, colour;
 } OutLayer;
 
 static RawLayer rawLayers[MAX_LAYERS];
 static int rawCount=0;
 static int mapW, mapH;
+static int mapTile=8;      // The map's tile size: 8 or 16
 
 static uint8_t *base64Decode(const char *s, size_t *outLen)
 {
@@ -1210,9 +1720,9 @@ static void collectObjects(TileSet *sets, int setCount)
                 if(!sheet){
                     fail("%s: its tile isn't in any tile set",where);
                 }
-                if(!sheet->spriteName){
-                    fail("%s is a tile from \"%s\" - tile objects have to be from sprite sheets (see levelconv sprites)",where,
-                        sheet->name);
+                if(!sheet->spriteName && !sheet->engineName){
+                    fail("%s is a tile from \"%s\", which is neither a sprite sheet (see levelconv sprites) nor engine tiles",
+                        where,sheet->name);
                 }
                 o->frame=g-sheet->firstGid;
                 o->flags|=(gid&FLIP_X_BIT)?LEVEL_OBJ_FLIP_X:0;
@@ -1237,7 +1747,20 @@ static void collectObjects(TileSet *sets, int setCount)
                 }
             }
             const cJSON *p;
+            const cJSON *tileProps=(sheet && !sheet->spriteName)?
+                cJSON_GetObjectItemCaseSensitive(tileEntry(sheet->json,o->frame),"properties"):NULL;
             cJSON_ArrayForEach(p,cJSON_GetObjectItemCaseSensitive(j,"properties")){
+                // A level tile's own properties (its colours, "solid", ...) come with it - they're the tile's, not the
+                // object's
+                const char *pn=jsonString(p,"name","");
+                bool fromTile=false;
+                const cJSON *tp;
+                cJSON_ArrayForEach(tp,tileProps){
+                    fromTile=fromTile || strcmp(jsonString(tp,"name",""),pn)==0;
+                }
+                if(fromTile && propID(pn)<0){
+                    continue;
+                }
                 setObjectProp(o,p,where);
             }
 
@@ -1321,6 +1844,7 @@ static void collectObjects(TileSet *sets, int setCount)
             TileSet *s=sets+(o->sheet-1000);
             if(!s->spriteUsed){
                 s->spriteUsed=true;
+                s->used=s->used || !s->spriteName;       // Level tiles: the level copies the tile set to RAM
                 s->sheetIndex=sheets++;
             }
             o->sheet=s->sheetIndex;
@@ -1356,7 +1880,7 @@ static void collectObjects(TileSet *sets, int setCount)
         if((o->flags&LEVEL_OBJ_SWITCH) && o->sheet>=0){
             for(int s=0;s<setCount;s++){
                 if(sets[s].spriteUsed && sets[s].sheetIndex==o->sheet && o->frame+1>=sets[s].frames){
-                    fail("switch %d (\"%s\") shows frame %d of \"%s\" - switches show the sheet's last frame when on, so need a later one, which it "
+                    fail("switch %d (\"%s\") shows frame %d of \"%s\" - switches show the sheet's last frame (or a level tile, the next tile) when on, so need a later one, which it "
                         "doesn't have",o->tiledID,o->name,o->frame,sets[s].name);
                 }
             }
@@ -1380,15 +1904,110 @@ static void writeCString(FILE *f, const char *s)
     fputc('"',f);
 }
 
+// A table of properties (an object's, or the level's own) in the level's .c file
+static void writeProps(FILE *f, const char *table, const OutProp *props, int count)
+{
+    char macro[256];
+    fprintf(f,"static const LevelProp %s[]={",table);
+    for(int k=0;k<count;k++){
+        const OutProp *p=props+k;
+        macroName(project.props[p->id],macro,sizeof(macro));
+        fprintf(f,"%s{LEVEL_PROP_%s,",k?",":"",macro);
+        switch(p->type){
+            case LEVEL_PROP_TYPE_FLOAT:
+            {
+                // A float literal needs a point (1f isn't valid C, 1.0f is)
+                char num[64];
+                snprintf(num,sizeof(num),"%.7g",p->f);
+                if(!strpbrk(num,".eEn")){
+                    strcat(num,".0");
+                }
+                fprintf(f,"LEVEL_PROP_TYPE_FLOAT,{.f=%sf}}",num);
+                break;
+            }
+            case LEVEL_PROP_TYPE_STRING:
+                fprintf(f,"LEVEL_PROP_TYPE_STRING,{.s=");
+                writeCString(f,p->s);
+                fprintf(f,"}}");
+                break;
+            case LEVEL_PROP_TYPE_OBJECT:
+                fprintf(f,"LEVEL_PROP_TYPE_OBJECT,{.i=%ld}}",p->i);
+                break;
+            default:
+                fprintf(f,"LEVEL_PROP_TYPE_INT,{.i=%ld}}",p->i);
+                break;
+        }
+    }
+    fprintf(f,"};\n");
+}
+
+// The level's own properties (Map > Map Properties in Tiled): its class's (e.g. Level's levelType, levelName and
+// levelDescription), with their defaults, then the map's own
+static OutObject levelProps;
+
+static void collectLevelProps(const cJSON *map)
+{
+    memset(&levelProps,0,sizeof(levelProps));
+    levelProps.slot=-1;
+    const char *where="the map";
+    const char *cls=jsonString(map,"class","");      // (a map's "type" is always "map")
+    if(cls[0]){
+        levelProps.cls=classID(cls);
+        if(levelProps.cls<0){
+            fail("the map has class \"%s\", which isn't in the Tiled project (%s)",cls,
+                project.json?project.path:"no project found");
+        }
+        const cJSON *m;
+        cJSON_ArrayForEach(m,cJSON_GetObjectItemCaseSensitive(project.classes[levelProps.cls-1],"members")){
+            setObjectProp(&levelProps,m,where);
+        }
+    }
+    const cJSON *p;
+    cJSON_ArrayForEach(p,cJSON_GetObjectItemCaseSensitive(map,"properties")){
+        setObjectProp(&levelProps,p,where);
+    }
+    // Links to objects: their indexes
+    for(int k=0;k<levelProps.propCount;k++){
+        OutProp *lp=levelProps.props+k;
+        if(lp->type!=LEVEL_PROP_TYPE_OBJECT){
+            continue;
+        }
+        lp->i=-1;
+        for(int m=0;m<objCount && lp->objectID;m++){
+            if(objects[m].tiledID==lp->objectID){
+                lp->i=m;
+            }
+        }
+    }
+}
+
+// A level property's int value (e.g. its levelType), or def
+static long levelPropInt(const char *name, long def)
+{
+    const int id=propID(name);
+    for(int k=0;k<levelProps.propCount && id>=0;k++){
+        if(levelProps.props[k].id==id){
+            return (levelProps.props[k].type==LEVEL_PROP_TYPE_FLOAT)?(long)levelProps.props[k].f:levelProps.props[k].i;
+        }
+    }
+    return def;
+}
+
 // The objects' tables in the level's .c file
 static void writeObjects(FILE *f, TileSet *sets, int setCount)
 {
-    char macro[256];
     if(objCount==0){
         return;
     }
-    fprintf(f,"\n// Sprite sheets\nstatic const LevelSpriteSheet sheets[]={\n");
-    for(int s=0;;s++){
+    // (objects can all be without sprites, e.g. only exits and entrances)
+    bool anySheets=false;
+    for(int n=0;n<setCount;n++){
+        anySheets=anySheets || sets[n].spriteUsed;
+    }
+    if(anySheets){
+        fprintf(f,"\n// Sprite sheets\nstatic const LevelSpriteSheet sheets[]={\n");
+    }
+    for(int s=0;anySheets;s++){
         const TileSet *found=NULL;
         for(int n=0;n<setCount;n++){
             if(sets[n].spriteUsed && sets[n].sheetIndex==s){
@@ -1404,44 +2023,22 @@ static void writeObjects(FILE *f, TileSet *sets, int setCount)
                 size=k;
             }
         }
-        fprintf(f,"    {%s,%s,%d,%d,%d},      // \"%s\" (SIZE_%dX%d)\n",found->spriteName,found->maskName,size,found->palette,
-            found->frames,found->name,found->spriteW,found->spriteH);
+        if(found->spriteName){
+            fprintf(f,"    {%s,%s,%d,%d,%d,0},      // \"%s\" (SIZE_%dX%d)\n",found->spriteName,found->maskName,size,
+                found->palette,found->frames,found->name,found->spriteW,found->spriteH);
+        }else{
+            // Level tiles: the level's RAM copy of the tile set
+            fprintf(f,"    {NULL,NULL,%d,%d,%d,%d},      // \"%s\" tiles (SIZE_%dX%d)\n",size,found->palette,
+                (found->frames>255)?255:found->frames,found->levelIndex+1,found->name,found->spriteW,found->spriteH);
+        }
     }
-    fprintf(f,"};\n\n// Objects' properties and paths\n");
+    fprintf(f,"%s\n// Objects' properties and paths\n",anySheets?"};\n":"");
     for(int n=0;n<objCount;n++){
         const OutObject *o=objects+n;
         if(o->propCount){
-            fprintf(f,"static const LevelProp object%dProps[]={",n);
-            for(int k=0;k<o->propCount;k++){
-                const OutProp *p=o->props+k;
-                macroName(project.props[p->id],macro,sizeof(macro));
-                fprintf(f,"%s{LEVEL_PROP_%s,",k?",":"",macro);
-                switch(p->type){
-                    case LEVEL_PROP_TYPE_FLOAT:
-                    {
-                        // A float literal needs a point (1f isn't valid C, 1.0f is)
-                        char num[64];
-                        snprintf(num,sizeof(num),"%.7g",p->f);
-                        if(!strpbrk(num,".eEn")){
-                            strcat(num,".0");
-                        }
-                        fprintf(f,"LEVEL_PROP_TYPE_FLOAT,{.f=%sf}}",num);
-                        break;
-                    }
-                    case LEVEL_PROP_TYPE_STRING:
-                        fprintf(f,"LEVEL_PROP_TYPE_STRING,{.s=");
-                        writeCString(f,p->s);
-                        fprintf(f,"}}");
-                        break;
-                    case LEVEL_PROP_TYPE_OBJECT:
-                        fprintf(f,"LEVEL_PROP_TYPE_OBJECT,{.i=%ld}}",p->i);
-                        break;
-                    default:
-                        fprintf(f,"LEVEL_PROP_TYPE_INT,{.i=%ld}}",p->i);
-                        break;
-                }
-            }
-            fprintf(f,"};\n");
+            char table[64];
+            snprintf(table,sizeof(table),"object%dProps",n);
+            writeProps(f,table,o->props,o->propCount);
         }
         if(o->pointCount){
             fprintf(f,"static const LevelPoint object%dPoints[]={",n);
@@ -1497,10 +2094,16 @@ static void writeTileSet(const TileSet *s, const char *outDir, char *setName, si
     if(!f){
         fail("can't write %s",path);
     }
+    // (an imported tile set's graphics are written from its image, to levels/gfx_<engine name>.c)
+    char gfxHeader[300];
+    snprintf(gfxHeader,sizeof(gfxHeader),s->imported?"gfx_%s.h":"tileDefs.h",s->engineName);
+    if(s->imported){
+        writeImportedGfx(outDir,jsonString(s->json,"image",""),s->engineName,s->importedData,NULL,NULL,s->importedSize*2);
+    }
     fprintf(f,"// Generated by levelconv from tile set \"%s\" (engine tiles %s) - shared by the levels using it\n\n"
-        "#include <stddef.h>\n#include \"tileset_%s.h\"\n#include \"tileDefs.h\"\n\nstatic const uint8_t attrs[512]={",s->name,
-        s->engineName,setName);
-    writeBytes(f,s->attrs,512);
+        "#include <stddef.h>\n#include \"tileset_%s.h\"\n#include \"%s\"\n\nstatic const uint8_t attrs[%d]={",s->name,
+        s->engineName,setName,gfxHeader,attrBytes(s));
+    writeBytes(f,s->attrs,attrBytes(s));
     fprintf(f,"};\nstatic const uint8_t flags[256]={");
     writeBytes(f,s->flags,256);
     fprintf(f,"};\n");
@@ -1519,8 +2122,8 @@ static void writeTileSet(const TileSet *s, const char *outDir, char *setName, si
         }
         fprintf(f,"};\n");
     }
-    fprintf(f,"\nconst LevelTileSet tileSet_%s={%s,attrs,flags,%d,%s};\n",setName,s->engineName,s->animCount,
-        s->animCount?"anims":"NULL");
+    fprintf(f,"\nconst LevelTileSet tileSet_%s={%s,attrs,flags,%d,%s,%d};\n",setName,s->engineName,s->animCount,
+        s->animCount?"anims":"NULL",s->tileSize);
     fclose(f);
 
     snprintf(path,sizeof(path),"%stileset_%s.h",outDir,setName);
@@ -1631,6 +2234,7 @@ static cJSON *loadMap(const char *mapPath)
 #else
     snprintf(tmp,sizeof(tmp),"/tmp/levelconv_%u.json",(unsigned)getpid());
 #endif
+    dirOf(tmp,exportDirectory,sizeof(exportDirectory));
     const int r=runTiledExport(mapPath,tmp);
     char *text=NULL;
     if(r==0){
@@ -1703,6 +2307,7 @@ static void convertLevel(const char *mapPath, const char *outDirArg)
     objLayerCount=0;
     char mapDir[1024];
     dirOf(mapPath,mapDir,sizeof(mapDir));
+    snprintf(mapDirectory,sizeof(mapDirectory),"%s",mapDir);
     findLevels(mapDir);
     if(strcmp(jsonString(map,"orientation","orthogonal"),"orthogonal")!=0){
         fail("the map has to be orthogonal");
@@ -1710,8 +2315,9 @@ static void convertLevel(const char *mapPath, const char *outDirArg)
     if(cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(map,"infinite"))){
         fail("infinite maps aren't supported - untick Infinite in the map properties");
     }
-    if(jsonInt(map,"tilewidth",8)!=8 || jsonInt(map,"tileheight",8)!=8){
-        fail("the map's tiles have to be 8x8");
+    mapTile=jsonInt(map,"tilewidth",8);
+    if((mapTile!=8 && mapTile!=16) || jsonInt(map,"tileheight",8)!=mapTile){
+        fail("the map's tiles have to be 8x8 or 16x16");
     }
     mapW=jsonInt(map,"width",0);
     mapH=jsonInt(map,"height",0);
@@ -1765,6 +2371,15 @@ static void convertLevel(const char *mapPath, const char *outDirArg)
         o->fgLayer=-1;
         o->tileSet=layerTileSet(r,sets,setCount);
         o->flags=(propBool(r->json,"wrapX",false)?LEVEL_WRAP_X:0)|(propBool(r->json,"wrapY",false)?LEVEL_WRAP_Y:0);
+        // A single colour layer: its own ink, paper and bright (white on black unless set), or transparent (its pixels
+        // only, leaving the colours under it alone)
+        if(property(r->json,"ink") || property(r->json,"paper") || property(r->json,"bright") ||
+            property(r->json,"transparent")){
+            const int ink=propColour(r->json,"ink"), paper=propColour(r->json,"paper");
+            o->singleColour=1;
+            o->colour=propBool(r->json,"transparent",false)?0x80:
+                ((propBool(r->json,"bright",false)?0x40:0)|(((paper<0)?0:paper)<<3)|((ink<0)?7:ink));
+        }
     }
     for(int n=0;n<rawCount;n++){
         RawLayer *r=rawLayers+n;
@@ -1818,6 +2433,13 @@ static void convertLevel(const char *mapPath, const char *outDirArg)
         sets[o->fgTileSet].used=true;
     }
     for(int n=0;n<setCount;n++){
+        sets[n].layerUsed=sets[n].used;
+    }
+
+    // Objects (read before the tile sets are numbered, as level tiles placed as objects need their tile set)
+    collectObjects(sets,setCount);
+    collectLevelProps(map);
+    for(int n=0;n<setCount;n++){
         if(!sets[n].used){
             continue;
         }
@@ -1829,11 +2451,18 @@ static void convertLevel(const char *mapPath, const char *outDirArg)
             fail("tile set \"%s\": no engine tile graphics called \"%s\" in engine/tileDefs.h",sets[n].name,
                 sets[n].engineName);
         }
+        if(sets[n].layerUsed && sets[n].tileSize!=mapTile){
+            fail("tile set \"%s\" has %dx%d tiles, but the map's are %dx%d - a map's tile layers use tile sets of its "
+                "tile size",sets[n].name,sets[n].tileSize,sets[n].tileSize,mapTile,mapTile);
+        }
         sets[n].levelIndex=levelSets++;
     }
 
-    // Pack
-    uint32_t ram=(uint32_t)levelSets*4096u;
+    // Pack (each tile set is copied to RAM: 4KB for 8x8 tiles, 16KB for 16x16)
+    uint32_t ram=0;
+    for(int n=0;n<setCount;n++){
+        ram+=sets[n].used?(uint32_t)(256*sets[n].tileSize*sets[n].tileSize/4):0u;
+    }
     int totalPacked=0, totalUnpacked=0;
     for(int n=0;n<outCount;n++){
         OutLayer *o=out+n;
@@ -1844,7 +2473,6 @@ static void convertLevel(const char *mapPath, const char *outDirArg)
     }
 
     // Objects (and an actor for each in RAM)
-    collectObjects(sets,setCount);
     ram+=(uint32_t)objCount*(uint32_t)sizeof(LevelActor);
     if(ram>LEVEL_RAM_SIZE){
         fail("the level needs %u bytes of RAM - more than LEVEL_RAM_SIZE (%d, engine/defs.h)",ram,LEVEL_RAM_SIZE);
@@ -1868,6 +2496,12 @@ static void convertLevel(const char *mapPath, const char *outDirArg)
             writeTileSet(sets+n,outDir,setName,sizeof(setName));
             fprintf(f,"#include \"tileset_%s.h\"\n",setName);
         }
+        // Imported sprite sheets' graphics, from their images
+        if(sets[n].spriteUsed && sets[n].imported){
+            writeImportedGfx(outDir,jsonString(sets[n].json,"image",""),sets[n].spriteName,sets[n].importedData,
+                sets[n].maskName,sets[n].importedMask,sets[n].importedSize);
+            fprintf(f,"#include \"gfx_%s.h\"\n",sets[n].spriteName);
+        }
     }
     for(int n=0;n<outCount;n++){
         const OutLayer *o=out+n;
@@ -1890,12 +2524,16 @@ static void convertLevel(const char *mapPath, const char *outDirArg)
     for(int n=0;n<outCount;n++){
         const OutLayer *o=out+n;
         const int px=(int)(o->raw->parallaxX*256.0+0.5), py=(int)(o->raw->parallaxY*256.0+0.5);
-        fprintf(f,"    {layer%dData,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,\"%s\"},\n",n,o->packedSize,o->width,o->height,
-            o->tileX,o->tileY,o->raw->offsetX,o->raw->offsetY,px,py,o->fgCount,sets[o->tileSet].levelIndex,
-            sets[o->fgTileSet].levelIndex,o->layer,o->fgLayer,o->flags,o->raw->name);
+        fprintf(f,"    {layer%dData,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,\"%s\",%d,0x%02X},\n",n,o->packedSize,o->width,
+            o->height,o->tileX,o->tileY,o->raw->offsetX,o->raw->offsetY,px,py,o->fgCount,sets[o->tileSet].levelIndex,
+            sets[o->fgTileSet].levelIndex,o->layer,o->fgLayer,o->flags,o->raw->name,o->singleColour,o->colour);
     }
     fprintf(f,"};\n");
     writeObjects(f,sets,setCount);
+    if(levelProps.propCount){
+        fprintf(f,"\n// The level's own properties\n");
+        writeProps(f,"levelProps",levelProps.props,levelProps.propCount);
+    }
     int sheetCount=0;
     for(int n=0;n<setCount;n++){
         sheetCount+=sets[n].spriteUsed?1:0;
@@ -1904,9 +2542,9 @@ static void convertLevel(const char *mapPath, const char *outDirArg)
     for(int n=0;n<objCount;n++){
         stateBytes+=(objects[n].slot>=0)?1:0;
     }
-    fprintf(f,"\nconst LevelDef level_%s={\"%s\",%d,%d,%u,%d,%d,%d,%d,tileSets,layers,%s,%s,%d,%d};\n",name,base,mapW,mapH,ram,
-        levelSets,outCount,sheetCount,objCount,sheetCount?"sheets":"NULL",objCount?"objects":"NULL",levelID(mapPath),
-        stateBytes);
+    fprintf(f,"\nconst LevelDef level_%s={\"%s\",%d,%d,%u,%d,%d,%d,%d,tileSets,layers,%s,%s,%d,%d,%d,%s,%d,%ld};\n",name,base,mapW,mapH,
+        ram,levelSets,outCount,sheetCount,objCount,sheetCount?"sheets":"NULL",objCount?"objects":"NULL",levelID(mapPath),
+        stateBytes,mapTile,levelProps.propCount?"levelProps":"NULL",levelProps.propCount,levelPropInt("levelType",0));
     fclose(f);
 
     snprintf(path,sizeof(path),"%slevel_%s.h",outDir,name);
@@ -1966,10 +2604,6 @@ static void convertLevel(const char *mapPath, const char *outDirArg)
 // Tile sets for Tiled
 // ---------------------------------------------------------------------------------------------------------------------
 
-static const uint8_t zxColours[16][3]={
-    {0,0,0},{0,0,0xD7},{0xD7,0,0},{0xD7,0,0xD7},{0,0xD7,0},{0,0xD7,0xD7},{0xD7,0xD7,0},{0xD7,0xD7,0xD7},
-    {0,0,0},{0,0,0xFF},{0xFF,0,0},{0xFF,0,0xFF},{0,0xFF,0},{0,0xFF,0xFF},{0xFF,0xFF,0},{0xFF,0xFF,0xFF},
-};
 
 static void writeJSON(const char *path, cJSON *json)
 {
@@ -2069,6 +2703,11 @@ static void makeSpriteSheet(const char *tsPath, const char *def, const char *mas
 {
     currentFile=tsPath;
     cJSON *ts=readJSONFile(tsPath);
+    if(ts && propBool(ts,"imported",false)){
+        printf("%s: imported from its image - nothing to redraw (edit the image, then convert the levels)\n",tsPath);
+        cJSON_Delete(ts);
+        return;
+    }
     if(!ts){
         int w=0, h=0;
         if(!def || !mask || !size || sscanf(size,"%dx%d",&w,&h)!=2){
@@ -2119,6 +2758,12 @@ static void makeTileSet(const char *tsPath, const char *engineName)
 {
     currentFile=tsPath;
     cJSON *ts=readJSONFile(tsPath);
+    if(ts && propBool(ts,"imported",false)){
+        // Its image is the artist's: never drawn over
+        printf("%s: imported from its image - nothing to redraw (edit the image, then convert the levels)\n",tsPath);
+        cJSON_Delete(ts);
+        return;
+    }
     if(ts && propString(ts,"engineSprite")){
         // A sprite sheet - redraw it
         drawSpriteSheet(tsPath,ts);
@@ -2132,14 +2777,19 @@ static void makeTileSet(const char *tsPath, const char *engineName)
             fail("doesn't exist - give the engine tile graphics to make it for, e.g. levelconv tileset %s levelDemoTileDef",
                 tsPath);
         }
-        // A new tile set: 256 8x8 tiles, the engine graphics they show, and default colours
+        // A new tile set: 256 tiles (8x8, or 16x16 for a 16KB array), the engine graphics they show, and default colours
+        const TileSetEntry *e=engineTiles(engineName);
+        if(!e){
+            fail("no engine tile graphics called \"%s\" in engine/tileDefs.h",engineName);
+        }
+        const int size=(e->size==16384)?16:8;
         ts=cJSON_CreateObject();
         cJSON_AddNumberToObject(ts,"columns",16);
         char image[300];
         snprintf(image,sizeof(image),"%s.png",base);
         cJSON_AddStringToObject(ts,"image",image);
-        cJSON_AddNumberToObject(ts,"imageheight",128);
-        cJSON_AddNumberToObject(ts,"imagewidth",128);
+        cJSON_AddNumberToObject(ts,"imageheight",16*size);
+        cJSON_AddNumberToObject(ts,"imagewidth",16*size);
         cJSON_AddNumberToObject(ts,"margin",0);
         cJSON_AddStringToObject(ts,"name",base);
         cJSON *props=cJSON_AddArrayToObject(ts,"properties");
@@ -2160,8 +2810,8 @@ static void makeTileSet(const char *tsPath, const char *engineName)
         cJSON_AddNumberToObject(ts,"spacing",0);
         cJSON_AddNumberToObject(ts,"tilecount",256);
         cJSON_AddStringToObject(ts,"tiledversion","1.12.2");
-        cJSON_AddNumberToObject(ts,"tileheight",8);
-        cJSON_AddNumberToObject(ts,"tilewidth",8);
+        cJSON_AddNumberToObject(ts,"tileheight",size);
+        cJSON_AddNumberToObject(ts,"tilewidth",size);
         cJSON_AddStringToObject(ts,"type","tileset");
         cJSON_AddStringToObject(ts,"version","1.10");
         char *out=cJSON_Print(ts);
@@ -2185,16 +2835,19 @@ static void makeTileSet(const char *tsPath, const char *engineName)
         fail("no engine tile graphics called \"%s\" in engine/tileDefs.h",s.engineName);
     }
 
-    // Draw the tiles in their colours (paper left clear where the tile's attributes are transparent)
-    uint8_t rgba[128*128*4];
+    // Draw the tiles in their colours (paper left clear where the tile's attributes are transparent), 16 across
+    const int size=s.tileSize, w=16*size;
+    static uint8_t rgba[256*256*4];
     for(int t=0;t<256;t++){
-        for(int r=0;r<8;r++){
-            const uint8_t attr=s.attrs[(t*2)+((r<4)?0:1)];
-            const uint8_t bits=s.tiles[(t*8)+r];
-            const int bright=(attr&0x40)?8:0;
-            for(int c=0;c<8;c++){
-                uint8_t *px=rgba+((((t/16)*8+r)*128)+((t%16)*8)+c)*4;
-                const bool on=(bits&(0x80>>c))!=0;
+        for(int r=0;r<size;r++){
+            for(int c=0;c<size;c++){
+                // 8x8 tiles: a byte a row, 2 attributes; 16x16: 2 bytes a row (left, right), 2 attributes a quarter
+                const uint8_t bits=(size==16)?s.tiles[(t*32)+(r*2)+(c>>3)]:s.tiles[(t*8)+r];
+                const uint8_t attr=(size==16)?s.attrs[(t*8)+(((((r>>3)<<1)|(c>>3)))*2)+(((r&7)>=4)?1:0)]:
+                    s.attrs[(t*2)+((r<4)?0:1)];
+                const int bright=(attr&0x40)?8:0;
+                uint8_t *px=rgba+(((((t/16)*size)+r)*w)+((t%16)*size)+c)*4;
+                const bool on=(bits&(0x80>>(c&7)))!=0;
                 if(t==0 || ((attr&0x80) && !on)){
                     px[0]=px[1]=px[2]=px[3]=0;
                     continue;
@@ -2208,7 +2861,7 @@ static void makeTileSet(const char *tsPath, const char *engineName)
         }
     }
     size_t pngSize=0;
-    void *png=tdefl_write_image_to_png_file_in_memory(rgba,128,128,4,&pngSize);
+    void *png=tdefl_write_image_to_png_file_in_memory(rgba,w,w,4,&pngSize);
     char dir[1024], pngPath[1400];
     dirOf(tsPath,dir,sizeof(dir));
     snprintf(pngPath,sizeof(pngPath),"%s%s",dir,jsonString(ts,"image","tiles.png"));
@@ -2223,6 +2876,165 @@ static void makeTileSet(const char *tsPath, const char *engineName)
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
+
+// A C identifier (for an imported image's graphics array)
+static void checkIdentifier(const char *name)
+{
+    bool ok=name && (isalpha((unsigned char)name[0]) || name[0]=='_');
+    for(const char *c=name;ok && *c;c++){
+        ok=isalnum((unsigned char)*c) || *c=='_';
+    }
+    if(!ok){
+        fail("\"%s\" isn't a C name for the graphics (letters, digits and _, e.g. caveTiles)",name?name:"");
+    }
+}
+
+static void setProperty(cJSON *ts, const char *name, const char *type, cJSON *value, const char *propertyType)
+{
+    cJSON *props=cJSON_GetObjectItemCaseSensitive(ts,"properties");
+    if(!props){
+        props=cJSON_AddArrayToObject(ts,"properties");
+    }
+    for(int n=cJSON_GetArraySize(props)-1;n>=0;n--){
+        if(strcmp(jsonString(cJSON_GetArrayItem(props,n),"name",""),name)==0){
+            cJSON_DeleteItemFromArray(props,n);
+        }
+    }
+    cJSON *p=cJSON_CreateObject();
+    cJSON_AddStringToObject(p,"name",name);
+    if(propertyType){
+        cJSON_AddStringToObject(p,"propertytype",propertyType);
+    }
+    cJSON_AddStringToObject(p,"type",type);
+    cJSON_AddItemToObject(p,"value",value);
+    cJSON_AddItemToArray(props,p);
+}
+
+static void setNumber(cJSON *o, const char *name, double v)
+{
+    cJSON_DeleteItemFromObjectCaseSensitive(o,name);
+    cJSON_AddNumberToObject(o,name,v);
+}
+
+static void setString(cJSON *o, const char *name, const char *v)
+{
+    cJSON_DeleteItemFromObjectCaseSensitive(o,name);
+    cJSON_AddStringToObject(o,name,v);
+}
+
+// The Tiled tile set for an imported image (made, or updated - keeping its tiles' properties, animations and other
+// settings), next to the image: its image, size and graphics name
+static cJSON *importedTileSet(const char *pngPath, char *tsPath, size_t tsPathSize, int imgW, int imgH, int tileW,
+    int tileH)
+{
+    char dir[1024], base[256], image[300];
+    dirOf(pngPath,dir,sizeof(dir));
+    baseName(pngPath,base,sizeof(base));
+    snprintf(tsPath,tsPathSize,"%s%s.tsj",dir,base);
+    snprintf(image,sizeof(image),"%s.png",base);
+    cJSON *ts=readJSONFile(tsPath);
+    if(ts && !propBool(ts,"imported",false)){
+        fail("%s is already a tile set of engine graphics, not an imported one - import the image under another name",
+            tsPath);
+    }
+    if(!ts){
+        ts=cJSON_CreateObject();
+        cJSON_AddStringToObject(ts,"name",base);
+        cJSON_AddStringToObject(ts,"type","tileset");
+        cJSON_AddStringToObject(ts,"version","1.10");
+        cJSON_AddStringToObject(ts,"tiledversion","1.12.2");
+        setNumber(ts,"margin",0);
+        setNumber(ts,"spacing",0);
+        setProperty(ts,"imagePaper","string",cJSON_CreateString("black"),"ZXColour");
+    }
+    const int cols=imgW/tileW, rows=imgH/tileH;
+    setString(ts,"image",image);
+    setNumber(ts,"imagewidth",imgW);
+    setNumber(ts,"imageheight",imgH);
+    setNumber(ts,"columns",cols);
+    setNumber(ts,"tilecount",cols*rows);
+    setNumber(ts,"tilewidth",tileW);
+    setNumber(ts,"tileheight",tileH);
+    setProperty(ts,"imported","bool",cJSON_CreateTrue(),NULL);
+    snprintf(mapDirectory,sizeof(mapDirectory),"%s",dir);
+    return ts;
+}
+
+// levelconv import <image.png> <graphics name> [8|16]: a PNG of tiles (left to right, then down; the first is tile 0,
+// always empty) as a Tiled tile set, and the engine tile graphics (levels/gfx_<name>.c)
+static void importTileImage(const char *pngPath, const char *name, int size)
+{
+    currentFile=pngPath;
+    checkIdentifier(name);
+    if(size!=8 && size!=16){
+        fail("tiles are 8 or 16 pixels square, not %d",size);
+    }
+    int w=0, h=0;
+    uint8_t *rgba=loadPNG(pngPath,&w,&h);
+    if(!rgba){
+        fail("can't read it - it has to be a PNG");
+    }
+    free(rgba);
+    char tsPath[1300], outDir[1100];
+    cJSON *ts=importedTileSet(pngPath,tsPath,sizeof(tsPath),w,h,size,size);
+    setProperty(ts,"engineTiles","string",cJSON_CreateString(name),NULL);
+    writeJSON(tsPath,ts);
+
+    // Read back as the converter will, and write its graphics
+    TileSet s;
+    memset(&s,0,sizeof(s));
+    readTileSet(&s,ts);
+    snprintf(outDir,sizeof(outDir),"%s../",mapDirectory);
+    writeImportedGfx(outDir,jsonString(ts,"image",""),name,s.importedData,NULL,NULL,s.importedSize*2);
+    printf("%s: %d tiles of %dx%d from %s, graphics %s in %sgfx_%s.c\n",tsPath,(w/size)*(h/size),size,size,pngPath,
+        name,outDir,name);
+    free(s.importedData);
+    cJSON_Delete(ts);
+}
+
+// levelconv importsprites <image.png> <graphics name> <width>x<height> [palette]: a PNG of sprite frames (left to
+// right, then down) as a Tiled sprite sheet, and the engine sprite graphics and masks (levels/gfx_<name>.c - the
+// masks are <name>Mask)
+static void importSpriteImage(const char *pngPath, const char *name, const char *sizeText, int pal)
+{
+    currentFile=pngPath;
+    checkIdentifier(name);
+    int fw=0, fh=0;
+    if(!sizeText || sscanf(sizeText,"%dx%d",&fw,&fh)!=2 || !spriteSizeValid(fw,fh)){
+        fail("give the sprites' size, one of the engine's (e.g. 16x16 or 24x24)");
+    }
+    int w=0, h=0;
+    uint8_t *rgba=loadPNG(pngPath,&w,&h);
+    if(!rgba){
+        fail("can't read it - it has to be a PNG");
+    }
+    free(rgba);
+    if(w%fw || h%fh){
+        fail("it's %dx%d - not a whole number of %dx%d frames",w,h,fw,fh);
+    }
+    char tsPath[1300], outDir[1100], maskName[300];
+    snprintf(maskName,sizeof(maskName),"%sMask",name);
+    cJSON *ts=importedTileSet(pngPath,tsPath,sizeof(tsPath),w,h,fw,fh);
+    setProperty(ts,"engineSprite","string",cJSON_CreateString(name),NULL);
+    setProperty(ts,"engineMask","string",cJSON_CreateString(maskName),NULL);
+    if(pal>=0 || !property(ts,"palette")){
+        setProperty(ts,"palette","int",cJSON_CreateNumber((pal<0)?0:pal),NULL);
+    }
+    // Tile objects' positions are their centres, as sprites' are
+    setString(ts,"objectalignment","center");
+    writeJSON(tsPath,ts);
+
+    TileSet s;
+    memset(&s,0,sizeof(s));
+    readTileSet(&s,ts);
+    snprintf(outDir,sizeof(outDir),"%s../",mapDirectory);
+    writeImportedGfx(outDir,jsonString(ts,"image",""),name,s.importedData,maskName,s.importedMask,s.importedSize);
+    printf("%s: %d frames of %dx%d from %s, graphics %s and %s in %sgfx_%s.c\n",tsPath,s.frames,fw,fh,pngPath,name,
+        maskName,outDir,name);
+    free(s.importedData);
+    free(s.importedMask);
+    cJSON_Delete(ts);
+}
 
 static void convertAll(const char *dir, const char *outDir)
 {
@@ -2280,6 +3092,12 @@ static void usage(void)
         "                                                 make a Tiled tile set of engine sprite graphics (e.g.\n"
         "                                                 sprite24x24Def mask24x24Def 24x24 5), to place sprites as\n"
         "                                                 tile objects - or redraw one\n"
+        "levelconv import <tiles.png> <graphics name> [8|16]\n"
+        "                                                 import a PNG of 8x8 (or 16x16) tiles: makes tiles.tsj next to\n"
+        "                                                 it, and the engine graphics in levels/gfx_<name>.c\n"
+        "levelconv importsprites <sheet.png> <graphics name> <width>x<height> [palette]\n"
+        "                                                 import a PNG of sprite frames: makes sheet.tsj next to it, and\n"
+        "                                                 the engine graphics and masks (<name>Mask) in levels/gfx_<name>.c\n"
         "options: --tiled <path to tiled.exe>\n");
     exit(2);
 }
@@ -2309,6 +3127,10 @@ int main(int argc, char **argv)
         makeTileSet(arg1,arg2);
     }else if(strcmp(cmd,"sprites")==0){
         makeSpriteSheet(arg1,arg2,(a+3<argc)?argv[a+3]:NULL,(a+4<argc)?argv[a+4]:NULL,(a+5<argc)?atoi(argv[a+5]):0);
+    }else if(strcmp(cmd,"import")==0 && arg2){
+        importTileImage(arg1,arg2,(a+3<argc)?atoi(argv[a+3]):8);
+    }else if(strcmp(cmd,"importsprites")==0 && arg2){
+        importSpriteImage(arg1,arg2,(a+3<argc)?argv[a+3]:NULL,(a+4<argc)?atoi(argv[a+4]):-1);
     }else{
         usage();
     }

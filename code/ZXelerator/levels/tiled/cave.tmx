@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="48" height="24" tilewidth="8" tileheight="8" infinite="0" nextlayerid="4" nextobjectid="5">
+<map version="1.10" class="Level" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="48" height="24" tilewidth="8" tileheight="8" infinite="0" nextlayerid="4" nextobjectid="6">
+ <properties>
+  <property name="levelName" value="The Cave"/>
+  <property name="levelDescription" value="Find the key to the locked door"/>
+ </properties>
  <tileset firstgid="1" source="demoTiles.tsj"/>
  <tileset firstgid="257" source="player.tsj"/>
  <tileset firstgid="273" source="enemy.tsj"/>
@@ -87,5 +91,14 @@
    </properties>
   </object>
   <object id="3" name="door key" type="Key" gid="298" x="256" y="68" width="16" height="8"/>
+  <object id="4" name="to demo16" type="Exit" gid="303" x="344" y="144" width="16" height="32">
+   <properties>
+    <property name="toEntrance" value="from cave"/>
+    <property name="toLevel" type="file" value="demo16.tmx"/>
+   </properties>
+  </object>
+  <object id="5" name="from demo16" type="Entrance" x="344" y="149">
+   <point/>
+  </object>
  </objectgroup>
 </map>

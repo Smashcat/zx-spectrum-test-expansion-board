@@ -1,0 +1,29 @@
+{
+	"columns":	1,
+	"image":	"turretGun.png",
+	"imageheight":	16,
+	"imagewidth":	16,
+	"margin":	0,
+	"name":	"turretGun",
+	"objectalignment":	"center",
+	"properties":	[{
+			"name":	"engineMask",
+			"type":	"string",
+			"value":	"turretGunMaskDef"
+		}, {
+			"name":	"engineSprite",
+			"type":	"string",
+			"value":	"turretGunDef"
+		}, {
+			"name":	"palette",
+			"type":	"int",
+			"value":	0
+		}],
+	"spacing":	0,
+	"tilecount":	1,
+	"tiledversion":	"1.12.2",
+	"tileheight":	16,
+	"tilewidth":	16,
+	"type":	"tileset",
+	"version":	"1.10"
+}

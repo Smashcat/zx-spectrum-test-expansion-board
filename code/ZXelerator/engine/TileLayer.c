@@ -23,6 +23,8 @@ void initLayers(void){
         t->opaque=false;
         t->colourAware=true;
         t->follow=-1;
+        t->tile16=false;
+        t->colour=LAYER_COLOUR_CELLS;
         clearLayerTransform(n);
         clearLayerLines(n,0,TILE_LAYER_HEIGHT);
     }
@@ -137,6 +139,40 @@ void setTileDefSet(int layerIX, const uint8_t *setRef)
     tileLayer[layerIX].tileDefPtr=setRef;
 }
 
+void setLayerTileSize(int layerIX, int size)
+{
+    tileLayer[layerIX].tile16=(size==16);
+}
+
+void setLayerColour(int layerIX, int colour)
+{
+    tileLayer[layerIX].colour=(int16_t)((colour<0)?LAYER_COLOUR_CELLS:(colour&0xff));
+}
+
+// A single colour tile layer's attributes: the whole screen in its colour (or left alone). True if the layer is single
+// colour - its cells' colours aren't drawn
+static bool singleColourAttrs(const TileLayer *tL)
+{
+    if(tL->colour<0){
+        return false;
+    }
+    if((tL->colour&0x80)==0){
+        memset(renderAttrBuffer,tL->colour,SCREEN_WIDTH_CELLS*ATTR_HEIGHT_CELLS);
+    }
+    return true;
+}
+
+// Where a tile layer's masks start, after its 256 tiles
+#define MASK_OFFSET(tL) ((tL)->tile16?(256*32):(256*8))
+
+// The byte of a tile's graphics holding layer pixel (lx,ly), for the tile number in that pixel's cell: 8x8 tiles are a
+// byte a row; on 16x16 layers the cell is a quarter of the tile, and rows are 2 bytes (left, right). Always inlined
+// with t16 a constant, so each caller gets a version for each size with no extra work for 8x8 layers
+static inline __attribute__((always_inline)) uint32_t tileByte(uint32_t tile, uint32_t lx, uint32_t ly, const int t16)
+{
+    return t16?((tile<<5)|((ly&15)<<1)|((lx>>3)&1)):((tile<<3)|(ly&7));
+}
+
 //__not_in_flash_func(
 //    void blitLayerToRenderBuffer(int layerIX)
 //)
@@ -188,25 +224,57 @@ void blitLayerToScratchBuffers(int layerIX)
     for(int destRow=0;destRow<SCREEN_HEIGHT_LINES;destRow++){
 
         // Go through 32 cols for each pixel row, picking up the correct char defs for the 8x8 cell, and scan-line offset
-        //TODO need to actually go through 33 cols, so that left shifting will scroll on the tile to the right of the display
-        const uint8_t *tDef=tL->tileDefPtr+srcRowOffY; // Current line offset added, for quicker lookup
+        // (and the 33rd, carry, for shifting in from the right)
         int yOff=srcRow*TILE_LAYER_WIDTH;
         int srcCol=srcStartX;
-        for(int destCol=0;destCol<SCREEN_WIDTH_CELLS;destCol++){
-            int tileDef=*(tileData+yOff+srcCol);
-            *spr++=*(tDef+(tileDef*8));
-            *smr++=*(tDef+(tileDef*8)+(256*8));
-            if(++srcCol==TILE_LAYER_WIDTH){
-                srcCol=0;
+        uint8_t carry, carryM;
+        if(tL->tile16){
+            // 16x16 tiles: each cell is a quarter of a tile, and a pixel row of the tile is 2 bytes (left, right) - so
+            // look each tile up once, and copy both its halves. If the screen starts on a right half, that's done first
+            const uint8_t *tRow=tL->tileDefPtr+(((((uint32_t)srcRow&1)<<3)+(uint32_t)srcRowOffY)<<1);
+            int destCol=0;
+            if(srcCol&1){
+                const uint8_t *d=tRow+((uint32_t)tileData[yOff+srcCol]<<5)+1;
+                *spr++=d[0];
+                *smr++=d[256*32];
+                destCol=1;
+                srcCol=(srcCol+1)&(TILE_LAYER_WIDTH-1);
             }
+            for(;destCol<SCREEN_WIDTH_CELLS-1;destCol+=2){
+                const uint8_t *d=tRow+((uint32_t)tileData[yOff+srcCol]<<5);
+                memcpy(spr,d,2);
+                memcpy(smr,d+(256*32),2);
+                spr+=2;
+                smr+=2;
+                srcCol=(srcCol+2)&(TILE_LAYER_WIDTH-1);
+            }
+            if(destCol<SCREEN_WIDTH_CELLS){
+                const uint8_t *d=tRow+((uint32_t)tileData[yOff+srcCol]<<5);
+                *spr++=d[0];
+                *smr++=d[256*32];
+                srcCol=(srcCol+1)&(TILE_LAYER_WIDTH-1);
+            }
+            const uint8_t *d=tRow+((uint32_t)tileData[yOff+srcCol]<<5)+(srcCol&1);
+            carry=d[0];
+            carryM=d[256*32];
+        }else{
+            const uint8_t *tDef=tL->tileDefPtr+srcRowOffY; // Current line offset added, for quicker lookup
+            for(int destCol=0;destCol<SCREEN_WIDTH_CELLS;destCol++){
+                int tileDef=*(tileData+yOff+srcCol);
+                *spr++=*(tDef+(tileDef*8));
+                *smr++=*(tDef+(tileDef*8)+(256*8));
+                if(++srcCol==TILE_LAYER_WIDTH){
+                    srcCol=0;
+                }
+            }
+            const int tileDef=*(tileData+yOff+srcCol);
+            carry=*(tDef+(tileDef*8));
+            carryM=*(tDef+(tileDef*8)+(256*8));
         }
 
         // Now shift pixels left if necessary
 
         if(leftShift){
-            int tileDef=*(tileData+yOff+srcCol);
-            uint8_t carry=*(tDef+(tileDef*8));
-            uint8_t carryM=*(tDef+(tileDef*8)+(256*8));
             const int ramOff=(destRow*SCREEN_WIDTH_CELLS)+31;
             uint8_t *rotP=scratchPixRam+ramOff;
             uint8_t *rotM=scratchMaskRam+ramOff;
@@ -234,7 +302,12 @@ void blitLayerToScratchBuffers(int layerIX)
 
     }
 
-    // Now draw attributes directly to the render buffer. Any attribute 
+    // A single colour layer colours the whole screen (or nothing), instead of its cells' colours
+    if(singleColourAttrs(tL)){
+        return;
+    }
+
+    // Now draw attributes directly to the render buffer. Any attribute
     // color with flashing bit set means (don't update this cell)
     srcRow=((srcStartY*8)+srcRowOffY)/4;
     const uint8_t *am=tL->attrMap;
@@ -577,10 +650,64 @@ static inline int32_t wrapFixed(int64_t p, int32_t lim)
     return (r<0)?r+lim:r;
 }
 
+// One screen line of a transformed tile layer: screen pixel x samples layer pixel (u+(x*du), v+(x*dv)), 16.16 fixed
+// point. Always inlined with t16 a constant, so 8x8 and 16x16 layers each get their own version
+static inline __attribute__((always_inline)) void transformedTileLine(const uint8_t *defs, const uint8_t *mDefs,
+    const uint8_t *map, uint32_t u, uint32_t v, const uint32_t du, const uint32_t dv, uint8_t *spr, uint8_t *smr,
+    const int t16)
+{
+    if(dv==0){
+        // Not rotated on this line, so it reads a single pixel row of the map, and neighbouring pixels usually
+        // share a tile, so only look up the tile when the column changes
+        const uint32_t vi=v>>16;
+        const uint8_t *rowMap=map+((vi&0x1f8)<<3);
+        const uint32_t rowOff=t16?((vi&15)<<1):(vi&7);
+        const uint8_t *rowDefs=defs+rowOff;
+        const uint8_t *rowMDefs=mDefs+rowOff;
+        uint32_t lastCol=0xffffffff;
+        uint32_t pb=0, mb=0xff;
+        for(int cx=0;cx<SCREEN_WIDTH_CELLS;cx++){
+            uint32_t pix=0, msk=0;
+            for(int b=0;b<8;b++){
+                const uint32_t ui=u>>16;
+                const uint32_t col=(ui>>3)&(TILE_LAYER_WIDTH-1);
+                if(col!=lastCol){
+                    lastCol=col;
+                    const uint32_t tileOff=t16?(((uint32_t)rowMap[col]<<5)|(col&1)):((uint32_t)rowMap[col]<<3);
+                    pb=rowDefs[tileOff];
+                    mb=rowMDefs[tileOff];
+                }
+                const uint32_t sh=(~ui)&7;
+                pix=(pix<<1)|((pb>>sh)&1);
+                msk=(msk<<1)|((mb>>sh)&1);
+                u+=du;
+            }
+            *spr++=(uint8_t)pix;
+            *smr++=(uint8_t)msk;
+        }
+    }else{
+        for(int cx=0;cx<SCREEN_WIDTH_CELLS;cx++){
+            uint32_t pix=0, msk=0;
+            for(int b=0;b<8;b++){
+                const uint32_t ui=u>>16;
+                const uint32_t vi=v>>16;
+                const uint32_t tileOff=tileByte(map[((vi&0x1f8)<<3)|((ui>>3)&(TILE_LAYER_WIDTH-1))],ui,vi,t16);
+                const uint32_t sh=(~ui)&7;
+                pix=(pix<<1)|((defs[tileOff]>>sh)&1);
+                msk=(msk<<1)|((mDefs[tileOff]>>sh)&1);
+                u+=du;
+                v+=dv;
+            }
+            *spr++=(uint8_t)pix;
+            *smr++=(uint8_t)msk;
+        }
+    }
+}
+
 static void __no_inline_not_in_flash_func(blitTileLayerTransformed)(const TileLayer *tL)
 {
     const uint8_t *defs=tL->tileDefPtr;
-    const uint8_t *mDefs=defs+(256*8);
+    const uint8_t *mDefs=defs+MASK_OFFSET(tL);
     const uint8_t *map=tL->tileMap;
     uint8_t *spr=scratchPixRam;
     uint8_t *smr=scratchMaskRam;
@@ -588,61 +715,30 @@ static void __no_inline_not_in_flash_func(blitTileLayerTransformed)(const TileLa
 
     // The tile map is 512x512 pixels and always wraps, so positions are simply masked (unsigned maths wraps negatives too)
     for(int y=0;y<SCREEN_HEIGHT_LINES;y++){
-        if(!getLayerLine(tL,y,&lt)){
-            spr+=SCREEN_WIDTH_CELLS;
-            smr+=SCREEN_WIDTH_CELLS;
-            continue;
+        if(getLayerLine(tL,y,&lt)){
+            if(tL->tile16){
+                transformedTileLine(defs,mDefs,map,(uint32_t)lt.u,(uint32_t)lt.v,(uint32_t)lt.dudx,(uint32_t)lt.dvdx,spr,
+                    smr,1);
+            }else{
+                transformedTileLine(defs,mDefs,map,(uint32_t)lt.u,(uint32_t)lt.v,(uint32_t)lt.dudx,(uint32_t)lt.dvdx,spr,
+                    smr,0);
+            }
         }
-        uint32_t u=(uint32_t)lt.u;
-        uint32_t v=(uint32_t)lt.v;
-        const uint32_t du=(uint32_t)lt.dudx;
-        const uint32_t dv=(uint32_t)lt.dvdx;
+        spr+=SCREEN_WIDTH_CELLS;
+        smr+=SCREEN_WIDTH_CELLS;
+    }
 
-        if(dv==0){
-            // Not rotated on this line, so it reads a single pixel row of the map, and neighbouring pixels usually
-            // share a tile, so only look up the tile when the column changes
-            const uint32_t vi=v>>16;
-            const uint8_t *rowMap=map+((vi&0x1f8)<<3);
-            const uint8_t *rowDefs=defs+(vi&7);
-            const uint8_t *rowMDefs=mDefs+(vi&7);
-            uint32_t lastCol=0xffffffff;
-            uint32_t pb=0, mb=0xff;
-            for(int cx=0;cx<SCREEN_WIDTH_CELLS;cx++){
-                uint32_t pix=0, msk=0;
-                for(int b=0;b<8;b++){
-                    const uint32_t ui=u>>16;
-                    const uint32_t col=(ui>>3)&(TILE_LAYER_WIDTH-1);
-                    if(col!=lastCol){
-                        lastCol=col;
-                        const uint32_t tileOff=(uint32_t)rowMap[col]<<3;
-                        pb=rowDefs[tileOff];
-                        mb=rowMDefs[tileOff];
-                    }
-                    const uint32_t sh=(~ui)&7;
-                    pix=(pix<<1)|((pb>>sh)&1);
-                    msk=(msk<<1)|((mb>>sh)&1);
-                    u+=du;
+    // A single colour layer colours the rows it's drawn on (lines a line table leaves blank, e.g. above a Mode 7
+    // horizon, aren't coloured), instead of its cells' colours - or with no colour, leaves them alone
+    if(tL->colour>=0){
+        if((tL->colour&0x80)==0){
+            for(int cy=0;cy<ATTR_HEIGHT_CELLS;cy++){
+                if(!tL->lineTransforms || getLayerLine(tL,(cy*ATTR_HEIGHT_PIXELS)+(ATTR_HEIGHT_PIXELS/2),&lt)){
+                    memset(renderAttrBuffer+(cy*SCREEN_WIDTH_CELLS),tL->colour,SCREEN_WIDTH_CELLS);
                 }
-                *spr++=(uint8_t)pix;
-                *smr++=(uint8_t)msk;
-            }
-        }else{
-            for(int cx=0;cx<SCREEN_WIDTH_CELLS;cx++){
-                uint32_t pix=0, msk=0;
-                for(int b=0;b<8;b++){
-                    const uint32_t ui=u>>16;
-                    const uint32_t vi=v>>16;
-                    const uint32_t tileOff=((uint32_t)map[((vi&0x1f8)<<3)|((ui>>3)&(TILE_LAYER_WIDTH-1))]<<3)|(vi&7);
-                    const uint32_t sh=(~ui)&7;
-                    pix=(pix<<1)|((defs[tileOff]>>sh)&1);
-                    msk=(msk<<1)|((mDefs[tileOff]>>sh)&1);
-                    u+=du;
-                    v+=dv;
-                }
-                *spr++=(uint8_t)pix;
-                *smr++=(uint8_t)msk;
             }
         }
+        return;
     }
 
     // Attributes are sampled at the centre of each 8x4 screen cell. Flash bit set means don't change the cell
@@ -906,13 +1002,22 @@ static inline uint32_t mapPixels(const TileLayer *tL, uint32_t lx, uint32_t ly, 
 {
     lx&=(TILE_LAYER_WIDTH*8)-1;
     ly&=(TILE_LAYER_HEIGHT*8)-1;
-    const uint8_t *rowDefs=tL->tileDefPtr+(ly&7);
     const uint8_t *rowMap=tL->tileMap+((ly>>3)*TILE_LAYER_WIDTH);
     const uint32_t tx=lx>>3;
     const int bytes=(int)(((lx&7)+(uint32_t)n+7)>>3);
     uint64_t bits=0;
-    for(int b=0;b<bytes;b++){
-        bits=(bits<<8)|rowDefs[(uint32_t)rowMap[(tx+(uint32_t)b)&(TILE_LAYER_WIDTH-1)]<<3];
+    if(tL->tile16){
+        // A cell is a quarter of a 16x16 tile: its byte of the row is the left or right one, by the cell's column
+        const uint8_t *rowDefs=tL->tileDefPtr+((ly&15)<<1);
+        for(int b=0;b<bytes;b++){
+            const uint32_t cx=(tx+(uint32_t)b)&(TILE_LAYER_WIDTH-1);
+            bits=(bits<<8)|rowDefs[((uint32_t)rowMap[cx]<<5)|(cx&1)];
+        }
+    }else{
+        const uint8_t *rowDefs=tL->tileDefPtr+(ly&7);
+        for(int b=0;b<bytes;b++){
+            bits=(bits<<8)|rowDefs[(uint32_t)rowMap[(tx+(uint32_t)b)&(TILE_LAYER_WIDTH-1)]<<3];
+        }
     }
     // Line the bytes up as if all 5 had been read, then shift the first pixel into bit 31
     bits<<=8*(5-bytes);
@@ -938,10 +1043,12 @@ uint32_t __not_in_flash_func(getLayerPixelsN)(int layerIX, int x, int y, int n)
         uint32_t u=(uint32_t)lt.u+((uint32_t)x*(uint32_t)lt.dudx);
         uint32_t v=(uint32_t)lt.v+((uint32_t)x*(uint32_t)lt.dvdx);
         uint32_t bits=0;
+        const bool t16=tL->tile16;
         for(int i=0;i<n;i++){
             const uint32_t ui=u>>16;
             const uint32_t vi=v>>16;
-            const uint32_t tileOff=((uint32_t)map[((vi&0x1f8)<<3)|((ui>>3)&(TILE_LAYER_WIDTH-1))]<<3)|(vi&7);
+            const uint32_t tile=map[((vi&0x1f8)<<3)|((ui>>3)&(TILE_LAYER_WIDTH-1))];
+            const uint32_t tileOff=t16?tileByte(tile,ui,vi,1):tileByte(tile,ui,vi,0);
             bits=(bits<<1)|((defs[tileOff]>>((~ui)&7))&1);
             u+=(uint32_t)lt.dudx;
             v+=(uint32_t)lt.dvdx;
@@ -1042,12 +1149,14 @@ bool __not_in_flash_func(isLayerMapPixelSet)(int layerIX, int x, int y)
     // One pixel: its tile, then the row of that tile's graphics, then the bit
     const uint32_t lx=(uint32_t)x, ly=(uint32_t)y;
     const uint8_t tile=tL->tileMap[(((ly>>3)&(TILE_LAYER_HEIGHT-1))*TILE_LAYER_WIDTH)+((lx>>3)&(TILE_LAYER_WIDTH-1))];
-    return (tL->tileDefPtr[((uint32_t)tile<<3)+(ly&7)]&(0x80u>>(lx&7)))!=0;
+    const uint32_t b=tL->tile16?tileByte(tile,lx,ly,1):tileByte(tile,lx,ly,0);
+    return (tL->tileDefPtr[b]&(0x80u>>(lx&7)))!=0;
 }
 
 // Which tiles of a tile set have no pixels, for the tile set used most recently. If a tile set's graphics are changed
 // in RAM after use, they're picked up next time a different tile set is looked at (or after tileSetsChanged)
 static const uint8_t *emptyTilesFor=NULL;
+static bool emptyTilesFor16=false;
 static uint32_t emptyTiles[256/32];
 
 void tileSetsChanged(void)
@@ -1061,11 +1170,18 @@ bool isLayerTileEmpty(int layerIX, int tileX, int tileY)
     if(tL->tileDefPtr==NULL){
         return true;
     }
-    if(emptyTilesFor!=tL->tileDefPtr){
+    if(emptyTilesFor!=tL->tileDefPtr || emptyTilesFor16!=tL->tile16){
         emptyTilesFor=tL->tileDefPtr;
+        emptyTilesFor16=tL->tile16;
+        // (16x16 tiles: the whole tile - a cell showing an empty quarter of a tile that isn't is just checked pixel by pixel)
+        const int bytes=tL->tile16?32:8;
         for(int t=0;t<256;t++){
-            const uint8_t *d=tL->tileDefPtr+(t*8);
-            const bool empty=(d[0]|d[1]|d[2]|d[3]|d[4]|d[5]|d[6]|d[7])==0;
+            const uint8_t *d=tL->tileDefPtr+(t*bytes);
+            uint8_t any=0;
+            for(int n=0;n<bytes;n++){
+                any|=d[n];
+            }
+            const bool empty=(any==0);
             if(empty){
                 emptyTiles[t>>5]|=1u<<(t&31);
             }else{
