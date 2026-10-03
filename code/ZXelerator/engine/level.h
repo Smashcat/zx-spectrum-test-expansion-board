@@ -288,6 +288,20 @@ bool loadLevel(const LevelDef *lv);
 /// out, use getLevelTile
 void setLevelCamera(int x, int y);
 
+/// @brief Shake the level (e.g. with the weight of a landing, or an impact): over 8 frames it jolts up to size pixels in
+/// a direction (0,1 down, 1,0 right...), bounces back past where it was, and settles. It's done by moving the camera
+/// (setLevelCamera adds it), so each layer moves by its own parallax - a half speed background half as far - with the
+/// sprites and particles in the level. Layers that aren't the level's (e.g. a HUD) stay still. A new shake replaces one
+/// going on; loading a level stops it
+void shakeLevel(float size, float dirX, float dirY);
+
+/// @brief The shake this frame: how far (pixels) the level's camera-speed layers are moved by it (0,0 when still)
+void getLevelShake(int *x, int *y);
+
+/// @brief An offset added to the camera every frame (0,0 unless set) - for effects of the game's own, e.g. its own
+/// shakes or a nudge. Positive moves the view right/down (the level left/up)
+void setLevelCameraOffset(int x, int y);
+
 /// @brief Animate the level's tiles, wake actors the camera has reached, give sprites to actors near the camera (and
 /// take them from those far from it), and place every actor's sprite at its position and frame. Call once a frame,
 /// after updating the actors and setting the camera

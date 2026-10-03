@@ -2924,16 +2924,25 @@ static void setString(cJSON *o, const char *name, const char *v)
 
 // The Tiled tile set for an imported image (made, or updated - keeping its tiles' properties, animations and other
 // settings), next to the image: its image, size and graphics name
-static cJSON *importedTileSet(const char *pngPath, char *tsPath, size_t tsPathSize, int imgW, int imgH, int tileW,
-    int tileH)
+static cJSON *importedTileSet(const char *pngPath, const char *givenTs, char *tsPath, size_t tsPathSize, int imgW,
+    int imgH, int tileW, int tileH)
 {
     char dir[1024], base[256], image[300];
     dirOf(pngPath,dir,sizeof(dir));
     baseName(pngPath,base,sizeof(base));
     snprintf(tsPath,tsPathSize,"%s%s.tsj",dir,base);
     snprintf(image,sizeof(image),"%s.png",base);
+    if(givenTs){
+        // (a tile set made in Tiled from the image: it stays where it is, referring to its image as it does)
+        snprintf(tsPath,tsPathSize,"%s",givenTs);
+        dirOf(givenTs,dir,sizeof(dir));
+    }
     cJSON *ts=readJSONFile(tsPath);
-    if(ts && !propBool(ts,"imported",false)){
+    if(givenTs && ts){
+        snprintf(image,sizeof(image),"%s",jsonString(ts,"image",image));
+    }
+    // (one made in Tiled from an image is fine to import - one of engine graphics isn't)
+    if(ts && !propBool(ts,"imported",false) && (!givenTs || propString(ts,"engineTiles") || propString(ts,"engineSprite"))){
         fail("%s is already a tile set of engine graphics, not an imported one - import the image under another name",
             tsPath);
     }
@@ -2962,7 +2971,7 @@ static cJSON *importedTileSet(const char *pngPath, char *tsPath, size_t tsPathSi
 
 // levelconv import <image.png> <graphics name> [8|16]: a PNG of tiles (left to right, then down; the first is tile 0,
 // always empty) as a Tiled tile set, and the engine tile graphics (levels/gfx_<name>.c)
-static void importTileImage(const char *pngPath, const char *name, int size)
+static void importTileImage(const char *pngPath, const char *name, int size, const char *givenTs)
 {
     currentFile=pngPath;
     checkIdentifier(name);
@@ -2976,7 +2985,7 @@ static void importTileImage(const char *pngPath, const char *name, int size)
     }
     free(rgba);
     char tsPath[1300], outDir[1100];
-    cJSON *ts=importedTileSet(pngPath,tsPath,sizeof(tsPath),w,h,size,size);
+    cJSON *ts=importedTileSet(pngPath,givenTs,tsPath,sizeof(tsPath),w,h,size,size);
     setProperty(ts,"engineTiles","string",cJSON_CreateString(name),NULL);
     writeJSON(tsPath,ts);
 
@@ -2995,7 +3004,7 @@ static void importTileImage(const char *pngPath, const char *name, int size)
 // levelconv importsprites <image.png> <graphics name> <width>x<height> [palette]: a PNG of sprite frames (left to
 // right, then down) as a Tiled sprite sheet, and the engine sprite graphics and masks (levels/gfx_<name>.c - the
 // masks are <name>Mask)
-static void importSpriteImage(const char *pngPath, const char *name, const char *sizeText, int pal)
+static void importSpriteImage(const char *pngPath, const char *name, const char *sizeText, int pal, const char *givenTs)
 {
     currentFile=pngPath;
     checkIdentifier(name);
@@ -3014,7 +3023,7 @@ static void importSpriteImage(const char *pngPath, const char *name, const char 
     }
     char tsPath[1300], outDir[1100], maskName[300];
     snprintf(maskName,sizeof(maskName),"%sMask",name);
-    cJSON *ts=importedTileSet(pngPath,tsPath,sizeof(tsPath),w,h,fw,fh);
+    cJSON *ts=importedTileSet(pngPath,givenTs,tsPath,sizeof(tsPath),w,h,fw,fh);
     setProperty(ts,"engineSprite","string",cJSON_CreateString(name),NULL);
     setProperty(ts,"engineMask","string",cJSON_CreateString(maskName),NULL);
     if(pal>=0 || !property(ts,"palette")){
@@ -3034,6 +3043,47 @@ static void importSpriteImage(const char *pngPath, const char *name, const char 
     free(s.importedData);
     free(s.importedMask);
     cJSON_Delete(ts);
+}
+
+// levelconv importtileset <tileset.tsj> [sprites]: a tile set made in Tiled from an image (Map > New Tileset - its
+// tiles 8x8 or 16x16, or for sprites, one of the engine's sprite sizes) made into an imported one, its image the engine
+// graphics (levels/gfx_<name>.c) - named after the tile set, unless it already has a name for them. Run from Tiled, on
+// the open tile set
+static void importTileSetFile(const char *tsPath, bool sprites)
+{
+    currentFile=tsPath;
+    if(!endsWith(tsPath,".tsj") && !endsWith(tsPath,".json")){
+        fail("open a tile set saved as JSON (.tsj) - in Tiled, File > Save As and choose the JSON tile set format");
+    }
+    cJSON *ts=readJSONFile(tsPath);
+    if(!ts){
+        fail("can't read it");
+    }
+    const char *image=jsonString(ts,"image",NULL);
+    if(!image){
+        fail("it isn't made from one image (a collection of images can't be imported)");
+    }
+    // Its image (relative to the tile set, unless it's an absolute path)
+    char dir[1024], png[2100], name[256];
+    dirOf(tsPath,dir,sizeof(dir));
+    const bool absolute=(image[0]=='/' || image[0]=='\\' || (image[0] && image[1]==':'));
+    snprintf(png,sizeof(png),"%s%s",absolute?"":dir,image);
+    // The graphics' name: the one it has, or the tile set's name
+    const char *given=propString(ts,sprites?"engineSprite":"engineTiles");
+    identifier(given?given:jsonString(ts,"name","tiles"),name,sizeof(name));
+    const int tw=jsonInt(ts,"tilewidth",0), th=jsonInt(ts,"tileheight",0);
+    const int pal=property(ts,"palette")?propInt(ts,"palette",0):-1;
+    cJSON_Delete(ts);
+    if(sprites){
+        char size[32];
+        snprintf(size,sizeof(size),"%dx%d",tw,th);
+        importSpriteImage(png,name,size,pal,tsPath);
+    }else{
+        if(tw!=th || (tw!=8 && tw!=16)){
+            fail("its tiles are %dx%d - tile sets are 8x8 or 16x16 (for sprites, use the sprite sheet import)",tw,th);
+        }
+        importTileImage(png,name,tw,tsPath);
+    }
 }
 
 static void convertAll(const char *dir, const char *outDir)
@@ -3098,6 +3148,8 @@ static void usage(void)
         "levelconv importsprites <sheet.png> <graphics name> <width>x<height> [palette]\n"
         "                                                 import a PNG of sprite frames: makes sheet.tsj next to it, and\n"
         "                                                 the engine graphics and masks (<name>Mask) in levels/gfx_<name>.c\n"
+        "levelconv importtileset <tileset.tsj> [sprites]  make a tile set made in Tiled from an image (New Tileset) an\n"
+        "                                                 imported one - a sprite sheet with \"sprites\" (Tiled\'s commands)\n"
         "options: --tiled <path to tiled.exe>\n");
     exit(2);
 }
@@ -3128,9 +3180,11 @@ int main(int argc, char **argv)
     }else if(strcmp(cmd,"sprites")==0){
         makeSpriteSheet(arg1,arg2,(a+3<argc)?argv[a+3]:NULL,(a+4<argc)?argv[a+4]:NULL,(a+5<argc)?atoi(argv[a+5]):0);
     }else if(strcmp(cmd,"import")==0 && arg2){
-        importTileImage(arg1,arg2,(a+3<argc)?atoi(argv[a+3]):8);
+        importTileImage(arg1,arg2,(a+3<argc)?atoi(argv[a+3]):8,NULL);
     }else if(strcmp(cmd,"importsprites")==0 && arg2){
-        importSpriteImage(arg1,arg2,(a+3<argc)?argv[a+3]:NULL,(a+4<argc)?atoi(argv[a+4]):-1);
+        importSpriteImage(arg1,arg2,(a+3<argc)?argv[a+3]:NULL,(a+4<argc)?atoi(argv[a+4]):-1,NULL);
+    }else if(strcmp(cmd,"importtileset")==0){
+        importTileSetFile(arg1,arg2 && strcmp(arg2,"sprites")==0);
     }else{
         usage();
     }

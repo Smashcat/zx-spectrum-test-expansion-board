@@ -634,6 +634,182 @@ static void testTileSprites(void)
     printf("Tiles as sprites (8x8 and 16x16 tile sets): %d tiles drawn, every pixel checked\n",tests);
 }
 
+// Frames drawn into a snapshot instead of sent to the Spectrum, and a snapshot shown full screen in place of the
+// layers: unseen frames leave the Spectrum's banks alone, a snapshot shown 1:1 is the frame it was taken from (the
+// layers under it untouched, and drawn again as before once it's hidden), front layers draw over it, and zoomed in,
+// its focus pixel stays where it's put and the pixels around it are magnified
+static FrameSnapshot screenSnap;
+static uint8_t scrRefPix[SCREEN_WIDTH_CELLS*SCREEN_HEIGHT_LINES];
+static uint8_t scrRefAttr[SCREEN_WIDTH_CELLS*ATTR_HEIGHT_CELLS];
+static uint8_t bankBefore[2][0x2f00];
+
+static void screenSnapshotScene(void)
+{
+    initLayers();
+    setLayerType(2,LT_BITMAP);
+    setLayerBitmap(2,titleScreenBitmap,titleScreenAttr);
+    setLayerPos(2,-9,5);
+    setTileDefSet(0,defaultTileDef);
+    drawTxtToLayer(0,"FRONT LAYER",0x46,0x45,2,20);
+    setLayerPos(0,0,0);
+    initSprites(1);
+    setSpriteSize(0,SIZE_32X40);
+    setSpriteDef(0,titleLettersDef,titleLettersMaskDef);
+    setSpritePalette(0,4);
+    setSpriteLayer(0,2);
+    setSpritePos(0,120.0f,90.0f);
+}
+
+// Layer points: single pixels in a layer's coordinates, drawn where the layer puts them (scrolled, or rotated), over
+// the layer, and gone after a frame
+static void testLayerPoints(void)
+{
+    initLayers();
+    initSprites(0);
+    setTileDefSet(1,defaultTileDef);
+    int bad=0, tests=0;
+    for(int rotated=0;rotated<2;rotated++){
+        setLayerPos(1,-37,23);
+        if(rotated){
+            setLayerTransform(1,0.6f,1.5f,1.5f);
+        }else{
+            clearLayerTransform(1);
+        }
+        for(int n=0;n<40;n++){
+            const float u=(float)(rng()%400), v=(float)(rng()%300);
+            float sx, sy;
+            layerToScreen(1,u+0.5f,v+0.5f,&sx,&sy);
+            const int x=(int)floorf(sx), y=(int)floorf(sy);
+            if(x<0 || x>=SCREEN_WIDTH_PIXELS || y<0 || y>=SCREEN_HEIGHT_LINES){
+                continue;
+            }
+            check(addLayerPoint(1,u,v),"layer point added",n,0);
+            initScratchBuffers(true);
+            compositeScene();
+            bad+=((renderBuffer[(y*SCREEN_WIDTH_CELLS)+(x>>3)]&(0x80>>(x&7)))==0)?1:0;
+            // (cleared: the next frame doesn't have it)
+            initScratchBuffers(true);
+            compositeScene();
+            bad+=((renderBuffer[(y*SCREEN_WIDTH_CELLS)+(x>>3)]&(0x80>>(x&7)))!=0)?1:0;
+            ++tests;
+        }
+    }
+    check(bad==0,"layer points drawn where the layer puts them, for a frame",bad,tests);
+    // Too many: refused
+    for(int n=0;n<MAX_LAYER_POINTS;n++){
+        addLayerPoint(1,0.0f,0.0f);
+    }
+    check(!addLayerPoint(1,0.0f,0.0f),"layer points full",0,0);
+    clearLayerPoints();
+    initLayers();
+    printf("Layer points: %d, scrolled and rotated, drawn for one frame\n",tests);
+}
+
+static void testScreenSnapshot(void)
+{
+    // The scene drawn and sent, for reference
+    screenSnapshotScene();
+    initScratchBuffers(true);
+    check(compositeScene(),"a frame is sent",0,0);
+    memcpy(scrRefPix,renderBuffer,sizeof(scrRefPix));
+    memcpy(scrRefAttr,renderAttrBuffer,sizeof(scrRefAttr));
+
+    // Drawn into a snapshot: not sent (the Spectrum's bank isn't written), and the snapshot is that frame. The next
+    // frame is sent again
+    memcpy(bankBefore,ram[writeBank],sizeof(bankBefore));
+    setFrameTarget(&screenSnap);
+    initScratchBuffers(true);
+    check(!compositeScene() && memcmp(bankBefore,ram[writeBank],sizeof(bankBefore))==0,"a frame drawn unseen",0,0);
+    check(memcmp(screenSnap.bitmap+4,scrRefPix,sizeof(scrRefPix))==0 &&
+        memcmp(screenSnap.attrs,scrRefAttr,sizeof(scrRefAttr))==0,"the unseen frame is in the snapshot",0,0);
+    initScratchBuffers(true);
+    check(compositeScene(),"the frame after is sent",0,0);
+
+    // Front layers left out of snapshots: the snapshot is the frame without layer 0 (its text, e.g. a HUD), while the
+    // frame itself is still drawn whole - for both kinds of snapshot
+    static uint8_t backPix[SCREEN_WIDTH_CELLS*SCREEN_HEIGHT_LINES], backAttr[SCREEN_WIDTH_CELLS*ATTR_HEIGHT_CELLS];
+    setLayerPos(0,500,0);
+    initScratchBuffers(true);
+    compositeScene();
+    memcpy(backPix,renderBuffer,sizeof(backPix));
+    memcpy(backAttr,renderAttrBuffer,sizeof(backAttr));
+    setLayerPos(0,0,0);
+    check(memcmp(backPix,scrRefPix,sizeof(backPix))!=0,"the front layer shows in the frame",0,0);
+    setSnapshotFrontLayers(1);
+    captureNextFrame(&screenSnap);
+    initScratchBuffers(true);
+    compositeScene();
+    check(memcmp(screenSnap.bitmap+4,backPix,sizeof(backPix))==0 && memcmp(screenSnap.attrs,backAttr,sizeof(backAttr))==0 &&
+        memcmp(renderBuffer,scrRefPix,sizeof(scrRefPix))==0,"front layer left out of a captured frame",0,0);
+    memset(&screenSnap,0,sizeof(screenSnap));
+    setFrameTarget(&screenSnap);
+    initScratchBuffers(true);
+    check(!compositeScene() && memcmp(screenSnap.bitmap+4,backPix,sizeof(backPix))==0 &&
+        memcmp(screenSnap.attrs,backAttr,sizeof(backAttr))==0,"front layer left out of a frame drawn unseen",0,0);
+    // (and the whole frame again, for what follows)
+    setSnapshotFrontLayers(0);
+    setFrameTarget(&screenSnap);
+    initScratchBuffers(true);
+    compositeScene();
+
+    // Shown full screen 1:1, over a changed scene (layers moved, a sprite moved): exactly the snapshot
+    setLayerPos(2,30,-20);
+    setSpritePos(0,40.0f,40.0f);
+    showScreenSnapshot(&screenSnap,0);
+    check(isScreenSnapshotShown(),"screen snapshot shown",0,0);
+    initScratchBuffers(true);
+    compositeScene();
+    check(memcmp(renderBuffer,scrRefPix,sizeof(scrRefPix))==0 && memcmp(renderAttrBuffer,scrRefAttr,sizeof(scrRefAttr))==0,
+        "screen snapshot 1:1 is the frame",0,0);
+
+    // Zoomed in 4x around a focus pixel put at another point on screen: each screen pixel near it is the snapshot's
+    // pixel a quarter as far from the focus
+    const int fx=100, fy=60, sx=128, sy=96;
+    setScreenSnapshotView((float)fx,(float)fy,(float)sx,(float)sy,4.0f,0.0f);
+    initScratchBuffers(true);
+    compositeScene();
+    int bad=0, tests=0;
+    for(int dy=-40;dy<40;dy+=3){
+        for(int dx=-60;dx<60;dx+=5){
+            // (the middle of each magnified pixel, clear of the edges where rounding could go either way)
+            const int ux=fx+(int)floorf((float)dx/4.0f), vy=fy+(int)floorf((float)dy/4.0f);
+            const int px=sx+((ux-fx)*4)+2, py=sy+((vy-fy)*4)+2;
+            const bool want=(scrRefPix[(vy*SCREEN_WIDTH_CELLS)+(ux>>3)]&(0x80>>(ux&7)))!=0;
+            const bool got=(renderBuffer[(py*SCREEN_WIDTH_CELLS)+(px>>3)]&(0x80>>(px&7)))!=0;
+            bad+=(want!=got)?1:0;
+            ++tests;
+        }
+    }
+    check(bad==0,"screen snapshot zoomed around its focus",bad,tests);
+
+    // With the front layer drawn over it: layer 0's text over the snapshot (1:1 - the text is in the snapshot too, so
+    // with the layer moved, both show)
+    setScreenSnapshotView(128.0f,96.0f,128.0f,96.0f,1.0f,0.0f);
+    setLayerPos(0,0,-16);
+    showScreenSnapshot(&screenSnap,1);
+    initScratchBuffers(true);
+    compositeScene();
+    static uint8_t frontRef[SCREEN_WIDTH_CELLS*SCREEN_HEIGHT_LINES];
+    memcpy(frontRef,renderBuffer,sizeof(frontRef));
+    showScreenSnapshot(&screenSnap,0);
+    initScratchBuffers(true);
+    compositeScene();
+    check(memcmp(frontRef,renderBuffer,sizeof(frontRef))!=0,"front layer drawn over the screen snapshot",0,0);
+
+    // Hidden: the layers are drawn again - the scene as it was, moved back
+    hideScreenSnapshot();
+    setLayerPos(2,-9,5);
+    setLayerPos(0,0,0);
+    setSpritePos(0,120.0f,90.0f);
+    initScratchBuffers(true);
+    compositeScene();
+    check(!isScreenSnapshotShown() && memcmp(renderBuffer,scrRefPix,sizeof(scrRefPix))==0 &&
+        memcmp(renderAttrBuffer,scrRefAttr,sizeof(scrRefAttr))==0,"layers drawn again once hidden",0,0);
+    initLayers();
+    initSprites(0);
+    printf("Screen snapshots: frames drawn unseen, shown 1:1 and zoomed (%d pixels), front layers over, hidden\n",tests);
+}
+
 // A captured frame shown on a layer on its own must reproduce the original frame exactly - both untransformed,
 // and through an identity line transform
 static FrameSnapshot testSnapshot;
@@ -2282,6 +2458,46 @@ static int checkLevel16Window(int layer, int fgLayer, const LevelTileSet *ts, in
 
 // A level of 16x16 tiles (levels/tiled/demo16.tmx): streamed into the 8x8 cell engine layers 2x2 cells a tile, as the
 // camera moves, rotation included
+// Shaking the level: it's the camera that moves, so each layer moves by its own parallax (the demo level's hills, on
+// layer 3, half as far as its main layer 2), over 8 frames back to still - and the camera offset adds to it
+static void testLevelShake(void)
+{
+    initLayers();
+    initSprites(4);
+    check(loadLevel(&level_demo),"shake: demo level loads",0,0);
+    static const float curve[8]={0.6f,1.0f,0.6f,0.0f,-0.5f,-0.5f,-0.2f,0.0f};
+    const int camX=300, camY=40;
+    setLevelCamera(camX,camY);
+    const int mainY=tileLayer[2].y, hillsY=tileLayer[3].y, mainX=tileLayer[2].x;
+    shakeLevel(4.0f,0.0f,1.0f);
+    int bad=0;
+    for(int f=0;f<10;f++){
+        setLevelCamera(camX,camY);
+        const int want=(f<8)?(int)floorf((curve[f]*4.0f)+0.5f):0;
+        int sx, sy;
+        getLevelShake(&sx,&sy);
+        // The main layer by the shake, the half speed hills by half (to the pixel either way)
+        bad+=(sy!=want || tileLayer[2].y!=mainY+want || tileLayer[2].x!=mainX || abs((tileLayer[3].y-hillsY)*2-want)>1)?1:0;
+        updateLevel();
+    }
+    check(bad==0,"level shake by each layer's parallax, then still",bad,0);
+
+    // The camera offset: added all the time (positive moves the view, so the level the other way)
+    setLevelCameraOffset(5,-3);
+    setLevelCamera(camX,camY);
+    check(tileLayer[2].x==mainX-5 && tileLayer[2].y==mainY+3,"level camera offset",tileLayer[2].x,mainX-5);
+    setLevelCameraOffset(0,0);
+
+    // Loading a level stops a shake
+    shakeLevel(4.0f,1.0f,0.0f);
+    check(loadLevel(&level_demo),"shake: demo level loads again",0,0);
+    setLevelCamera(camX,camY);
+    int sx, sy;
+    getLevelShake(&sx,&sy);
+    check(sx==0 && sy==0 && tileLayer[2].x==mainX,"loading a level stops the shake",sx,0);
+    printf("Level shake: by each layer's parallax over 8 frames, camera offset, stopped by loading\n");
+}
+
 static void testLevel16(void)
 {
     initLayers();
@@ -2295,7 +2511,7 @@ static void testLevel16(void)
         strcmp(getLevelPropString(LEVEL_PROP_SPEED,"none"),"none")==0,"level properties",getLevelType(),0);
     check(levelList[LEVEL_ID_FLIGHT]->type==LEVEL_TYPE_SHOOTER &&
         getLevelDefInt(levelList[LEVEL_ID_FLIGHT],LEVEL_PROP_LEVEL_TYPE,-1)==LEVEL_TYPE_SHOOTER &&
-        strcmp(getLevelDefString(levelList[LEVEL_ID_FLIGHT],LEVEL_PROP_LEVEL_NAME,""),"Sky Tunnel")==0 &&
+        strcmp(getLevelDefString(levelList[LEVEL_ID_FLIGHT],LEVEL_PROP_LEVEL_NAME,""),"Sunken Caves")==0 &&
         levelList[LEVEL_ID_DEMO]->type==LEVEL_TYPE_PLATFORM,"level types",levelList[LEVEL_ID_FLIGHT]->type,1);
     // Its sky is one colour, its level and foreground draw their pixels only
     check(tileLayer[4].colour==0x4F && tileLayer[2].colour==LAYER_COLOUR_NONE && tileLayer[1].colour==LAYER_COLOUR_NONE,
@@ -2924,6 +3140,8 @@ int main(int argc, char *argv[])
 
     testTileSprites();
     testFrameSnapshot();
+    testScreenSnapshot();
+    testLayerPoints();
     testSpriteSets();
     testSpriteSpriteCollisions();
     testSpriteLayerCollisions();
@@ -2936,6 +3154,7 @@ int main(int argc, char *argv[])
     testDemoLevel();
     testLevelActors();
     testLevelSwitches();
+    testLevelShake();
     testLevel16();
     for(int space=0;space<2;space++){
         testSpace=space?PARTICLE_SPACE_LAYER:PARTICLE_SPACE_SCREEN;

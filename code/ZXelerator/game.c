@@ -47,9 +47,12 @@ void gameUpdateLoop(void){
                 default:
                 break;
             }
-            compositeScene();
+            // (a frame drawn into a snapshot instead isn't shown - the Spectrum keeps the last one)
+            const bool shown=compositeScene();
             gv.frameTimeUs=(uint32_t)(time_us_64()-frameStart);
-            flipBank=1;
+            if(shown){
+                flipBank=1;
+            }
             __dsb();
         }
         ++gv.frameRendered;

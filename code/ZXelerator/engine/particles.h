@@ -115,3 +115,22 @@ void updateParticles(void);
 
 /// @brief Draw the particle sets that are drawn over a layer (called by compositeScene)
 void blitParticlesToScratchBuffers(int layer);
+
+// ---------------------------------------------------------------------------
+// Layer points: single pixels drawn over a layer - for chains, ropes, beams and the like
+// ---------------------------------------------------------------------------
+
+/// @brief Most layer points at once
+#define MAX_LAYER_POINTS        512
+
+/// @brief Remove every layer point (compositeScene does, once it's drawn them)
+void clearLayerPoints(void);
+
+/// @brief Add a single pixel drawn over a layer (with its particles, before its sprites), in the ink colour of the cell
+/// it's in. The position is in the layer's own coordinates, so it moves, rotates and scales with the layer (for a
+/// level's layer, that's level pixels). Points are drawn in the next frame only - add them again each frame
+/// @return False if there are already MAX_LAYER_POINTS
+bool addLayerPoint(int layer, float x, float y);
+
+/// @brief Draw the points over a layer (called by compositeScene)
+void blitLayerPointsToScratchBuffers(int layer);

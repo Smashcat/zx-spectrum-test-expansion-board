@@ -109,6 +109,6 @@ static const LevelObject objects[]={
 };
 
 // The level's own properties
-static const LevelProp levelProps[]={{LEVEL_PROP_LEVEL_TYPE,LEVEL_PROP_TYPE_INT,{.i=1}},{LEVEL_PROP_LEVEL_NAME,LEVEL_PROP_TYPE_STRING,{.s="Sky Tunnel"}},{LEVEL_PROP_LEVEL_DESCRIPTION,LEVEL_PROP_TYPE_STRING,{.s="Fly through to the other side"}}};
+static const LevelProp levelProps[]={{LEVEL_PROP_LEVEL_TYPE,LEVEL_PROP_TYPE_INT,{.i=1}},{LEVEL_PROP_LEVEL_NAME,LEVEL_PROP_TYPE_STRING,{.s="Sunken Caves"}},{LEVEL_PROP_LEVEL_DESCRIPTION,LEVEL_PROP_TYPE_STRING,{.s="Swim through to the other side"}},{LEVEL_PROP_UNDERWATER,LEVEL_PROP_TYPE_INT,{.i=1}}};
 
-const LevelDef level_flight={"flight",240,24,12224,1,2,3,26,tileSets,layers,sheets,objects,3,0,8,levelProps,3,1};
+const LevelDef level_flight={"flight",240,24,12224,1,2,3,26,tileSets,layers,sheets,objects,3,0,8,levelProps,4,1};

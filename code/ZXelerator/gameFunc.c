@@ -213,11 +213,13 @@ void demoLoop(void){
         
             drawIntNumToLayer(hudLayer,spriteList[0].x&0x07,0b01000110,0b00000101,30,5,2);
             drawIntNumToLayer(hudLayer,spriteList[0].x>>3,0b01000110,0b00000101,30,6,2);
-            compositeScene();
+            const bool shown=compositeScene();
 
             tf=(tf?false:true);
 //            gpio_put(PIN_LED,tf);
-            flipBank=1;
+            if(shown){
+                flipBank=1;
+            }
             __dsb();
         }
         ++gv.frameRendered;
@@ -1142,12 +1144,14 @@ void collisionTest(void)
 
 #define LV_LAYER        2       // The level layer the player is in - its foreground tiles are on layer 1
 #define LV_HUD_LAYER    0       // Text, in front of everything (the level uses layers 1-4)
-#define LV_SPRITES      40      // Sprites for the player, the actors near the camera and bubbles
+#define LV_SPRITES      60      // Sprites for the player, the actors near the camera, bubbles, bullets and shots
 
 // The player's (and the enemies') hitbox, around its position (the sprite's centre): the part of the 24x24 graphic the
 // character fills
-#define LV_LEFT         8       // Pixels left of the centre
-#define LV_RIGHT        7       // ...right
+// The player's box: to the edges of their sprite as drawn (black outline and all - it's 1-2 pixels left of centre), so they
+// stop against walls rather than overlapping them
+#define LV_LEFT         12      // Pixels left of the centre
+#define LV_RIGHT        9       // ...right
 #define LV_TOP          11      // ...above
 #define LV_BOTTOM       10      // ...below (the feet)
 
@@ -1159,14 +1163,41 @@ void collisionTest(void)
 #define LV_FRICTION     0.12f   // Slowing down, when nothing's pressed
 #define LV_SKID         0.30f   // Slowing down, when pushing the other way
 #define LV_AIR_CONTROL  0.16f   // Steering in the air
-#define LV_GRAVITY      0.32f
-#define LV_MAX_FALL     6.0f
-#define LV_JUMP         5.4f
-#define LV_STOMP        4.0f    // Bounce off an enemy stomped on
+// Jumps: quick up, and quicker down (falling pulls harder than rising, so jumps don't float) - a jump's still about 46
+// pixels high, but over 26 frames rather than 34
+#define LV_GRAVITY      0.45f   // Rising
+#define LV_FALL_GRAVITY 0.7f    // Falling
+#define LV_MAX_FALL     7.0f
+#define LV_JUMP         6.4f
+#define LV_JUMP_CUT     3.0f    // Letting go of jump while rising faster than this slows the rise to it (a tap is a hop)
+#define LV_STOMP        4.75f   // Bounce off an enemy stomped on
+#define LV_SHAKE_FALL   16      // Landing from higher than this shakes the level
+#define LV_WALL_SHAKE   2.5f    // Running into a wall faster than this shakes the level (sideways)...
+// The dash (M): twice running speed for LV_DASH_DISTANCE pixels - destroying enemies it hits on the way - then slowing
+// back to running speed. A wall hit faster than a run bursts particles off the wall, more the faster
+#define LV_DASH_SPEED   (LV_RUN*4.0f)   // (13 pixels a frame - enemies are checked every pixel of it, so none are passed)
+#define LV_DASH_DISTANCE 64
+#define LV_SLOW_FRAMES  4.0f    // Speed over a run (out of a dash, or off a conveyor) is lost over this many frames
+#define LV_DASH_COOLDOWN 150    // Frames (3 seconds) before the dash can be used again
+// The grapple (G, in the air): the closest grapple point (a grapplePoint tile) ahead of and above the player, in range and
+// in sight, marked by a bobbing arrow - the player swings from it on a chain the length it was when they grabbed it
+#define LV_GRAPPLE_RANGE 96
+#define LV_HAND         7       // The chain hooks onto the player this far above their centre
+#define LV_SWING_GRAVITY 0.45f  // Pulling the swing back down (pixels a frame, a frame)
+#define LV_SWING_PUMP   0.12f   // O and P push the swing along
+#define LV_SWING_MAX    8.0f    // Top speed along the swing (pixels a frame)
+#define LV_SWING_LIMIT  1.45f   // How far either side of straight down it swings (radians - about 83 degrees)
+#define LV_SWING_HOP    2.5f    // Jumping off (Q) adds this upwards to the swing's speed
+#define LV_CHAIN_PITCH  4.0f    // Pixels from link to link (a loop, then a bar, from the side)
+#define LV_CHAIN_LINKS  32      // Most links (a chain LV_GRAPPLE_RANGE long)
+#define LV_CHAIN_LAG    0.45f   // How far each link swings to follow the one above it a frame (less: more whip)
+#define LV_CHAIN_SPEED  16.0f   // The chain flies out to the grapple point, and back in, this many pixels a frame
+#define LV_CAM_ZONE     32.0f   // The player moves freely within this far of the middle of the screen (a 64x64 box)...
+#define LV_CAM_CATCH_UP 0.08f   // ...then the camera catches up by this fraction of the way a frame (more when far)
 #define LV_CLIMB        2       // Steepest slope climbed: pixels up for each pixel across
 #define LV_CONVEYOR     1.0f    // Pixels a frame a conveyor carries the player along
-#define LV_SPRING       8.0f    // A springboard's bounce...
-#define LV_SPRING_HIGH  10.5f   // ...holding jump
+#define LV_SPRING       9.5f    // A springboard's bounce...
+#define LV_SPRING_HIGH  12.5f   // ...holding jump
 #define LV_SPRING_SQUASH 8      // Frames a springboard shows squashed after a bounce
 #define LV_SHIP_ACCEL   0.35f   // Shooter levels: the player flies - speeding up the way pushed...
 #define LV_SHIP_DRAG    0.90f   // ...slowing down (each frame's speed is multiplied by this)...
@@ -1184,12 +1215,18 @@ void collisionTest(void)
 #define LV_TURRET_ARC   1.4f    // A turret's gun turns this far (radians) either side of straight out of its floor or roof
 #define LV_LAUNCH_TURN  0.08f   // How quickly a launched mine turns towards the player
 #define LV_LAUNCHED     3       // (a launch pattern flyer's state once it's launched: 1 is waiting)
+#define LV_MAX_SEA_BUBBLES 16   // Underwater levels: bubbles rising at once...
+#define LV_SEA_BUBBLE_GAP  12   // ...about this many frames apart from the sea bed...
+#define LV_BREATH_GAP      70   // ...and the player breathing out, about this many apart
+#define LV_ZOOM_FRAMES  12      // Going to another level: frames zooming into the door, then out of the new level...
+#define LV_ZOOM_SCALE   8.0f    // ...and how far in (the last frame of one level, magnified this much)
 
 // Sprite frames: 0-7 face left, 8-15 right. Each 8 is a run cycle; frame 3 has the feet together (standing)
 #define LV_FRAMES_RIGHT 8
 #define LV_FRAME_STAND  3
 #define LV_FRAME_JUMP   4
 #define LV_FRAME_SKID   0
+#define LV_FRAME_DASH   -1      // While dashing (-1: the run cycle, until there's a dash graphic)
 #define LV_STRIDE       5.0f    // Pixels run per frame of the cycle
 
 // Palettes: the player, bubbles
@@ -1234,6 +1271,32 @@ static uint32_t lvKeys;
 static bool lvPrevA;
 // The springboard showing squashed (its tile position, and its own tile to put back), and for how many more frames
 static int lvSpringX, lvSpringY, lvSpringTile, lvSpringTimer;
+// A jump with the jump key still held since it started (letting go cuts it short)
+static bool lvJumpHeld;
+// Pixels of the dash left (0 when not dashing), and the dash key last frame
+static int lvDashLeft;
+// Frames until the dash can be used again
+static int lvDashCool;
+// The speed of the conveyor the player was on last frame (0 if none) - carried on with them when they leave it
+static float lvConveyorSpeed;
+// How fast speed over a run is being lost (0 when it isn't - see lvSlowToRun)
+static float lvSlowRate;
+// In the air with speed carried off a conveyor or the grapple's chain (kept until landing, a wall, or pushing back)
+static bool lvKeepAirSpeed;
+// The grapple: the point the player would grab (and if there is one), swinging (the anchor, chain length, angle from
+// straight down - positive with the player to the right - and its speed, radians a frame), each link's angle (lagging the
+// ones above, for the whip), the marker's sprite and the grapple key last frame
+static bool lvHasTarget, lvSwinging, lvPrevG;
+static float lvTargetX, lvTargetY, lvAnchorX, lvAnchorY, lvChainLength, lvSwingAngle, lvSwingSpeed;
+static float lvChainAngles[LV_CHAIN_LINKS];
+static int lvMarker=-1;
+// The chain flying out to the grapple point (the swing starts when it gets there), or pulling back in after letting go:
+// its tip, and how far it's reached
+static bool lvChainFiring, lvChainRetracting;
+static float lvChainTipX, lvChainTipY, lvChainReach;
+static bool lvPrevM;
+// The highest point (smallest y) since leaving the ground (a landing far enough below it shakes the level)
+static int lvAirTop;
 // Frames since entering the level (for showing its name and description), and what the HUD's second line shows
 static int lvTitleTimer, lvHudLine=-1;
 // The player's bullets (sprites, in the bullets set), the explosions' particle set, and frames until the next shot
@@ -1252,6 +1315,30 @@ typedef struct LvShot {
 } LvShot;
 static LvShot lvShotList[LV_MAX_SHOTS];
 static void lvFreeShots(void);
+// Underwater levels (the Level's "underwater" in Tiled): bubbles rising from the sea bed (they pop when touched) and
+// from the player (they don't, and rise faster)
+typedef struct LvSeaBubble {
+    int16_t sprite;
+    int16_t age;
+    bool fromPlayer;
+    float x, y, rise, wobble;
+} LvSeaBubble;
+static LvSeaBubble lvSeaBubbles[LV_MAX_SEA_BUBBLES];
+static bool lvUnderwater;
+static int lvBreathTimer;
+// Going to another level: zooming into the last frame of this one (a snapshot), around the player at the door, then
+// out of the new level's first frame (drawn unseen into the same snapshot) around them at its entrance
+#define LV_TRANSITION_NONE  0
+#define LV_ZOOM_IN          1
+#define LV_ZOOM_LOAD        2
+#define LV_ZOOM_OUT         3
+static FrameSnapshot lvSnapshot;
+static int lvTransition=LV_TRANSITION_NONE, lvTransitionFrame, lvTransitionLevel;
+static const char *lvTransitionEntrance;
+static float lvFocusX, lvFocusY;
+static void lvDrawFrame(void);
+static void lvStartTransition(void);
+static void lvUpdateTransition(void);
 // An exit used this frame: the level and entrance to go to
 static int lvGoLevel=-1;
 static const char *lvGoEntrance;
@@ -1429,6 +1516,15 @@ static void lvRespawn(void)
     lvSafe=LV_SAFE_TIME;
     lvX=lvStartX;
     lvY=lvStartY;
+    lvAirTop=lvY;
+    lvDashLeft=0;
+    lvConveyorSpeed=0.0f;
+    lvDashCool=0;
+    lvSwinging=false;
+    lvHasTarget=false;
+    lvKeepAirSpeed=false;
+    lvChainFiring=false;
+    lvChainRetracting=false;
     lvFracX=0.0f;
     lvFracY=0.0f;
     lvSpeed=0.0f;
@@ -1442,11 +1538,118 @@ static void lvRespawn(void)
 // Leave the ground: the speed along the level becomes a velocity on screen, plus the jump (straight up the screen)
 static void lvTakeOff(float jump)
 {
-    layerToScreenVector(LV_LAYER,lvSpeed,0.0f,&lvVX,&lvVY);
+    lvAirTop=lvY;
+    lvDashLeft=0;           // (leaving the ground ends a dash)
+    // (off a conveyor, its speed goes with the player - and if that's more than a run, it's kept through the air)
+    lvKeepAirSpeed=(lvConveyorSpeed!=0.0f && fabsf(lvSpeed+lvConveyorSpeed)>LV_RUN);
+    layerToScreenVector(LV_LAYER,lvSpeed+lvConveyorSpeed,0.0f,&lvVX,&lvVY);
+    lvConveyorSpeed=0.0f;
     lvVY-=jump;
     lvOnGround=false;
     lvSkidding=false;
     lvFracY=0.0f;
+}
+
+// Shake the level (the engine's shakeLevel), 4 pixels at most, in a direction (0,1 down, for a landing; 1,0 or -1,0 for
+// a wall)
+static void lvStartShake(float size, float dirX, float dirY)
+{
+    shakeLevel((size>4.0f)?4.0f:size,dirX,dirY);
+}
+
+// Ran (or flew) into a wall going one way (dir) at a speed: fast enough, the level shakes with it - and faster than a
+// run (a dash), particles burst back off the wall
+static void lvWallImpact(int dir, float speed)
+{
+    if(speed<LV_WALL_SHAKE){
+        return;
+    }
+    lvStartShake(1.0f+((speed-LV_WALL_SHAKE)*1.5f),(float)dir,0.0f);
+    lvSlowRate=0.0f;
+    lvDashLeft=0;
+    const float over=speed-LV_RUN;
+    if(over>0.05f && lvSparks>=0){
+        // Faster than a run (dashing, or still slowing from a dash): a burst from where the player meets the wall, back
+        // the way they came (0 is up, clockwise) - the more over running speed, the more particles, and the faster
+        const float back=(dir>0)?4.7124f:1.5708f;
+        const int x=lvX+((dir>0)?LV_RIGHT+1:-LV_LEFT-1);
+        const float hard=(over>LV_DASH_SPEED-LV_RUN)?1.0f:over/(LV_DASH_SPEED-LV_RUN);   // (1 at full dash speed)
+        startParticles(lvSparks,x,lvY,8+(int)(hard*92.0f),back-1.1f,back+1.1f,0.6f,1.0f+(hard*4.0f),12,35);
+    }
+}
+
+static void lvExplode(float x, float y, int dir);
+
+// Dashing: any enemy the player's box meets is destroyed, blown apart the way they're going. Checked after every pixel
+// the dash moves, so at dash speed none are passed by between frames
+static void lvDashHits(int dir)
+{
+    for(int ix=firstSpriteInSet(lvEnemies);ix>=0;){
+        const int next=nextSpriteInSet(ix);     // (destroying it takes it out of the set)
+        const int obj=getSpriteLevelObject(ix);
+        const LevelActor *a=getLevelActor(obj);
+        const LevelObject *o=(obj>=0)?getLevelObject(obj):NULL;
+        if(a && o){
+            const float hw=(float)o->width*0.5f, hh=(float)o->height*0.5f;
+            if(a->x+hw>(float)(lvX-LV_LEFT) && a->x-hw<=(float)(lvX+LV_RIGHT) &&
+                a->y+hh>(float)(lvY-LV_TOP) && a->y-hh<=(float)(lvY+LV_BOTTOM)){
+                lvExplode(a->x,a->y,dir);
+                killLevelActor(obj);
+                ++lvStomped;
+            }
+        }
+        ix=next;
+    }
+}
+
+// Speed over a run (out of a dash, or off a conveyor) is lost over LV_SLOW_FRAMES frames, on the ground or in the air:
+// the rate's set from how much there is when the slowing starts (lvSlowRate), and cleared once back to running speed
+static float lvSlowToRun(float v)
+{
+    const float a=fabsf(v);
+    if(a<=LV_RUN){
+        lvSlowRate=0.0f;
+        return v;
+    }
+    if(lvSlowRate<=0.0f){
+        lvSlowRate=(a-LV_RUN)/LV_SLOW_FRAMES;
+    }
+    float s=a-lvSlowRate;
+    if(s<=LV_RUN+0.001f){
+        s=LV_RUN;
+        lvSlowRate=0.0f;
+    }
+    return (v>0.0f)?s:-s;
+}
+
+// Dashing into a wall: breakable tiles in the way (TileType breakable - e.g. cracked bricks) are broken - each becomes the
+// next tile along in its tile set (the broken version, which isn't solid), with fragments bursting out the way the
+// player's going. True if any were (the caller tries the step again: through, if nothing else solid's in the way)
+static bool lvBreakWalls(int dir)
+{
+    const int x=(dir>0)?lvX+LV_RIGHT+1:lvX-LV_LEFT-1;
+    const int half=(1<<lvTileShift)/2;
+    const float ahead=(dir>0)?1.5708f:4.7124f;
+    bool broke=false;
+    for(int y=lvY-LV_TOP;y<=lvY+LV_BOTTOM;y++){
+        if(!isLevelPixelSolid(LV_LAYER,x,y)){
+            continue;
+        }
+        const int tx=x>>lvTileShift, ty=y>>lvTileShift;
+        if(LEVEL_TILE_TYPE(getLevelTileFlags(LV_LAYER,tx,ty))!=TILE_TYPE_BREAKABLE){
+            continue;
+        }
+        // (now the broken tile, it's no longer breakable, so the rows below in the same tile pass it by)
+        setLevelTile(LV_LAYER,tx,ty,(uint8_t)(getLevelTile(LV_LAYER,tx,ty)+1));
+        const int cx=(tx<<lvTileShift)+half, cy=(ty<<lvTileShift)+half;
+        startParticles(lvSparks,cx,cy,10+(half*2),ahead-0.9f,ahead+0.9f,1.5f,5.0f,15,40);
+        startParticles(lvSparks,cx,cy,4+half,-0.6f,0.6f,1.0f,3.0f,10,30);
+        broke=true;
+    }
+    if(broke){
+        lvStartShake(1.5f,(float)dir,0.0f);
+    }
+    return broke;
 }
 
 static void lvRun(int dir)
@@ -1454,7 +1657,12 @@ static void lvRun(int dir)
     // Mario style: a walk to start, building up speed the longer it runs one way. Pushing the other way skids, and
     // letting go slides to a stop
     lvSkidding=false;
-    if(dir && lvSpeed*(float)dir<0.0f){
+    if(lvDashLeft>0){
+        // Dashing: dash speed, whatever's pressed, until it's gone its distance
+    }else if(fabsf(lvSpeed)>LV_RUN){
+        // After a dash (or off a conveyor): slowing back to running speed
+        lvSpeed=lvSlowToRun(lvSpeed);
+    }else if(dir && lvSpeed*(float)dir<0.0f){
         lvSkidding=true;
         lvSpeed+=(float)dir*LV_SKID;
         if(lvSpeed*(float)dir>0.0f){
@@ -1474,18 +1682,280 @@ static void lvRun(int dir)
     lvFracX+=lvSpeed;
     while(fabsf(lvFracX)>=1.0f){
         const int step=(lvFracX>0.0f)?1:-1;
-        if(!lvStepAcross(step,true)){
+        // (dashing, breakable walls in the way break - through them, the dash carries on)
+        bool moved=lvStepAcross(step,true);
+        if(!moved && lvDashLeft>0 && lvBreakWalls(step)){
+            moved=lvStepAcross(step,true);
+        }
+        if(!moved){
+            lvWallImpact(step,fabsf(lvSpeed));
             lvSpeed=0.0f;
             lvFracX=0.0f;
             break;
         }
         lvFracX-=(float)step;
         lvStride+=1.0f;
+        if(lvDashLeft>0){
+            --lvDashLeft;
+            lvDashHits(step);
+        }
     }
     // Ran off an edge
     if(!lvGrounded(lvX,lvY)){
         lvTakeOff(0.0f);
     }
+}
+
+// ---------------------------------------------------------------------------
+// The grapple
+// ---------------------------------------------------------------------------
+
+// The grapple point the player would grab: the closest grapple point tile (TileType grapplePoint - its middle) ahead of
+// them (the way they face) and above their hand, within LV_GRAPPLE_RANGE, with nothing solid in the way
+static bool lvFindGrapple(float *px, float *py)
+{
+    const int size=1<<lvTileShift, hx=lvX, hy=lvY-LV_HAND;
+    const int x0=(lvFacing>0)?hx-(size/2):hx-LV_GRAPPLE_RANGE, x1=(lvFacing>0)?hx+LV_GRAPPLE_RANGE:hx+(size/2);
+    int best=(LV_GRAPPLE_RANGE*LV_GRAPPLE_RANGE)+1;
+    for(int ty=(hy-LV_GRAPPLE_RANGE)>>lvTileShift;ty<=hy>>lvTileShift;ty++){
+        for(int tx=x0>>lvTileShift;tx<=x1>>lvTileShift;tx++){
+            if(LEVEL_TILE_TYPE(getLevelTileFlags(LV_LAYER,tx,ty))!=TILE_TYPE_GRAPPLE_POINT){
+                continue;
+            }
+            const int cx=(tx<<lvTileShift)+(size/2), cy=(ty<<lvTileShift)+(size/2);
+            const int dx=cx-hx, dy=cy-hy, d2=(dx*dx)+(dy*dy);
+            if(dy>-8 || dx*lvFacing<-(size/2) || d2>=best || d2<12*12){
+                continue;
+            }
+            // In sight: nothing solid between the hand and the point (stopping short of the point's own tile)
+            const float d=sqrtf((float)d2), stepX=(float)dx/d, stepY=(float)dy/d;
+            bool clear=true;
+            for(float s=0.0f;s<d-(float)(size/2) && clear;s+=1.0f){
+                clear=!isLevelPixelSolid(LV_LAYER,hx+(int)(stepX*s),hy+(int)(stepY*s));
+            }
+            if(clear){
+                best=d2;
+                *px=(float)cx;
+                *py=(float)cy;
+            }
+        }
+    }
+    return best<=LV_GRAPPLE_RANGE*LV_GRAPPLE_RANGE;
+}
+
+static void lvGrab(void);
+
+// Throw the chain at the marked grapple point: it flies out from the player's hand (lvUpdateChain)
+static void lvFireChain(void)
+{
+    lvChainFiring=true;
+    lvHasTarget=false;      // (looked for again once the player's off the chain)
+    lvChainRetracting=false;
+    lvAnchorX=lvTargetX;
+    lvAnchorY=lvTargetY;
+    lvChainReach=0.0f;
+    lvChainTipX=(float)lvX;
+    lvChainTipY=(float)(lvY-LV_HAND);
+}
+
+// The chain's tip, a frame on: flying out (when it reaches the grapple point, the player swings from it - landing first,
+// it pulls back in), or pulling back into the player's hand, following them
+static void lvUpdateChain(void)
+{
+    const float hx=(float)lvX, hy=(float)(lvY-LV_HAND);
+    if(lvChainFiring){
+        const float dx=lvAnchorX-hx, dy=lvAnchorY-hy, d=sqrtf((dx*dx)+(dy*dy));
+        lvChainReach+=LV_CHAIN_SPEED;
+        if(lvChainReach>=d){
+            lvChainFiring=false;
+            lvGrab();
+            return;
+        }
+        lvChainTipX=hx+(dx*(lvChainReach/d));
+        lvChainTipY=hy+(dy*(lvChainReach/d));
+        if(lvOnGround){
+            lvChainFiring=false;
+            lvChainRetracting=true;
+        }
+    }else if(lvChainRetracting){
+        const float dx=lvChainTipX-hx, dy=lvChainTipY-hy, d=sqrtf((dx*dx)+(dy*dy));
+        if(d<=LV_CHAIN_SPEED){
+            lvChainRetracting=false;
+            return;
+        }
+        lvChainTipX=hx+(dx*((d-LV_CHAIN_SPEED)/d));
+        lvChainTipY=hy+(dy*((d-LV_CHAIN_SPEED)/d));
+    }
+}
+
+// Grab the grapple point: swinging on a chain as long as it is from the player's hand, carrying on at the speed they were
+// going (the part of it along the swing)
+static void lvGrab(void)
+{
+    lvSwinging=true;
+    const float dx=(float)lvX-lvAnchorX, dy=(float)(lvY-LV_HAND)-lvAnchorY;
+    lvChainLength=sqrtf((dx*dx)+(dy*dy));
+    lvSwingAngle=atan2f(dx,dy);
+    float du, dv;
+    screenToLayerVector(LV_LAYER,lvVX,lvVY,&du,&dv);
+    lvSwingSpeed=((du*cosf(lvSwingAngle))-(dv*sinf(lvSwingAngle)))/lvChainLength;
+    for(int n=0;n<LV_CHAIN_LINKS;n++){
+        lvChainAngles[n]=lvSwingAngle;
+    }
+    lvDashLeft=0;
+    lvKeepAirSpeed=false;
+    lvJumpHeld=false;
+    lvFracX=0.0f;
+    lvFracY=0.0f;
+}
+
+// Off the chain, carrying on at the swing's speed (plus a hop, jumping off) - jumping off, that speed's kept through
+// the air like a conveyor's; knocked off (by something solid), it's an ordinary fall
+static void lvLetGo(float hop, bool keepSpeed)
+{
+    // (the chain lets go of the grapple point, and pulls back in)
+    lvChainRetracting=true;
+    lvChainTipX=lvAnchorX;
+    lvChainTipY=lvAnchorY;
+    const float speed=lvSwingSpeed*lvChainLength;
+    layerToScreenVector(LV_LAYER,speed*cosf(lvSwingAngle),-speed*sinf(lvSwingAngle),&lvVX,&lvVY);
+    lvVY-=hop;
+    lvSwinging=false;
+    lvOnGround=false;
+    lvKeepAirSpeed=keepSpeed && fabsf(lvVX)>LV_RUN;
+    lvAirTop=lvY;
+    lvFracX=0.0f;
+    lvFracY=0.0f;
+}
+
+// Swinging: a pendulum - pulled back down, pushed along by O and P (dir), stopping at LV_SWING_LIMIT either side - the
+// player moved to the end of the chain a pixel at a time, knocked off by anything solid in the way. Q jumps off
+static void lvSwingOnChain(int dir, bool jump)
+{
+    if(jump){
+        lvLetGo(LV_SWING_HOP,true);
+        return;
+    }
+    lvSwingSpeed+=(-(LV_SWING_GRAVITY/lvChainLength)*sinf(lvSwingAngle))+(((float)dir*LV_SWING_PUMP)/lvChainLength);
+    lvSwingSpeed*=0.997f;
+    const float maxSpeed=LV_SWING_MAX/lvChainLength;
+    lvSwingSpeed=(lvSwingSpeed>maxSpeed)?maxSpeed:((lvSwingSpeed<-maxSpeed)?-maxSpeed:lvSwingSpeed);
+    lvSwingAngle+=lvSwingSpeed;
+    if(fabsf(lvSwingAngle)>LV_SWING_LIMIT){
+        lvSwingAngle=(lvSwingAngle>0.0f)?LV_SWING_LIMIT:-LV_SWING_LIMIT;
+        lvSwingSpeed=0.0f;
+    }
+    if(dir){
+        lvFacing=dir;
+    }else if(fabsf(lvSwingSpeed)>0.005f){
+        lvFacing=(lvSwingSpeed>0.0f)?1:-1;
+    }
+
+    // The links follow the swing, each lagging the one above it a little more
+    lvChainAngles[0]=lvSwingAngle;
+    for(int n=1;n<LV_CHAIN_LINKS;n++){
+        lvChainAngles[n]+=(lvChainAngles[n-1]-lvChainAngles[n])*LV_CHAIN_LAG;
+    }
+
+    // To the end of the chain, a pixel at a time - anything solid in the way knocks the player off
+    const int nx=(int)floorf(lvAnchorX+(lvChainLength*sinf(lvSwingAngle))+0.5f);
+    const int ny=(int)floorf(lvAnchorY+(lvChainLength*cosf(lvSwingAngle))+0.5f)+LV_HAND;
+    while(lvX!=nx || lvY!=ny){
+        if(abs(nx-lvX)>=abs(ny-lvY)){
+            if(!lvStepAcross((nx>lvX)?1:-1,false)){
+                lvLetGo(0.0f,false);
+                return;
+            }
+        }else{
+            const int step=(ny>lvY)?1:-1;
+            if(lvPlayerRowBlocked(lvX,(step<0)?lvY-LV_TOP-1:lvY+LV_BOTTOM+1)){
+                lvLetGo(0.0f,false);
+                return;
+            }
+            lvY+=step;
+        }
+    }
+}
+
+static void lvDrawLinks(const float *x, const float *y, int links, int first);
+
+// The chain, as points drawn over the level layer: links from the anchor down to the player's hand - a loop, then a
+// bar, seen from the side - bent by the lag of the links below (the whip), then eased so its end is at the hand
+static void lvDrawChain(void)
+{
+    int links=(int)(lvChainLength/LV_CHAIN_PITCH);
+    links=(links<2)?2:((links>LV_CHAIN_LINKS)?LV_CHAIN_LINKS:links);
+    float x[LV_CHAIN_LINKS+1], y[LV_CHAIN_LINKS+1];
+    x[0]=lvAnchorX;
+    y[0]=lvAnchorY;
+    const float pitch=lvChainLength/(float)links;
+    for(int n=0;n<links;n++){
+        x[n+1]=x[n]+(pitch*sinf(lvChainAngles[n]));
+        y[n+1]=y[n]+(pitch*cosf(lvChainAngles[n]));
+    }
+    const float ex=(float)lvX-x[links], ey=(float)(lvY-LV_HAND)-y[links];
+    for(int n=1;n<=links;n++){
+        x[n]+=ex*(float)n/(float)links;
+        y[n]+=ey*(float)n/(float)links;
+    }
+    lvDrawLinks(x,y,links,1);
+}
+
+// A straight chain, from its tip (flying out to the grapple point, or pulling back in) to the player's hand - the tip
+// a loop, like the end of a hook
+static void lvDrawChainTo(float tipX, float tipY)
+{
+    const float hx=(float)lvX, hy=(float)(lvY-LV_HAND), dx=hx-tipX, dy=hy-tipY;
+    int links=(int)(sqrtf((dx*dx)+(dy*dy))/LV_CHAIN_PITCH);
+    if(links<1){
+        return;
+    }
+    links=(links>LV_CHAIN_LINKS)?LV_CHAIN_LINKS:links;
+    float x[LV_CHAIN_LINKS+1], y[LV_CHAIN_LINKS+1];
+    for(int n=0;n<=links;n++){
+        x[n]=tipX+((dx*(float)n)/(float)links);
+        y[n]=tipY+((dy*(float)n)/(float)links);
+    }
+    lvDrawLinks(x,y,links,0);
+}
+
+// Chain links at points 0 (the far end) to links (the hand): from point "first" to the one before the hand - a loop,
+// then a bar, seen from the side
+static void lvDrawLinks(const float *x, const float *y, int links, int first)
+{
+    for(int n=first;n<links;n++){
+        if(n&1){
+            // A bar, along the chain
+            const float tx=(x[n+1]-x[n-1])*0.25f, ty=(y[n+1]-y[n-1])*0.25f;
+            addLayerPoint(LV_LAYER,x[n]-tx,y[n]-ty);
+            addLayerPoint(LV_LAYER,x[n],y[n]);
+            addLayerPoint(LV_LAYER,x[n]+tx,y[n]+ty);
+        }else{
+            // A loop: a ring of 8 pixels
+            for(int k=0;k<9;k++){
+                if(k!=4){
+                    addLayerPoint(LV_LAYER,x[n]+(float)((k%3)-1),y[n]+(float)((k/3)-1));
+                }
+            }
+        }
+    }
+}
+
+// The marker: an arrow bobbing over the grapple point the player would grab (flashing), hidden when there's none, or
+// they're already swinging
+static void lvUpdateMarker(void)
+{
+    static int t;
+    ++t;
+    if(lvMarker<0){
+        return;
+    }
+    if(!lvHasTarget || lvSwinging || lvChainFiring || (t&7)>=6){
+        setSpriteLayer(lvMarker,-1);
+        return;
+    }
+    setSpriteLayer(lvMarker,LV_LAYER);
+    setSpritePos(lvMarker,lvTargetX,lvTargetY-14.0f-(fabsf(sinf((float)t*0.15f))*5.0f));
 }
 
 // Shooter levels (levelType "shooter" in Tiled): the player flies freely in any direction, with no gravity - moving
@@ -1579,6 +2049,13 @@ static void lvGroundTiles(bool jumpHeld)
     }
     int tx, ty;
     const int type=lvOnGround?lvGroundType(&tx,&ty):TILE_TYPE_NONE;
+    // Stepping off a conveyor onto the ground: its speed carries on with the player (over running speed, it's lost
+    // again as after a dash). Leaving it into the air, lvTakeOff adds it
+    const float belt=(type==TILE_TYPE_CONVEYOR_RIGHT)?LV_CONVEYOR:((type==TILE_TYPE_CONVEYOR_LEFT)?-LV_CONVEYOR:0.0f);
+    if(lvConveyorSpeed!=0.0f && belt==0.0f && lvOnGround){
+        lvSpeed+=lvConveyorSpeed;
+    }
+    lvConveyorSpeed=belt;
     if(type==TILE_TYPE_CONVEYOR_LEFT || type==TILE_TYPE_CONVEYOR_RIGHT){
         static float carried;
         carried+=(type==TILE_TYPE_CONVEYOR_RIGHT)?LV_CONVEYOR:-LV_CONVEYOR;
@@ -1601,10 +2078,28 @@ static void lvGroundTiles(bool jumpHeld)
 
 static void lvFly(int dir)
 {
-    lvVX+=(float)dir*LV_AIR_CONTROL;
-    lvVX=(lvVX>LV_RUN)?LV_RUN:((lvVX<-LV_RUN)?-LV_RUN:lvVX);
-    lvVY+=LV_GRAVITY;
-    lvVY=(lvVY>LV_MAX_FALL)?LV_MAX_FALL:lvVY;
+    if(lvDashLeft>0){
+        // Dashing through the air: straight across at dash speed, no falling, until it's gone its distance
+        lvVY=0.0f;
+    }else if(fabsf(lvVX)>LV_RUN && lvKeepAirSpeed && (float)dir*lvVX>=0.0f){
+        // Carried off a conveyor at more than a run: that speed's kept through the air (lost on landing, at a wall, or by
+        // pushing back)
+    }else if(fabsf(lvVX)>LV_RUN){
+        // Extra speed out of a dash - or off a conveyor, pushing back: slowing back to a run, as on the ground (pushing
+        // back loses it faster)
+        lvKeepAirSpeed=false;
+        lvVX=lvSlowToRun(lvVX);
+        if((float)dir*lvVX<0.0f){
+            lvVX+=(float)dir*LV_AIR_CONTROL;
+        }
+    }else{
+        lvVX+=(float)dir*LV_AIR_CONTROL;
+        lvVX=(lvVX>LV_RUN)?LV_RUN:((lvVX<-LV_RUN)?-LV_RUN:lvVX);
+    }
+    if(lvDashLeft==0){
+        lvVY+=(lvVY<0.0f)?LV_GRAVITY:LV_FALL_GRAVITY;
+        lvVY=(lvVY>LV_MAX_FALL)?LV_MAX_FALL:lvVY;
+    }
 
     // The velocity on screen, in the level's direction (the level may be tilted), a pixel at a time across and down
     float du, dv;
@@ -1624,10 +2119,19 @@ static void lvFly(int dir)
     while(fabsf(lvFracX)>=1.0f || fabsf(lvFracY)>=1.0f){
         if(fabsf(lvFracX)>=1.0f){
             const int step=(lvFracX>0.0f)?1:-1;
-            if(lvStepAcross(step,false)){
+            bool moved=lvStepAcross(step,false);
+            if(!moved && lvDashLeft>0 && lvBreakWalls(step)){
+                moved=lvStepAcross(step,false);
+            }
+            if(moved){
                 lvFracX-=(float)step;
+                if(lvDashLeft>0){
+                    --lvDashLeft;
+                    lvDashHits(step);
+                }
             }else{
                 // Hit a wall: stop moving across the level
+                lvWallImpact(step,fabsf(du));
                 lvFracX=0.0f;
                 du=0.0f;
                 layerToScreenVector(LV_LAYER,du,dv,&lvVX,&lvVY);
@@ -1688,7 +2192,7 @@ static void lvUpdateEnemy(int ix, LevelActor *a)
     // Fall until on the ground
     int x=(int)floorf(a->x), y=(int)floorf(a->y);
     if(!lvOnLevelGround(x,y)){
-        a->vy=(a->vy+LV_GRAVITY>LV_MAX_FALL)?LV_MAX_FALL:a->vy+LV_GRAVITY;
+        a->vy=(a->vy+LV_FALL_GRAVITY>LV_MAX_FALL)?LV_MAX_FALL:a->vy+LV_FALL_GRAVITY;
         for(int n=0;n<(int)a->vy && !lvOnLevelGround(x,y);n++){
             ++y;
         }
@@ -2046,10 +2550,15 @@ static void lvUpdateShots(void)
         if(s->sprite<0){
             continue;
         }
-        s->x+=s->vx;
-        s->y+=s->vy;
-        bool gone=(++s->age>LV_SHOT_LIFE);
-        if(!gone && isLevelPixelSolid(LV_LAYER,(int)s->x,(int)s->y)){
+        // A pixel at a time, so nothing thin (even a 1 pixel line) is skipped over
+        bool gone=(++s->age>LV_SHOT_LIFE), hit=false;
+        const int steps=(int)ceilf((fabsf(s->vx)>fabsf(s->vy))?fabsf(s->vx):fabsf(s->vy));
+        for(int k=0;k<steps && !hit;k++){
+            s->x+=s->vx/(float)steps;
+            s->y+=s->vy/(float)steps;
+            hit=isLevelPixelSolid(LV_LAYER,(int)s->x,(int)s->y);
+        }
+        if(!gone && hit){
             startParticles(lvSparks,(int)s->x,(int)s->y,5,0.0f,6.2832f,0.3f,1.0f,5,10);
             gone=true;
         }
@@ -2231,6 +2740,101 @@ static void lvExplode(float x, float y, int dir)
     startParticles(lvSparks,(int)x,(int)y,12,behind-0.5f,behind+0.5f,0.5f,1.8f,8,22);
 }
 
+// ---------------------------------------------------------------------------
+// Underwater: bubbles from the sea bed and the player
+// ---------------------------------------------------------------------------
+
+// A bubble (size 0-2: small, medium, large), rising at a speed
+static void lvSpawnSeaBubble(float x, float y, int size, float rise, bool fromPlayer)
+{
+    for(int n=0;n<LV_MAX_SEA_BUBBLES;n++){
+        LvSeaBubble *b=lvSeaBubbles+n;
+        if(b->sprite>=0){
+            continue;
+        }
+        const int s=allocateSprite();
+        if(s<0){
+            return;
+        }
+        b->sprite=(int16_t)s;
+        b->age=0;
+        b->fromPlayer=fromPlayer;
+        b->x=x;
+        b->y=y;
+        b->rise=rise;
+        b->wobble=(float)(rand()%628)/100.0f;
+        setSpriteSize(s,SIZE_8X8);
+        setSpriteDef(s,seaBubbleDef,seaBubbleMaskDef);
+        setSpritePalette(s,0);
+        setSpriteLayer(s,LV_LAYER);
+        setSpriteSpace(s,SPRITE_SPACE_LAYER,-1);
+        spriteList[s].frame=(int16_t)size;
+        setSpritePos(s,x,y);
+        return;
+    }
+}
+
+static void lvFreeSeaBubble(LvSeaBubble *b, bool pop)
+{
+    if(pop){
+        startParticles(lvSparks,(int)b->x,(int)b->y,6,0.0f,6.2832f,0.3f,0.9f,4,9);
+    }
+    freeSprite(b->sprite);
+    b->sprite=-1;
+}
+
+static void lvFreeSeaBubbles(void)
+{
+    for(int n=0;n<LV_MAX_SEA_BUBBLES;n++){
+        if(lvSeaBubbles[n].sprite>=0){
+            lvFreeSeaBubble(lvSeaBubbles+n,false);
+        }
+    }
+}
+
+// Every so often a bubble rises from the sea bed somewhere in view (mostly small ones, at different speeds), and the
+// player breathes one out. They wobble up until they reach the roof (and pop), or the sea bed's are touched by the
+// player (and pop) - the player's own pass through them
+static void lvUpdateSeaBubbles(void)
+{
+    if((rand()%LV_SEA_BUBBLE_GAP)==0){
+        // The sea bed below somewhere in view: down a column from the middle of the screen to something solid
+        const int x=(int)lvCamX+(rand()%SCREEN_WIDTH_PIXELS);
+        for(int y=(int)lvCamY+(SCREEN_HEIGHT_LINES/2);y<(int)lvCamY+SCREEN_HEIGHT_LINES+16;y++){
+            if(isLevelPixelSolid(LV_LAYER,x,y)){
+                const int r=rand()%10;
+                lvSpawnSeaBubble((float)x,(float)(y-4),(r<7)?0:((r<9)?1:2),0.35f+((float)(rand()%60)/100.0f),false);
+                break;
+            }
+        }
+    }
+    if(--lvBreathTimer<=0){
+        // From the player's mouth (in front of them, near the top)
+        lvBreathTimer=(LV_BREATH_GAP/2)+(rand()%LV_BREATH_GAP);
+        lvSpawnSeaBubble((float)(lvX+(lvFacing*7)),(float)(lvY-6),rand()%2,1.0f+((float)(rand()%50)/100.0f),true);
+    }
+    for(int n=0;n<LV_MAX_SEA_BUBBLES;n++){
+        LvSeaBubble *b=lvSeaBubbles+n;
+        if(b->sprite<0){
+            continue;
+        }
+        ++b->age;
+        b->y-=b->rise;
+        const float x=b->x+(sinf(b->wobble+((float)b->age*0.12f))*1.5f);
+        const int half=2+(spriteList[b->sprite].frame*1);
+        if(isLevelPixelSolid(LV_LAYER,(int)x,(int)b->y-half) || b->age>600){
+            lvFreeSeaBubble(b,b->age<=600);
+            continue;
+        }
+        if(!b->fromPlayer && x+half>=(float)(lvX-LV_LEFT) && x-half<=(float)(lvX+LV_RIGHT) &&
+            b->y+half>=(float)(lvY-LV_TOP) && b->y-half<=(float)(lvY+LV_BOTTOM)){
+            lvFreeSeaBubble(b,true);
+            continue;
+        }
+        setSpritePos(b->sprite,x,b->y);
+    }
+}
+
 static void lvFreeBullet(LvBullet *b)
 {
     freeSprite(b->sprite);
@@ -2283,10 +2887,10 @@ static void lvUpdateBullets(void)
             continue;
         }
         bool gone=false;
-        // In 2 pixel steps, so nothing thin is skipped over
+        // A pixel at a time, so nothing thin (even a 1 pixel line) is skipped over
         const float speed=LV_BULLET_SPEED+fabsf(lvVX);
-        for(float moved=0.0f;moved<speed && !gone;moved+=2.0f){
-            b->x+=(float)b->dir*2.0f;
+        for(float moved=0.0f;moved<speed && !gone;moved+=1.0f){
+            b->x+=(float)b->dir;
             const int tipX=(int)b->x+(b->dir*4);
             if(isLevelPixelSolid(LV_LAYER,tipX,(int)b->y) || isLevelPixelSolid(LV_LAYER,tipX,(int)b->y+1)){
                 startParticles(lvSparks,tipX,(int)b->y,8,(b->dir>0)?4.7124f-0.8f:1.5708f-0.8f,
@@ -2371,6 +2975,14 @@ static void lvPlayerHits(void)
             if(!a){
                 continue;
             }
+            // Dashed into: destroyed, blown apart the way the player was going (only while the dash lasts - once it's
+            // slowing back to running speed, enemies hurt as usual)
+            if(lvDashLeft>0 && getLevelType()!=LEVEL_TYPE_SHOOTER){
+                lvExplode(a->x,a->y,(lvSpeed>0.0f)?1:-1);
+                killLevelActor(obj);
+                ++lvStomped;
+                continue;
+            }
             // (stomped on from above - on foot only)
             if(getLevelType()!=LEVEL_TYPE_SHOOTER && !lvOnGround && lvVY>0.0f && (float)lvY<a->y-6.0f){
                 killLevelActor(obj);
@@ -2397,18 +3009,29 @@ static void lvPlayerHits(void)
 static void lvCamera(bool snap)
 {
     const float maxX=(float)(getLevelWidth()-SCREEN_WIDTH_PIXELS), maxY=(float)(getLevelHeight()-SCREEN_HEIGHT_LINES);
+    // Where the camera would be with the player in the middle of the screen
     float tx=(float)lvX-(SCREEN_WIDTH_PIXELS/2);
     float ty=(float)lvY-(SCREEN_HEIGHT_LINES/2);
+    if(!snap){
+        // The player moves freely in the box in the middle of the screen: the camera only goes far enough to bring
+        // them back to its edge
+        const float ox=tx-lvCamX, oy=ty-lvCamY;
+        tx=(ox>LV_CAM_ZONE)?tx-LV_CAM_ZONE:((ox<-LV_CAM_ZONE)?tx+LV_CAM_ZONE:lvCamX);
+        ty=(oy>LV_CAM_ZONE)?ty-LV_CAM_ZONE:((oy<-LV_CAM_ZONE)?ty+LV_CAM_ZONE:lvCamY);
+    }
     tx=(tx<0.0f)?0.0f:((tx>maxX)?maxX:tx);
     ty=(ty<0.0f)?0.0f:((ty>maxY)?maxY:ty);
     if(snap){
         lvCamX=tx;
         lvCamY=ty;
     }else{
+        // Catching up, faster the further there is to go - but not at all if that's under a pixel this frame (a pixel
+        // every few frames looks jerky)
         const float dx=tx-lvCamX, dy=ty-lvCamY;
-        const float kx=0.03f+(fabsf(dx)*0.001f), ky=0.03f+(fabsf(dy)*0.001f);
-        lvCamX+=dx*((kx>1.0f)?1.0f:kx);
-        lvCamY+=dy*((ky>1.0f)?1.0f:ky);
+        const float kx=LV_CAM_CATCH_UP+(fabsf(dx)*0.001f), ky=LV_CAM_CATCH_UP+(fabsf(dy)*0.001f);
+        const float sx=dx*((kx>1.0f)?1.0f:kx), sy=dy*((ky>1.0f)?1.0f:ky);
+        lvCamX+=(fabsf(sx)>=1.0f)?sx:0.0f;
+        lvCamY+=(fabsf(sy)>=1.0f)?sy:0.0f;
     }
     setLevelCamera((int)floorf(lvCamX+0.5f),(int)floorf(lvCamY+0.5f));
 }
@@ -2500,18 +3123,23 @@ static void lvOnSwitch(int value, bool on, int objectIX, uint8_t why)
 // its classes, and its actors' starting states
 static void lvSetupLevel(const LevelDef *lv)
 {
-    (void)lv;
     lvTileShift=(getLevelTileSize()==16)?4:3;
     // Bullets and explosions are only in the level they were in
     lvFreeBullets();
     lvFireTimer=0;
+    lvFreeSeaBubbles();
+    lvUnderwater=getLevelDefInt(lv,LEVEL_PROP_UNDERWATER,0)!=0;
+    lvBreathTimer=LV_BREATH_GAP;
     lvFreeShots();
     if(lvSparks>=0){
         deleteParticleSet(lvSparks);
     }
     lvSparks=createParticleSet(LV_SPARKS,LV_LAYER);
     setParticleSetSpace(lvSparks,PARTICLE_SPACE_LAYER);
-    setParticleSetGravity(lvSparks,0.03f);
+    // Bouncing off the level's tiles - falling properly on foot, drifting in a shooter level's (gravity-less) flight
+    setParticleSetCollisions(lvSparks,true);
+    setParticleSetBounce(lvSparks,0.6f);
+    setParticleSetGravity(lvSparks,(lv->type==LEVEL_TYPE_SHOOTER)?0.03f:0.15f);
     lvPistonsStopped=false;
     lvLiftCalled=false;
     for(int n=0;n<LV_MAX_BUBBLES;n++){
@@ -2657,6 +3285,9 @@ void setupLevelTest(void)
     for(int n=0;n<LV_MAX_SHOTS;n++){
         lvShotList[n].sprite=-1;
     }
+    for(int n=0;n<LV_MAX_SEA_BUBBLES;n++){
+        lvSeaBubbles[n].sprite=-1;
+    }
     deleteParticleSets();
     lvSparks=-1;
     for(int n=0;n<LV_MAX_BUBBLES;n++){
@@ -2671,6 +3302,13 @@ void setupLevelTest(void)
     setSpriteLayer(lvPlayer,LV_LAYER);
     setSpriteSpace(lvPlayer,SPRITE_SPACE_LAYER,-1);
     setSpriteCollisions(lvPlayer,COLLIDE_SPRITES);
+    // The grapple marker (hidden until there's a grapple point to grab)
+    lvMarker=allocateSprite();
+    setSpriteSize(lvMarker,SIZE_8X8);
+    setSpriteDef(lvMarker,grappleArrowDef,grappleArrowMaskDef);
+    setSpritePalette(lvMarker,0);
+    setSpriteSpace(lvMarker,SPRITE_SPACE_LAYER,LV_LAYER);
+    setSpriteLayer(lvMarker,-1);
     lvCoins=0;
     lvLost=0;
     lvStomped=0;
@@ -2702,6 +3340,11 @@ void levelTest(void)
     if(!lvLoaded){
         return;
     }
+    // Going to another level: everything waits while the screen zooms
+    if(lvTransition!=LV_TRANSITION_NONE){
+        lvUpdateTransition();
+        return;
+    }
     const bool rDown=keyDown(KEY_R)!=0;
     if(rDown && !lvPrevR){
         lvRotate=!lvRotate;
@@ -2721,6 +3364,7 @@ void levelTest(void)
     lvPlayerHits();
 
     // Every actor, then the player - carried by the platform they're standing on
+    const bool wasOnGround=lvOnGround;
     const int riding=lvOnGround?lvPlatformUnder(lvX,lvY):-1;
     lvUpdateActors();
     lvPistonsHitPlayer();
@@ -2754,16 +3398,68 @@ void levelTest(void)
         // Flying: Q up, A down
         lvShip(dir,(lvLeaving>=0)?0:(qDown?-1:(aDown?1:0)));
     }else{
-        if(qDown && !lvPrevQ && lvOnGround && lvLeaving<0){
-            lvTakeOff(LV_JUMP);
+        // The grapple (G): in the air, grabbing the marked grapple point - then swinging until jumping off (Q) or
+        // knocked off. No dashing while swinging (its cooldown still counts down)
+        const bool gDown=keyDown(KEY_G)!=0;
+        const bool mDown=keyDown(KEY_M)!=0;
+        if(lvDashCool>0){
+            --lvDashCool;
         }
-        if(lvOnGround){
-            lvRun(dir);
+        if(!lvSwinging && !lvChainFiring){
+            lvHasTarget=lvFindGrapple(&lvTargetX,&lvTargetY);
+        }
+        if(gDown && !lvPrevG && !lvOnGround && !lvSwinging && !lvChainFiring && lvHasTarget && lvLeaving<0){
+            lvFireChain();
+        }
+        lvPrevG=gDown;
+        // (the chain flying out - grabbing the point when it gets there - or pulling back in)
+        lvUpdateChain();
+        if(lvSwinging){
+            lvSwingOnChain(dir,qDown && !lvPrevQ && lvLeaving<0);
+            lvPrevM=mDown;
         }else{
-            lvFly(dir);
+            // The dash (M): on the ground or in the air (straight across, holding its height - a jump and a dash reach
+            // further), then not again until its cooldown's over
+            if(mDown && !lvPrevM && lvDashCool==0 && !lvChainFiring && lvLeaving<0){
+                lvDashLeft=LV_DASH_DISTANCE;
+                lvSlowRate=0.0f;       // (the slowing after it starts afresh)
+                lvKeepAirSpeed=false;
+                lvDashCool=LV_DASH_COOLDOWN;
+                if(lvOnGround){
+                    lvSpeed=(float)lvFacing*LV_DASH_SPEED;
+                }else{
+                    lvVX=(float)lvFacing*LV_DASH_SPEED;
+                    lvVY=0.0f;
+                    lvJumpHeld=false;
+                }
+            }
+            lvPrevM=mDown;
+            if(qDown && !lvPrevQ && lvOnGround && lvLeaving<0){
+                lvTakeOff(LV_JUMP);
+                lvJumpHeld=true;
+            }
+            // Letting go of jump on the way up cuts the jump short: a tap is a hop, holding it the full jump (only for
+            // jumps - not springboards or stomps)
+            if(lvJumpHeld && (!qDown || lvOnGround || lvVY>=0.0f)){
+                if(!qDown && lvVY<-LV_JUMP_CUT){
+                    lvVY=-LV_JUMP_CUT;
+                }
+                lvJumpHeld=false;
+            }
+            if(lvOnGround){
+                lvRun(dir);
+            }else{
+                lvFly(dir);
+            }
         }
     }
     lvPrevQ=qDown;
+    // A heavy landing (from more than LV_SHAKE_FALL above) shakes the level - harder the further the fall
+    if(!lvOnGround){
+        lvAirTop=(lvY<lvAirTop)?lvY:lvAirTop;
+    }else if(!wasOnGround && lvY-lvAirTop>LV_SHAKE_FALL){
+        lvStartShake(2.0f+((float)(lvY-lvAirTop-LV_SHAKE_FALL)/24.0f),0.0f,1.0f);
+    }
     if(shooter){
         // Fire (M - SPACE leaves the level test) - held, a shot every LV_FIRE_DELAY frames
         if(lvFireTimer>0){
@@ -2776,15 +3472,18 @@ void levelTest(void)
         lvUpdateBullets();
         lvUpdateShots();
     }
+    if(lvUnderwater){
+        lvUpdateSeaBubbles();
+    }
 
     // Switches, keys, doors and exits (A uses things - or, flying, exits are taken by flying into them) - an exit
     // takes the player to another level straight away
     lvUseThings(aDown && !lvPrevA && !shooter,shooter);
     lvPrevA=aDown;
     if(lvGoLevel>=0){
-        const int to=lvGoLevel;
-        lvGoLevel=-1;
-        lvEnter(to,lvGoEntrance);
+        // (the frame as it is now, then zooming into it, into the next level)
+        lvDrawFrame();
+        lvStartTransition();
         return;
     }
 
@@ -2802,11 +3501,21 @@ void levelTest(void)
         ++lvLost;
         lvRespawn();
     }
+    lvDrawFrame();
+}
+
+// Everything drawn for the frame: the player's sprite, the camera, the level (animated tiles, sprites for the actors
+// near the camera) and the HUD
+static void lvDrawFrame(void)
+{
+    const bool shooter=(getLevelType()==LEVEL_TYPE_SHOOTER);
 
     // Frame: standing, running (the cycle moving on with the distance run), skidding or in the air
     int frame=LV_FRAME_STAND;
     if(!lvOnGround){
         frame=LV_FRAME_JUMP;
+    }else if(lvDashLeft>0 && LV_FRAME_DASH>=0){
+        frame=LV_FRAME_DASH;
     }else if(lvSkidding){
         frame=LV_FRAME_SKID;
     }else if(lvSpeed!=0.0f){
@@ -2817,7 +3526,16 @@ void levelTest(void)
     setSpritePalette(lvPlayer,(lvSafe>0 && (lvSafe&4))?0:(shooter?LV_SHIP_PALETTE:LV_PALETTE));
     setSpritePos(lvPlayer,(float)lvX,(float)lvY);
 
-    // The camera, then the level: animated tiles, sprites for the actors near the camera, placed where they are now
+    // The grapple: its marker, and the chain while swinging
+    lvUpdateMarker();
+    if(lvSwinging){
+        lvDrawChain();
+    }else if(lvChainFiring || lvChainRetracting){
+        lvDrawChainTo(lvChainTipX,lvChainTipY);
+    }
+
+    // The camera (with any shake - the engine adds it), then the level: animated tiles, sprites for the actors near the
+    // camera, placed where they are now
     lvCamera(false);
     updateLevel();
 
@@ -2843,7 +3561,7 @@ void levelTest(void)
             snprintf(text,sizeof(text),"%-32.32s",line?desc:name);
         }else{
             snprintf(text,sizeof(text),"%-32s",(getLevelType()==LEVEL_TYPE_SHOOTER)?"O/P/Q/A:FLY M:FIRE R:TILT":
-                "O/P:RUN Q:JUMP A:USE R:TILT");
+                "O/P Q:JUMP M:DASH G:GRAB A:USE");
         }
         for(char *c=text;*c;c++){
             *c=(char)toupper((unsigned char)*c);
@@ -2862,4 +3580,82 @@ void levelTest(void)
             (unsigned)(gv.frameTimeUs/400));
     }
     drawTxtToLayer(LV_HUD_LAYER,status,0x46,0x46,0,0);
+}
+
+// ---------------------------------------------------------------------------
+// Going to another level: a zoom into the door, and out of the next level
+// ---------------------------------------------------------------------------
+
+// The player's position on screen (the zoom's focus)
+static void lvPlayerOnScreen(float *x, float *y)
+{
+    layerToScreen(LV_LAYER,(float)lvX,(float)lvY,x,y);
+}
+
+// Start going to the level an exit leads to (lvGoLevel): this frame is captured as it's drawn, to zoom into
+static void lvStartTransition(void)
+{
+    lvTransitionLevel=lvGoLevel;
+    lvTransitionEntrance=lvGoEntrance;
+    lvGoLevel=-1;
+    lvPlayerOnScreen(&lvFocusX,&lvFocusY);
+    // (the HUD, on layer 0, is left out of the snapshots - it's drawn as it is over the zoom)
+    setSnapshotFrontLayers(1);
+    captureNextFrame(&lvSnapshot);
+    lvTransition=LV_ZOOM_IN;
+    lvTransitionFrame=0;
+}
+
+// The snapshot zoomed in by t (0 to 1): magnified up to LV_ZOOM_SCALE times around the focus, which moves to the
+// middle of the screen as it does (so the zoom ends on it)
+static void lvZoomView(float t)
+{
+    const float scale=powf(LV_ZOOM_SCALE,t);
+    const float sx=lvFocusX+(((SCREEN_WIDTH_PIXELS/2)-lvFocusX)*t), sy=lvFocusY+(((SCREEN_HEIGHT_LINES/2)-lvFocusY)*t);
+    setScreenSnapshotView(lvFocusX,lvFocusY,sx,sy,scale,0.0f);
+}
+
+static void lvUpdateTransition(void)
+{
+    switch(lvTransition){
+        case LV_ZOOM_IN:
+            // Into the last frame of the level being left
+            if(lvTransitionFrame==0){
+                showScreenSnapshot(&lvSnapshot,1);
+            }
+            lvZoomView((float)(++lvTransitionFrame)/(float)LV_ZOOM_FRAMES);
+            if(lvTransitionFrame>=LV_ZOOM_FRAMES){
+                lvTransition=LV_ZOOM_LOAD;
+            }
+        break;
+        case LV_ZOOM_LOAD:
+            // The next level, its first frame drawn unseen into the snapshot (the Spectrum keeps showing the zoomed in
+            // door meanwhile, however long loading takes)
+            hideScreenSnapshot();
+            if(!lvEnter(lvTransitionLevel,lvTransitionEntrance)){
+                lvTransition=LV_TRANSITION_NONE;
+                setSnapshotFrontLayers(0);
+                return;
+            }
+            lvDrawFrame();
+            setFrameTarget(&lvSnapshot);
+            lvPlayerOnScreen(&lvFocusX,&lvFocusY);
+            lvTransition=LV_ZOOM_OUT;
+            lvTransitionFrame=0;
+        break;
+        case LV_ZOOM_OUT:
+            // Out of it, around the player at the entrance - ending at 1:1, the frame the level carries on from
+            if(lvTransitionFrame==0){
+                showScreenSnapshot(&lvSnapshot,1);
+            }
+            lvZoomView(1.0f-((float)(++lvTransitionFrame)/(float)LV_ZOOM_FRAMES));
+            if(lvTransitionFrame>=LV_ZOOM_FRAMES){
+                hideScreenSnapshot();
+                lvTransition=LV_TRANSITION_NONE;
+                setSnapshotFrontLayers(0);
+            }
+        break;
+        default:
+        break;
+    }
 }

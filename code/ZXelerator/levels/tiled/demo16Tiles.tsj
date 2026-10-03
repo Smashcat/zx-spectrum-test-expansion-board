@@ -175,7 +175,17 @@
             { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"blue" },
             { "name":"bright", "type":"bool", "value":true },
             { "name":"solid", "type":"bool", "value":true },
-            { "name":"tileType", "propertytype":"TileType", "type":"string", "value":"superJump" } ] }
+            { "name":"tileType", "propertytype":"TileType", "type":"string", "value":"superJump" } ] },
+        { "id":41, "properties":[
+            { "name":"ink", "propertytype":"ZXColour", "type":"string", "value":"red" },
+            { "name":"paper", "propertytype":"ZXColour", "type":"string", "value":"white" },
+            { "name":"solid", "type":"bool", "value":true },
+            { "name":"tileType", "propertytype":"TileType", "type":"string", "value":"breakable" } ] },
+        { "id":42, "properties":[
+            { "name":"transparent", "type":"bool", "value":true } ] },
+        { "id":43, "properties":[
+            { "name":"tileType", "propertytype":"TileType", "type":"string", "value":"grapplePoint" },
+            { "name":"transparent", "type":"bool", "value":true } ] }
  ],
  "tilewidth":16,
  "type":"tileset",

@@ -33,3 +33,7 @@ extern const uint8_t enemyShotDef[];
 extern const uint8_t enemyShotMaskDef[];
 extern const uint8_t mineDef[];
 extern const uint8_t mineMaskDef[];
+extern const uint8_t seaBubbleDef[];
+extern const uint8_t seaBubbleMaskDef[];
+extern const uint8_t grappleArrowDef[];
+extern const uint8_t grappleArrowMaskDef[];

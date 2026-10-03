@@ -603,3 +603,53 @@ void blitParticlesToScratchBuffers(int layer)
         }
     }
 }
+
+// ---------------------------------------------------------------------------
+// Layer points
+// ---------------------------------------------------------------------------
+
+typedef struct LayerPoint {
+    int16_t x, y;           // (the layer pixel it's in)
+    int8_t layer;
+} LayerPoint;
+
+static LayerPoint layerPoints[MAX_LAYER_POINTS];
+static int layerPointCount=0;
+
+void clearLayerPoints(void)
+{
+    layerPointCount=0;
+}
+
+bool addLayerPoint(int layer, float x, float y)
+{
+    if(layerPointCount>=MAX_LAYER_POINTS || layer<0 || layer>=MAX_TILE_LAYERS){
+        return false;
+    }
+    LayerPoint *p=layerPoints+layerPointCount++;
+    p->x=(int16_t)floorf(x);
+    p->y=(int16_t)floorf(y);
+    p->layer=(int8_t)layer;
+    return true;
+}
+
+void blitLayerPointsToScratchBuffers(int layer)
+{
+    for(int n=0;n<layerPointCount;n++){
+        const LayerPoint *p=layerPoints+n;
+        if(p->layer!=layer){
+            continue;
+        }
+        // The pixel the point's in on screen (layerToScreen gives the pixel's centre's position for its top left corner)
+        float sx, sy;
+        layerToScreen(layer,(float)p->x+0.5f,(float)p->y+0.5f,&sx,&sy);
+        const int x=(int)floorf(sx), y=(int)floorf(sy);
+        if(x<0 || x>=SCREEN_WIDTH_PIXELS || y<0 || y>=SCREEN_HEIGHT_LINES){
+            continue;
+        }
+        const int i=(y*SCREEN_WIDTH_CELLS)+(x>>3);
+        const uint8_t bit=(uint8_t)(0x80>>(x&7));
+        scratchPixRam[i]|=bit;
+        scratchMaskRam[i]&=(uint8_t)~bit;
+    }
+}

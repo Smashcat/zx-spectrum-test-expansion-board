@@ -36,10 +36,11 @@ typedef struct TileLayer {
     int16_t x;
     /// @brief Y position, relative to screen in pixels (not drawn if 192 or more - tile layers repeat, so can be any distance up; bitmaps not drawn once fully off screen)
     int16_t y;
-    /// @brief Tile definitions in cells within this layer
-    uint8_t tileMap[(TILE_LAYER_WIDTH*TILE_LAYER_HEIGHT)];
+    /// @brief Tile definitions in cells within this layer (TILE_LAYER_WIDTH x TILE_LAYER_HEIGHT - NULL for the screen
+    /// snapshot layer, which is a bitmap only)
+    uint8_t *tileMap;
     /// @brief Attribute definitions in cells within this layer (bi-color, so 8x4 pixel blocks). If "flash bit" (7) set, then will not update current attr under the tile on this layer"
-    uint8_t attrMap[(TILE_LAYER_WIDTH*TILE_LAYER_ATTR_HEIGHT)];
+    uint8_t *attrMap;
     /// @brief Pointer to the tile definitions to use for this layer: 256 tiles then their 256 masks. 8x8 tiles are 8
     /// bytes each (masks at tileDefPtr+(8*256)); 16x16 tiles (see setLayerTileSize) are 32 bytes, a row of 2 bytes
     /// (left, right) at a time (masks at tileDefPtr+(32*256))
@@ -309,4 +310,7 @@ void setLayerLineTransforms(int layerIX, const LayerLineTransform *lines);
 /// @param focalLength Distance from the camera to the projection plane, in pixels (around 128 gives a 90 degree field of view)
 void buildLayerPerspective(LayerLineTransform *lines, float camX, float camY, float angle, float camHeight, float horizonY, float focalLength);
 
-extern TileLayer tileLayer[MAX_TILE_LAYERS];
+/// @brief The layers, then (at SCREEN_SNAPSHOT_LAYER) the compositor's own bitmap layer for a full screen snapshot (see
+/// showScreenSnapshot in Compositor.h) - not one of the game's layers
+extern TileLayer tileLayer[MAX_TILE_LAYERS+1];
+#define SCREEN_SNAPSHOT_LAYER   MAX_TILE_LAYERS

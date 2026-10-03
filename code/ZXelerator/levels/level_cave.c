@@ -49,6 +49,6 @@ static const LevelObject objects[]={
 };
 
 // The level's own properties
-static const LevelProp levelProps[]={{LEVEL_PROP_LEVEL_TYPE,LEVEL_PROP_TYPE_INT,{.i=0}},{LEVEL_PROP_LEVEL_NAME,LEVEL_PROP_TYPE_STRING,{.s="The Cave"}},{LEVEL_PROP_LEVEL_DESCRIPTION,LEVEL_PROP_TYPE_STRING,{.s="Find the key to the locked door"}}};
+static const LevelProp levelProps[]={{LEVEL_PROP_LEVEL_TYPE,LEVEL_PROP_TYPE_INT,{.i=0}},{LEVEL_PROP_LEVEL_NAME,LEVEL_PROP_TYPE_STRING,{.s="The Cave"}},{LEVEL_PROP_LEVEL_DESCRIPTION,LEVEL_PROP_TYPE_STRING,{.s="Find the key to the locked door"}},{LEVEL_PROP_UNDERWATER,LEVEL_PROP_TYPE_INT,{.i=0}}};
 
-const LevelDef level_cave={"cave",48,24,6560,1,2,2,5,tileSets,layers,sheets,objects,0,1,8,levelProps,3,0};
+const LevelDef level_cave={"cave",48,24,6560,1,2,2,5,tileSets,layers,sheets,objects,0,1,8,levelProps,4,0};

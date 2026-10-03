@@ -1,6 +1,9 @@
 #include "TileLayer.h"
 
-TileLayer tileLayer[MAX_TILE_LAYERS];
+TileLayer tileLayer[MAX_TILE_LAYERS+1];
+// The layers' tile and attribute maps (the screen snapshot layer has none)
+static uint8_t layerTileMaps[MAX_TILE_LAYERS][TILE_LAYER_WIDTH*TILE_LAYER_HEIGHT];
+static uint8_t layerAttrMaps[MAX_TILE_LAYERS][TILE_LAYER_WIDTH*TILE_LAYER_ATTR_HEIGHT];
 static uint8_t pixLineBuffer[260] __attribute__((aligned(4)));
 
 static void blitTileLayerTransformed(const TileLayer *tL);
@@ -9,8 +12,11 @@ static void buildColourTables(void);
 
 void initLayers(void){
     buildColourTables();
-    for(int n=0;n<MAX_TILE_LAYERS;n++){
+    for(int n=0;n<=MAX_TILE_LAYERS;n++){
         TileLayer *t=tileLayer+n;
+        const bool screen=(n==SCREEN_SNAPSHOT_LAYER);
+        t->tileMap=screen?NULL:layerTileMaps[n];
+        t->attrMap=screen?NULL:layerAttrMaps[n];
         t->x=500;
         t->y=0;
         t->globalAttr=0;
@@ -26,7 +32,11 @@ void initLayers(void){
         t->tile16=false;
         t->colour=LAYER_COLOUR_CELLS;
         clearLayerTransform(n);
-        clearLayerLines(n,0,TILE_LAYER_HEIGHT);
+        if(screen){
+            t->layerType=LT_BITMAP;
+        }else{
+            clearLayerLines(n,0,TILE_LAYER_HEIGHT);
+        }
     }
 }
 

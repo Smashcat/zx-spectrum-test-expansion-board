@@ -2,8 +2,9 @@
 <map version="1.10" class="Level" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="240" height="24" tilewidth="8" tileheight="8" infinite="0" nextlayerid="4" nextobjectid="20">
  <properties>
   <property name="levelType" propertytype="LevelType" value="shooter"/>
-  <property name="levelName" value="Sky Tunnel"/>
-  <property name="levelDescription" value="Fly through to the other side"/>
+  <property name="levelName" value="Sunken Caves"/>
+  <property name="levelDescription" value="Swim through to the other side"/>
+  <property name="underwater" type="bool" value="true"/>
  </properties>
  <tileset firstgid="1" source="demoTiles.tsj"/>
  <tileset firstgid="257" source="saucer.tsj"/>

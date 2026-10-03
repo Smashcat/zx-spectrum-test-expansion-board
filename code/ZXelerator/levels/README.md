@@ -86,7 +86,7 @@ all at once), then press F6 to redraw the image:
 engine doesn't act on the flags: they're for the game, through `getLevelTileFlags` and `isLevelPixelSolid`.
 
 **Tile types:** the project's **TileType** enum (Project > Project Properties > Custom Types) names up to 16
-kinds of tile: none, conveyorLeft, conveyorRight, superJump and grapplePoint so far. Add your own values to the
+kinds of tile: none, conveyorLeft, conveyorRight, superJump, grapplePoint and breakable so far. Add your own values to the
 end, so the numbers of tiles already set don't change. Converting writes them to `levels/levelObjects.h`
 (`TILE_TYPE_CONVEYOR_LEFT` etc), and a tile's type is `LEVEL_TILE_TYPE(getLevelTileFlags(...))`. It combines
 with the other flags: a conveyor is `solid` too. `getLevelTileSetFlags(layer, tile)` gives a tile number's flags,
@@ -95,6 +95,20 @@ wherever it is (e.g. to check a tile before `setLevelTile` puts it in).
 In `demo16.tmx`, the level test player is carried along by conveyors (34, animated, going right, and 38, the same
 frames backwards, going left) and bounced up by the springboard (39, higher holding jump). The springboard shows the
 next tile (40, squashed) for a moment, as that's a springboard too.
+
+**Breakable walls:** a dash (M, in the level test) breaks the `breakable` tiles in its way: each becomes the next tile
+along in its tile set - its broken version, which shouldn't be `solid` (give it `transparent` too, so the colours behind
+show through its gaps) - and fragments burst out. The dash carries on through, so it can break several, as long as
+it hasn't run out; slowing down afterwards, they're walls like any other. Only the tiles level with the player break.
+Broken walls are back when the level's loaded again. In the demo tiles: cracked bricks 42 (broken 43), and in
+demo16's 41 (broken 42) - there's a cracked wall just right of the demo level's start, and one before demo16's pool.
+
+**Grapple points:** in the level test, jumping and pressing G grabs the closest `grapplePoint` tile ahead of and above
+the player (its middle), within 96 pixels and with nothing solid in the way - a flashing arrow bobs over the one
+that would be grabbed. The player swings from it on a chain as long as it was when they grabbed it (O and P push the
+swing, Q jumps off with its speed, and anything solid knocks them off). The chain is drawn with layer points
+(`addLayerPoint`, in `engine/particles.h`): single pixels in a layer's coordinates, drawn for a frame. demo16's tile 43
+is a ring on a stem, and there are two over its pool.
 
 **Animated tiles** use Tiled's Tile Animation Editor: frames are other tiles of the same tile set (in its
 first 256), and their durations are rounded to 25ths of a second. The tile's own colours are used for
@@ -106,7 +120,14 @@ copied to RAM, and the tile's graphic and mask are rewritten when its frame chan
 Tiles and sprites can be drawn in any paint program and imported from a PNG. Your image is the tile set's image
 in Tiled, so you see exactly what you drew. It stays the source of the graphics: converting a level reads it again
 each time, so edit the image, press F5, and the level and the game's graphics are up to date - no rebuilding the
-converter, and nothing to copy into the engine. Put the image in `levels/tiled`, then:
+converter, and nothing to copy into the engine.
+
+**From Tiled:** make a tile set from the image as usual (Map > New Tileset, "Based on Tileset Image", 8x8 or 16x16
+tiles - or a sprite size for sprites - saved as a JSON tile set, `.tsj`, in `levels/tiled`). With it open, run
+**Import tile set image for ZXelerator** (Ctrl+F6), or **...as a sprite sheet** (Ctrl+Shift+F6) for sprites. It
+names the graphics after the tile set and writes them; Tiled then reloads the tile set with its new properties.
+
+**Or from the command line**, with the image in `levels/tiled`:
 
 ```bat
 pc\build\Release\levelconv.exe import levels\tiled\caveTiles.png caveTiles 16
@@ -174,6 +195,7 @@ Give a map the **Level** class (Map > Map Properties > Class) for its level's ow
 | `levelType` | LevelType | platform (the default) or shooter - add your own kinds of stage to the enum |
 | `levelName` | string | e.g. for a title as the level starts |
 | `levelDescription` | string | |
+| `underwater` | bool | Bubbles rise from the sea bed and the player (in the level test) |
 
 Add more members to the class (Project > Custom Types) and every level gets them, or add a property to just one
 map. Each becomes a `LEVEL_PROP_...` like object properties. The game reads them with `getLevelType()` (`LEVEL_TYPE_SHOOTER`

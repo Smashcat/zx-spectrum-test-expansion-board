@@ -48,6 +48,15 @@ static const LevelDef *level=NULL;
 static LevelLayerState layers[MAX_TILE_LAYERS];
 static int layerCount=0;
 static uint8_t *tileSetRam[MAX_LEVEL_TILESETS];
+
+// Added to the camera every frame: the game's own offset (setLevelCameraOffset), and the shake (shakeLevel) - its frame
+// (-1 for none), size and direction
+static int cameraOffsetX, cameraOffsetY;
+static int shakeFrame=-1;
+static float shakeSize, shakeDirX, shakeDirY;
+#define SHAKE_FRAMES    8
+// The shake as a fraction of its size each frame: away with the weight of the impact, bouncing back, settling
+static const float shakeCurve[SHAKE_FRAMES]={0.6f,1.0f,0.6f,0.0f,-0.5f,-0.5f,-0.2f,0.0f};
 static LevelAnimState anims[MAX_LEVEL_ANIMS];
 static int animCount=0;
 
@@ -286,6 +295,7 @@ static int levelStateOffset(int levelID)
 
 bool loadLevel(const LevelDef *lv)
 {
+    shakeFrame=-1;          // (a new level starts still)
     // Sprites the last level's actors had go back, and its layers are emptied and hidden (the new level may not use them
     // all, e.g. one with no parallax background)
     if(level && actors){
@@ -474,8 +484,35 @@ bool loadLevel(const LevelDef *lv)
     return true;
 }
 
+
+void setLevelCameraOffset(int x, int y)
+{
+    cameraOffsetX=x;
+    cameraOffsetY=y;
+}
+
+void shakeLevel(float size, float dirX, float dirY)
+{
+    shakeSize=size;
+    shakeDirX=dirX;
+    shakeDirY=dirY;
+    shakeFrame=0;
+}
+
+void getLevelShake(int *x, int *y)
+{
+    const float s=(shakeFrame>=0)?shakeCurve[shakeFrame]*shakeSize:0.0f;
+    *x=(int)floorf((s*shakeDirX)+0.5f);
+    *y=(int)floorf((s*shakeDirY)+0.5f);
+}
+
 void setLevelCamera(int x, int y)
 {
+    // (the level moving one way with the shake is the camera moving the other)
+    int sx, sy;
+    getLevelShake(&sx,&sy);
+    x+=cameraOffsetX-sx;
+    y+=cameraOffsetY-sy;
     for(int n=0;n<layerCount;n++){
         LevelLayerState *L=layers+n;
         const LevelLayer *d=L->def;
@@ -661,6 +698,10 @@ static void updateActors(void)
 
 void updateLevel(void)
 {
+    // The shake moves on a frame (setLevelCamera, called before this each frame, used this one)
+    if(shakeFrame>=0 && ++shakeFrame>=SHAKE_FRAMES){
+        shakeFrame=-1;
+    }
     bool changed=false;
     for(int n=0;n<animCount;n++){
         LevelAnimState *s=anims+n;

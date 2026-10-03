@@ -41,15 +41,16 @@
 #define LEVEL_PROP_LEVEL_TYPE            20
 #define LEVEL_PROP_LEVEL_NAME            21
 #define LEVEL_PROP_LEVEL_DESCRIPTION     22
-#define LEVEL_PROP_PATTERN               23
-#define LEVEL_PROP_AMPLITUDE             24
-#define LEVEL_PROP_PERIOD                25
-#define LEVEL_PROP_HP                    26
-#define LEVEL_PROP_FIRE_RATE             27
-#define LEVEL_PROP_SHOT_SPEED            28
-#define LEVEL_PROP_RANGE                 29
-#define LEVEL_PROP_TURN_SPEED            30
-#define LEVEL_PROP_CEILING               31
+#define LEVEL_PROP_UNDERWATER            23
+#define LEVEL_PROP_PATTERN               24
+#define LEVEL_PROP_AMPLITUDE             25
+#define LEVEL_PROP_PERIOD                26
+#define LEVEL_PROP_HP                    27
+#define LEVEL_PROP_FIRE_RATE             28
+#define LEVEL_PROP_SHOT_SPEED            29
+#define LEVEL_PROP_RANGE                 30
+#define LEVEL_PROP_TURN_SPEED            31
+#define LEVEL_PROP_CEILING               32
 
 // TileType
 #define TILE_TYPE_NONE                   0
@@ -57,7 +58,8 @@
 #define TILE_TYPE_CONVEYOR_RIGHT         2
 #define TILE_TYPE_SUPER_JUMP             3
 #define TILE_TYPE_GRAPPLE_POINT          4
-#define TILE_TYPE_COUNT 5
+#define TILE_TYPE_BREAKABLE              5
+#define TILE_TYPE_COUNT 6
 
 // ZXColour
 #define ZXCOLOUR_BLACK                   0

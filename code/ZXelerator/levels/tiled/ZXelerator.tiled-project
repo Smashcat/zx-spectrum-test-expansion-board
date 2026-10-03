@@ -30,6 +30,26 @@
             "shortcut": "F6",
             "showOutput": true,
             "workingDirectory": "%mappath"
+        },
+        {
+            "arguments": "importtileset \"%mapfile\"",
+            "command": "G:/repos/Speccy/code/ZXelerator/pc/build/Release/levelconv.exe",
+            "enabled": true,
+            "name": "Import tile set image for ZXelerator (8x8 or 16x16 tiles)",
+            "saveBeforeExecute": true,
+            "shortcut": "Ctrl+F6",
+            "showOutput": true,
+            "workingDirectory": "%mappath"
+        },
+        {
+            "arguments": "importtileset \"%mapfile\" sprites",
+            "command": "G:/repos/Speccy/code/ZXelerator/pc/build/Release/levelconv.exe",
+            "enabled": true,
+            "name": "Import tile set image for ZXelerator as a sprite sheet",
+            "saveBeforeExecute": true,
+            "shortcut": "Ctrl+Shift+F6",
+            "showOutput": true,
+            "workingDirectory": "%mappath"
         }
     ],
     "compatibilityVersion": 1100,
@@ -50,7 +70,8 @@
                 "conveyorLeft",
                 "conveyorRight",
                 "superJump",
-                "grapplePoint"
+                "grapplePoint",
+                "breakable"
             ],
             "valuesAsFlags": false
         },
@@ -397,6 +418,11 @@
                     "name": "levelDescription",
                     "type": "string",
                     "value": ""
+                },
+                {
+                    "name": "underwater",
+                    "type": "bool",
+                    "value": false
                 }
             ],
             "name": "Level",
